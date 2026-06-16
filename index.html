@@ -42,6 +42,42 @@
   header p { color: #94a3b8; font-size: 0.9rem; margin-top: 0.4rem; }
   .last-update { color: #64748b; font-size: 0.8rem; margin-top: 0.3rem; }
 
+  /* ===== BOTÃO VOLTAR AO TOPO ===== */
+  .back-to-top {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f59e0b, #ef4444);
+    color: #fff;
+    border: none;
+    font-size: 1.3rem;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    transition: all .25s ease;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(10px);
+  }
+  .back-to-top.show {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+  .back-to-top:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 6px 20px rgba(239,68,68,0.5);
+  }
+  @media (max-width: 640px) {
+    .back-to-top { bottom: 16px; right: 16px; width: 44px; height: 44px; font-size: 1.1rem; }
+  }
+
   /* ===== NAVEGAÇÃO ===== */
   .nav-bar {
     display: flex;
@@ -1420,7 +1456,19 @@
   }
 
   await loadData();
-  setInterval(() => loadData(3), 180000);
+  // Botão voltar ao topo
+const backBtn = document.createElement('button');
+backBtn.className = 'back-to-top';
+backBtn.innerHTML = '⬆';
+backBtn.title = 'Voltar ao topo';
+backBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+document.body.appendChild(backBtn);
+
+window.addEventListener('scroll', () => {
+  backBtn.classList.toggle('show', window.scrollY > 400);
+});
+
+setInterval(() => loadData(3), 180000);
 })();
 
 // Service Worker
