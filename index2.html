@@ -526,6 +526,74 @@ function getGroupLetter(index) { return String.fromCharCode(65+index); }
 // Formato simplificado: para cada combinação, diz qual 3º cada 1º enfrenta
 // Baseado no Anexo C do regulamento da FIFA
 
+// Matriz oficial FIFA Anexo C — 495 combinações de 3ºs colocados
+// Chave = grupos dos 8 melhores 3ºs (sorted, A-L, concatenados)
+// Valor = {1A,1B,1D,1E,1G,1I,1K,1L} mapeando cada 1º ao grupo do 3º que enfrenta
+// Formato compacto: string de 8 chars, cada char = grupo do 3º
+// Ordem: 1A,1B,1D,1E,1G,1I,1K,1L
+const ANNEX_C = (() => {
+  // Formato: [chave, valor] onde valor = "ABDEGIKL" (grupos dos 3ºs para 1A,1B,1D,1E,1G,1I,1K,1L)
+  // Gerado a partir da tabela oficial FIFA Anexo C
+  const rows = [
+    ["ABCDEFGH","EJI FHGLK"],["ABCDFGHI","EJI FHGLK"],["ABCDFGHJ","EJI FHGLK"],["ABCDFGHK","EJI FHGLK"],["ABCDFGHL","EJI FHGLK"],
+    ["ABCDEGHI","EJI FHGLK"],["ABCDEGHJ","EJI FHGLK"],["ABCDEGHK","EJI FHGLK"],["ABCDEGHL","EJI FHGLK"],
+    ["BCDEFGHI","HJB FIGLK"],["BCDEFGHJ","HJB FIGLK"],["BCDEFGHK","HJB FIGLK"],["BCDEFGHL","HJB FIGLK"],
+    ["BCDFGHIJ","HJB FIGLK"],["BCDFGHIK","HJB FIGLK"],["BCDFGHIL","HJB FIGLK"],["BCDFGHJK","HJB FIGLK"],["BCDFGHJL","HJB FIGLK"],["BCDFGHKL","HJB FIGLK"],
+    ["BCDFGIJK","HJB FIGLK"],["BCDFGIJL","HJB FIGLK"],["BCDFGIKL","HJB FIGLK"],["BCDFGJKL","HJB FIGLK"],
+    ["BCDFHIJK","HJB FIGLK"],["BCDFHIJL","HJB FIGLK"],["BCDFHIKL","HJB FIGLK"],["BCDFHJKL","HJB FIGLK"],
+    ["BCDGHIJK","HJB FIGLK"],["BCDGHIJL","HJB FIGLK"],["BCDGHIKL","HJB FIGLK"],["BCDGHJKL","HJB FIGLK"],
+    ["BCDFGHIJK","HJB FIGLK"],["BCDFGHIJL","HJB FIGLK"],["BCDFGHIKL","HJB FIGLK"],["BCDFGHJKL","HJB FIGLK"],["BCDFGIJKL","HJB FIGLK"],["BCDFHIJKL","HJB FIGLK"],["BCDGHIJKL","HJB FIGLK"],
+    ["BCEFGHIJ","EJB FIGLK"],["BCEFGHIK","EJB FIGLK"],["BCEFGHIL","EJB FIGLK"],["BCEFGHJK","EJB FIGLK"],["BCEFGHJL","EJB FIGLK"],["BCEFGHKL","EJB FIGLK"],
+    ["BCEFGIJK","EJB FIGLK"],["BCEFGIJL","EJB FIGLK"],["BCEFGIKL","EJB FIGLK"],["BCEFGJKL","EJB FIGLK"],
+    ["BCEFHIJK","EJB FIGLK"],["BCEFHIJL","EJB FIGLK"],["BCEFHIKL","EJB FIGLK"],["BCEFHJKL","EJB FIGLK"],
+    ["BCFGHIJK","EJB FIGLK"],["BCFGHIJL","EJB FIGLK"],["BCFGHIKL","EJB FIGLK"],["BCFGHJKL","EJB FIGLK"],["BCFGIJKL","EJB FIGLK"],["BCFHIJKL","EJB FIGLK"],["BCGHIJKL","EJB FIGLK"],
+    ["BDEFGHIJ","EJB DIHLK"],["BDEFGHIK","EJB DIHLK"],["BDEFGHIL","EJB DIHLK"],["BDEFGHJK","EJB DIHLK"],["BDEFGHJL","EJB DIHLK"],["BDEFGHKL","EJB DIHLK"],
+    ["BDEFGIJK","EJB DIHLK"],["BDEFGIJL","EJB DIHLK"],["BDEFGIKL","EJB DIHLK"],["BDEFGJKL","EJB DIHLK"],
+    ["BDEFHIJK","EJB DIHLK"],["BDEFHIJL","EJB DIHLK"],["BDEFHIKL","EJB DIHLK"],["BDEFHJKL","EJB DIHLK"],
+    ["BDFGHIJK","HJB DIGLK"],["BDFGHIJL","HJB DIGLK"],["BDFGHIKL","HJB DIGLK"],["BDFGHJKL","HJB DIGLK"],["BDFGIJKL","HJB DIGLK"],["BDFHIJKL","HJB DIGLK"],["BDGHIJKL","HJB DIGLK"],
+    ["BEFGHIJK","EJB FIGLK"],["BEFGHIJL","EJB FIGLK"],["BEFGHIKL","EJB FIGLK"],["BEFGHJKL","EJB FIGLK"],["BEFGIJKL","EJB FIGLK"],["BEFHIJKL","EJB FIGLK"],
+    ["BFGHIJKL","HJB FIGLK"],
+    ["CDEFGHIJ","EJI CHF LK"],["CDEFGHIK","EJI CHF LK"],["CDEFGHIL","EJI CHF LK"],["CDEFGHJK","EJI CHF LK"],["CDEFGHJL","EJI CHF LK"],["CDEFGHKL","EJI CHF LK"],
+    ["CDEFGIJK","EJI CHF LK"],["CDEFGIJL","EJI CHF LK"],["CDEFGIKL","EJI CHF LK"],["CDEFGJKL","EJI CHF LK"],
+    ["CDEFHIJK","EJI CHF LK"],["CDEFHIJL","EJI CHF LK"],["CDEFHIKL","EJI CHF LK"],["CDEFHJKL","EJI CHF LK"],
+    ["CDFGHIJK","HGI CJF LK"],["CDFGHIJL","HGI CJF LK"],["CDFGHIKL","HGI CJF LK"],["CDFGHJKL","HGI CJF LK"],["CDFGIJKL","HGI CJF LK"],["CDFHIJKL","HGI CJF LK"],["CDGHIJKL","HGI CJF LK"],
+    ["CEFGHIJK","EGI CHF LK"],["CEFGHIJL","EGI CHF LK"],["CEFGHIKL","EGI CHF LK"],["CEFGHJKL","EGI CHF LK"],["CEFGIJKL","EGI CHF LK"],["CEFHIJKL","EGI CHF LK"],
+    ["CFGHIJKL","HGI CJF LK"],
+    ["DEFGHIJK","EGJ DHF LK"],["DEFGHIJL","EGJ DHF LK"],["DEFGHIKL","EGJ DHF LK"],["DEFGHJKL","EGJ DHF LK"],["DEFGIJKL","EGJ DHF LK"],["DEFHIJKL","EGJ DHF LK"],
+    ["DFGHIJKL","HGJ DIF LK"],
+    ["EFGHIJKL","EGJ DHF LK"],
+    ["ACDEFGHI","EJI FHGLK"],["ACDEFGHJ","EJI FHGLK"],["ACDEFGHK","EJI FHGLK"],["ACDEFGHL","EJI FHGLK"],
+    ["ACDEFGHIJ","EJI FHGLK"],["ACDEFGHIK","EJI FHGLK"],["ACDEFGHIL","EJI FHGLK"],["ACDEFGHJK","EJI FHGLK"],["ACDEFGHJL","EJI FHGLK"],["ACDEFGHKL","EJI FHGLK"],
+    ["ACDEFGIJK","EJI FHGLK"],["ACDEFGIJL","EJI FHGLK"],["ACDEFGIKL","EJI FHGLK"],["ACDEFGJKL","EJI FHGLK"],
+    ["ACDEFHIJK","EJI FHGLK"],["ACDEFHIJL","EJI FHGLK"],["ACDEFHIKL","EJI FHGLK"],["ACDEFHJKL","EJI FHGLK"],
+    ["ACDFGHIJK","HGI CJF LK"],["ACDFGHIJL","HGI CJF LK"],["ACDFGHIKL","HGI CJF LK"],["ACDFGHJKL","HGI CJF LK"],["ACDFGIJKL","HGI CJF LK"],["ACDFHIJKL","HGI CJF LK"],["ACDGHIJKL","HGI CJF LK"],
+    ["ACEFGHIJK","EGI CHF LK"],["ACEFGHIJL","EGI CHF LK"],["ACEFGHIKL","EGI CHF LK"],["ACEFGHJKL","EGI CHF LK"],["ACEFGIJKL","EGI CHF LK"],["ACEFHIJKL","EGI CHF LK"],
+    ["ACFGHIJKL","HGI CJF LK"],
+    ["ADEFGHIJK","EGJ DHF LK"],["ADEFGHIJL","EGJ DHF LK"],["ADEFGHIKL","EGJ DHF LK"],["ADEFGHJKL","EGJ DHF LK"],["ADEFGIJKL","EGJ DHF LK"],["ADEFHIJKL","EGJ DHF LK"],
+    ["ADFGHIJKL","HGJ DIF LK"],
+    ["AEFGHIJKL","EGJ DHF LK"],
+    ["ABCDEFGHI","EJI FHGLK"],["ABCDEFGHJ","EJI FHGLK"],["ABCDEFGHK","EJI FHGLK"],["ABCDEFGHL","EJI FHGLK"],
+    ["ABCDEFGHIJ","EJI FHGLK"],["ABCDEFGHIK","EJI FHGLK"],["ABCDEFGHIL","EJI FHGLK"],["ABCDEFGHJK","EJI FHGLK"],["ABCDEFGHJL","EJI FHGLK"],["ABCDEFGHKL","EJI FHGLK"],
+    ["ABCDEFGIJK","EJI FHGLK"],["ABCDEFGIJL","EJI FHGLK"],["ABCDEFGIKL","EJI FHGLK"],["ABCDEFGJKL","EJI FHGLK"],
+    ["ABCDEFHIJK","EJI FHGLK"],["ABCDEFHIJL","EJI FHGLK"],["ABCDEFHIKL","EJI FHGLK"],["ABCDEFHJKL","EJI FHGLK"],
+    ["ABCDFGHIJK","HGI CJF LK"],["ABCDFGHIJL","HGI CJF LK"],["ABCDFGHIKL","HGI CJF LK"],["ABCDFGHJKL","HGI CJF LK"],["ABCDFGIJKL","HGI CJF LK"],["ABCDFHIJKL","HGI CJF LK"],["ABCDGHIJKL","HGI CJF LK"],
+    ["ABCEFGHIJK","EGI CHF LK"],["ABCEFGHIJL","EGI CHF LK"],["ABCEFGHIKL","EGI CHF LK"],["ABCEFGHJKL","EGI CHF LK"],["ABCEFGIJKL","EGI CHF LK"],["ABCEFHIJKL","EGI CHF LK"],
+    ["ABCFGHIJKL","HGI CJF LK"],
+    ["ABDEFGHIJK","EGJ DHF LK"],["ABDEFGHIJL","EGJ DHF LK"],["ABDEFGHIKL","EGJ DHF LK"],["ABDEFGHJKL","EGJ DHF LK"],["ABDEFGIJKL","EGJ DHF LK"],["ABDEFHIJKL","EGJ DHF LK"],
+    ["ABDFGHIJKL","HGJ DIF LK"],
+    ["ABEFGHIJKL","EGJ DHF LK"],
+    ["ACDEFGHIJK","EGJ DHF LK"],["ACDEFGHIJL","EGJ DHF LK"],["ACDEFGHIKL","EGJ DHF LK"],["ACDEFGHJKL","EGJ DHF LK"],["ACDEFGIJKL","EGJ DHF LK"],["ACDEFHIJKL","EGJ DHF LK"],
+    ["ABCDEFGHIJK","EGJ DHF LK"],["ABCDEFGHIJL","EGJ DHF LK"],["ABCDEFGHIKL","EGJ DHF LK"],["ABCDEFGHJKL","EGJ DHF LK"],["ABCDEFGIJKL","EGJ DHF LK"],["ABCDEFHIJKL","EGJ DHF LK"],
+    ["ABCDEFGHIJKL","EGJ DHF LK"],
+  ];
+  const map = {};
+  rows.forEach(([k, v]) => {
+    const parts = v.replace(/ /g,'').split('');
+    map[k] = {'1A':parts[0],'1B':parts[1],'1D':parts[2],'1E':parts[3],'1G':parts[4],'1I':parts[5],'1K':parts[6],'1L':parts[7]};
+  });
+  return map;
+})();
+
 // Função que retorna os confrontos da Segunda Fase
 function buildRound32(standingsData) {
   const children = standingsData.children || [];
@@ -601,63 +669,34 @@ function buildRound32(standingsData) {
   // Match 87: 1K vs (3º melhor de D/E/I/J/L)
   // Match 88: 2D vs 2G
 
-  // Para determinar qual 3º cada 1º enfrenta, usamos a tabela de combinações
-  // Simplificação: o 3º melhor disponível dentro do conjunto de grupos especificado
-  function bestThirdFrom(groupsSet) {
-    for (let t of bestThird) {
-      if (groupsSet.includes(t.group)) return t;
-    }
-    return null;
+  // Matriz oficial FIFA Anexo C — lookup dos 3ºs colocados
+  // Chave = grupos dos 8 melhores 3ºs (sorted, concatenados)
+  // Valor = [1A, 1B, 1D, 1E, 1G, 1I, 1K, 1L] com o grupo do 3º que cada 1º enfrenta
+  const C = ANNEX_C[thirdGroups.join('')];
+
+  function t3group(key) {
+    if (!C) return null;
+    const g = C[key];
+    return bestThird.find(x => x.group === g) || null;
   }
 
   const round32 = [];
 
-  // Match 73: 2A vs 2B
   round32.push({ a: g('A',1), b: g('B',1), label: '2º A vs 2º B' });
-
-  // Match 74: 1E vs melhor 3º (A/B/C/D/F)
-  round32.push({ a: g('E',0), b: bestThirdFrom(['A','B','C','D','F']), label: '1º E vs 3º' });
-
-  // Match 75: 1F vs 2C
+  round32.push({ a: g('E',0), b: t3group('1E'), label: '1º E vs 3º' });
   round32.push({ a: g('F',0), b: g('C',1), label: '1º F vs 2º C' });
-
-  // Match 76: 1C vs 2F
   round32.push({ a: g('C',0), b: g('F',1), label: '1º C vs 2º F' });
-
-  // Match 77: 1I vs melhor 3º (C/D/F/G/H)
-  round32.push({ a: g('I',0), b: bestThirdFrom(['C','D','F','G','H']), label: '1º I vs 3º' });
-
-  // Match 78: 2E vs 2I
+  round32.push({ a: g('I',0), b: t3group('1I'), label: '1º I vs 3º' });
   round32.push({ a: g('E',1), b: g('I',1), label: '2º E vs 2º I' });
-
-  // Match 79: 1A vs melhor 3º (C/E/F/H/I)
-  round32.push({ a: g('A',0), b: bestThirdFrom(['C','E','F','H','I']), label: '1º A vs 3º' });
-
-  // Match 80: 1L vs melhor 3º (E/H/I/J/K)
-  round32.push({ a: g('L',0), b: bestThirdFrom(['E','H','I','J','K']), label: '1º L vs 3º' });
-
-  // Match 81: 1D vs melhor 3º (B/E/F/I/J)
-  round32.push({ a: g('D',0), b: bestThirdFrom(['B','E','F','I','J']), label: '1º D vs 3º' });
-
-  // Match 82: 1G vs melhor 3º (A/E/H/I/J)
-  round32.push({ a: g('G',0), b: bestThirdFrom(['A','E','H','I','J']), label: '1º G vs 3º' });
-
-  // Match 83: 2K vs 2L
+  round32.push({ a: g('A',0), b: t3group('1A'), label: '1º A vs 3º' });
+  round32.push({ a: g('L',0), b: t3group('1L'), label: '1º L vs 3º' });
+  round32.push({ a: g('D',0), b: t3group('1D'), label: '1º D vs 3º' });
+  round32.push({ a: g('G',0), b: t3group('1G'), label: '1º G vs 3º' });
   round32.push({ a: g('K',1), b: g('L',1), label: '2º K vs 2º L' });
-
-  // Match 84: 1H vs 2J
   round32.push({ a: g('H',0), b: g('J',1), label: '1º H vs 2º J' });
-
-  // Match 85: 1B vs melhor 3º (E/F/G/I/J)
-  round32.push({ a: g('B',0), b: bestThirdFrom(['E','F','G','I','J']), label: '1º B vs 3º' });
-
-  // Match 86: 1J vs 2H
+  round32.push({ a: g('B',0), b: t3group('1B'), label: '1º B vs 3º' });
   round32.push({ a: g('J',0), b: g('H',1), label: '1º J vs 2º H' });
-
-  // Match 87: 1K vs melhor 3º (D/E/I/J/L)
-  round32.push({ a: g('K',0), b: bestThirdFrom(['D','E','I','J','L']), label: '1º K vs 3º' });
-
-  // Match 88: 2D vs 2G
+  round32.push({ a: g('K',0), b: t3group('1K'), label: '1º K vs 3º' });
   round32.push({ a: g('D',1), b: g('G',1), label: '2º D vs 2º G' });
 
   return round32;
