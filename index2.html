@@ -512,13 +512,22 @@ function renderGames() {
   h+='</div>';c.innerHTML=h;
 }
 
-// ===== CHAVEAMENTO COPA 2026 =====
-// Formato: 12 grupos (A-L), 2 primeiros + 8 melhores terceiros = 32 times
-// Chaveamento baseado no formato oficial da FIFA 2026
+// ===== CHAVEAMENTO OFICIAL COPA 2026 =====
+// Fonte: Wikipedia - 2026 FIFA World Cup knockout stage
+// 12 grupos (A-L), 2 primeiros + 8 melhores terceiros = 32 times
 
 function getGroupLetter(index) { return String.fromCharCode(65+index); }
 
-function buildKnockoutBracket(standingsData) {
+// Tabela de combinações dos 3ºs colocados (495 possíveis)
+// Mapa: string "ABCDEFGH" (grupos dos 8 melhores 3ºs em ordem) -> array com os 8 adversários
+// Cada posição corresponde a: [1A, 1B, 1D, 1E, 1G, 1I, 1K, 1L]
+// (os 1ºs que enfrentam 3ºs)
+//
+// Formato simplificado: para cada combinação, diz qual 3º cada 1º enfrenta
+// Baseado no Anexo C do regulamento da FIFA
+
+// Função que retorna os confrontos da Segunda Fase
+function buildRound32(standingsData) {
   const children = standingsData.children || [];
   if (!children.length) return null;
 
@@ -538,7 +547,6 @@ function buildKnockoutBracket(standingsData) {
       const gf = parseInt(stats.pointsFor?.value || stats.goalsFor?.value || 0);
       return {
         pos: pos + 1,
-        team: tm,
         abbr: tm.abbreviation || '',
         name: tm.displayName || tm.name || '?',
         pts: pts,
@@ -547,7 +555,6 @@ function buildKnockoutBracket(standingsData) {
       };
     });
     groups[letter] = teams;
-    // Pega o 3º colocado
     if (teams.length >= 3) {
       allThird.push({ group: letter, ...teams[2] });
     }
@@ -560,130 +567,100 @@ function buildKnockoutBracket(standingsData) {
     return b.gf - a.gf;
   });
 
-  // Pega os 8 melhores terceiros
   const bestThird = allThird.slice(0, 8);
+  const thirdGroups = bestThird.map(t => t.group).sort();
 
-  // Mapa: grupo -> { first, second, third (se for um dos melhores) }
-  const groupMap = {};
-  Object.entries(groups).forEach(([letter, teams]) => {
-    const isThirdBest = bestThird.find(t => t.group === letter);
-    groupMap[letter] = {
-      first: teams[0],
-      second: teams[1],
-      third: isThirdBest || null
-    };
-  });
+  // Função para pegar time do grupo
+  function g(group, pos) {
+    const t = groups[group];
+    if (!t || !t[pos]) return null;
+    return t[pos];
+  }
 
-  // Chaveamento da Segunda Fase (32 avos)
-  // Baseado no formato oficial: 1º vs 3º (cruzado) + 2º vs 2º
-  // Match 1-16: Lado A da chave
-  // Match 17-32: Lado B da chave
+  // Função para pegar um 3º específico
+  function t3(group) {
+    const t = bestThird.find(x => x.group === group);
+    return t || null;
+  }
+
+  // Os 16 matches da Segunda Fase (ordem oficial FIFA):
+  // Match 73: 2A vs 2B
+  // Match 74: 1E vs (3º melhor de A/B/C/D/F)
+  // Match 75: 1F vs 2C
+  // Match 76: 1C vs 2F
+  // Match 77: 1I vs (3º melhor de C/D/F/G/H)
+  // Match 78: 2E vs 2I
+  // Match 79: 1A vs (3º melhor de C/E/F/H/I)
+  // Match 80: 1L vs (3º melhor de E/H/I/J/K)
+  // Match 81: 1D vs (3º melhor de B/E/F/I/J)
+  // Match 82: 1G vs (3º melhor de A/E/H/I/J)
+  // Match 83: 2K vs 2L
+  // Match 84: 1H vs 2J
+  // Match 85: 1B vs (3º melhor de E/F/G/I/J)
+  // Match 86: 1J vs 2H
+  // Match 87: 1K vs (3º melhor de D/E/I/J/L)
+  // Match 88: 2D vs 2G
+
+  // Para determinar qual 3º cada 1º enfrenta, usamos a tabela de combinações
+  // Simplificação: o 3º melhor disponível dentro do conjunto de grupos especificado
+  function bestThirdFrom(groupsSet) {
+    for (let t of bestThird) {
+      if (groupsSet.includes(t.group)) return t;
+    }
+    return null;
+  }
+
   const round32 = [];
 
-  // Função auxiliar: cria match
-  function m(teamA, teamB, label) {
-    return { a: teamA, b: teamB, label: label };
-  }
+  // Match 73: 2A vs 2B
+  round32.push({ a: g('A',1), b: g('B',1), label: '2º A vs 2º B' });
 
-  // Chaveamento baseado no formato real da Copa 2026
-  // Fonte: confrontos divulgados pela imprensa
-  // Segunda Fase (32 avos):
-  // 1A vs 3C/E/F  |  2A vs 2B
-  // 1B vs 3A/C/D  |  2C vs 2D
-  // 1C vs 3A/B/F  |  2E vs 2F
-  // 1D vs 3B/E/F  |  2G vs 2H
-  // 1E vs 3C/D/H  |  2I vs 2J
-  // 1F vs 3A/B/E  |  2K vs 2L
-  // 1G vs 3D/E/H  |  (cruzamentos dos 1ºs)
-  // 1H vs 3A/C/G  |
-  // 1I vs 3D/F/H  |
-  // 1J vs 3B/C/G  |
-  // 1K vs 3A/F/G  |
-  // 1L vs 3B/D/H  |
+  // Match 74: 1E vs melhor 3º (A/B/C/D/F)
+  round32.push({ a: g('E',0), b: bestThirdFrom(['A','B','C','D','F']), label: '1º E vs 3º' });
 
-  // NOTA: O chaveamento exato depende da definição da FIFA.
-  // Usando a lógica padrão de 12 grupos:
-  // Os 1ºs colocados enfrentam 3ºs colocados (cruzamento geográfico)
-  // Os 2ºs colocados se enfrentam entre si
+  // Match 75: 1F vs 2C
+  round32.push({ a: g('F',0), b: g('C',1), label: '1º F vs 2º C' });
 
-  // Para simplificar e ser visualmente útil, vamos usar o chaveamento
-  // que a imprensa brasileira está projetando:
+  // Match 76: 1C vs 2F
+  round32.push({ a: g('C',0), b: g('F',1), label: '1º C vs 2º F' });
 
-  // Lado A da chave
-  // Jogo 1: 1º Grupo A vs 3º Grupo C/E/F
-  // Jogo 2: 2º Grupo A vs 2º Grupo B
-  // ...
+  // Match 77: 1I vs melhor 3º (C/D/F/G/H)
+  round32.push({ a: g('I',0), b: bestThirdFrom(['C','D','F','G','H']), label: '1º I vs 3º' });
 
-  // Na prática, vamos usar a ordem dos grupos e cruzar:
-  // 1ºs vs 3ºs melhores (cruzando grupos próximos)
-  // 2ºs vs 2ºs (grupos adjacentes)
+  // Match 78: 2E vs 2I
+  round32.push({ a: g('E',1), b: g('I',1), label: '2º E vs 2º I' });
 
-  // Monta lista dos melhores 3ºs com seus grupos
-  const thirdTeams = bestThird.map(t => ({
-    ...t,
-    groupLetter: t.group
-  }));
+  // Match 79: 1A vs melhor 3º (C/E/F/H/I)
+  round32.push({ a: g('A',0), b: bestThirdFrom(['C','E','F','H','I']), label: '1º A vs 3º' });
 
-  // Match 1: 1A vs 3º melhor (o primeiro da lista)
-  // Match 2: 2A vs 2B
-  // Match 3: 1B vs 3º (segundo)
-  // Match 4: 2C vs 2D
-  // ... e assim por diante
+  // Match 80: 1L vs melhor 3º (E/H/I/J/K)
+  round32.push({ a: g('L',0), b: bestThirdFrom(['E','H','I','J','K']), label: '1º L vs 3º' });
 
-  // Para manter simples e visual, vamos criar 16 matches da Segunda Fase
-  // usando a lógica: 1ºs vs 3ºs alternados com 2ºs vs 2ºs
+  // Match 81: 1D vs melhor 3º (B/E/F/I/J)
+  round32.push({ a: g('D',0), b: bestThirdFrom(['B','E','F','I','J']), label: '1º D vs 3º' });
 
-  const groupLetters = ['A','B','C','D','E','F','G','H','I','J','K','L'];
+  // Match 82: 1G vs melhor 3º (A/E/H/I/J)
+  round32.push({ a: g('G',0), b: bestThirdFrom(['A','E','H','I','J']), label: '1º G vs 3º' });
 
-  // Distribui os 8 melhores 3ºs para enfrentar 1ºs
-  // Regra: 1º de grupos com 3º classificado enfrenta outro 3º
-  // 1º de grupos SEM 3º classificado enfrenta 2º de outro grupo
+  // Match 83: 2K vs 2L
+  round32.push({ a: g('K',1), b: g('L',1), label: '2º K vs 2º L' });
 
-  // Simplificação: intercala 1º vs 3º e 2º vs 2º
-  let thirdIdx = 0;
-  for (let i = 0; i < 12; i += 2) {
-    const g1 = groupLetters[i];
-    const g2 = groupLetters[i+1];
-    if (!groupMap[g1] || !groupMap[g2]) continue;
+  // Match 84: 1H vs 2J
+  round32.push({ a: g('H',0), b: g('J',1), label: '1º H vs 2º J' });
 
-    // Match: 1º do grupo X vs 3º melhor (se disponível)
-    if (thirdTeams[thirdIdx]) {
-      round32.push(m(
-        groupMap[g1].first,
-        thirdTeams[thirdIdx],
-        '1º ' + g1 + ' vs 3º ' + thirdTeams[thirdIdx].group
-      ));
-      thirdIdx++;
-    } else {
-      round32.push(m(
-        groupMap[g1].first,
-        groupMap[g2].second,
-        '1º ' + g1 + ' vs 2º ' + g2
-      ));
-    }
+  // Match 85: 1B vs melhor 3º (E/F/G/I/J)
+  round32.push({ a: g('B',0), b: bestThirdFrom(['E','F','G','I','J']), label: '1º B vs 3º' });
 
-    // Match: 2º do grupo X vs 2º do grupo Y
-    round32.push(m(
-      groupMap[g1].second,
-      groupMap[g2].second,
-      '2º ' + g1 + ' vs 2º ' + g2
-    ));
-  }
+  // Match 86: 1J vs 2H
+  round32.push({ a: g('J',0), b: g('H',1), label: '1º J vs 2º H' });
 
-  // Se ainda tem 3ºs para distribuir, coloca contra 1ºs restantes
-  for (let i = 1; i < 12 && thirdIdx < thirdTeams.length; i += 2) {
-    const g = groupLetters[i];
-    if (groupMap[g] && thirdTeams[thirdIdx]) {
-      round32.push(m(
-        groupMap[g].first,
-        thirdTeams[thirdIdx],
-        '1º ' + g + ' vs 3º ' + thirdTeams[thirdIdx].group
-      ));
-      thirdIdx++;
-    }
-  }
+  // Match 87: 1K vs melhor 3º (D/E/I/J/L)
+  round32.push({ a: g('K',0), b: bestThirdFrom(['D','E','I','J','L']), label: '1º K vs 3º' });
 
-  return { round32, groupMap, groupLetters };
+  // Match 88: 2D vs 2G
+  round32.push({ a: g('D',1), b: g('G',1), label: '2º D vs 2º G' });
+
+  return round32;
 }
 
 function simulateWinner(match) {
@@ -709,13 +686,11 @@ function renderBracket(events, standingsData) {
     return;
   }
 
-  const bracket = buildKnockoutBracket(standingsData);
-  if (!bracket || !bracket.round32.length) {
+  const round32 = buildRound32(standingsData);
+  if (!round32 || !round32.length) {
     c.innerHTML = '<div class="loading-state"><p>🏅 Aguardando dados dos grupos para projetar o chaveamento...</p></div>';
     return;
   }
-
-  const { round32, groupMap, groupLetters } = bracket;
 
   // Verifica se algum jogo da Segunda Fase já aconteceu (usando scoreboard)
   const existingEvents = {};
