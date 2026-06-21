@@ -433,7 +433,7 @@ function renderGroups(d) {
   let h='<div class="groups-grid">';
   kids.forEach((ch,i)=>{
     const en = ch.standings?.entries||[];
-    h+='<div class="group-card"><div class="group-header"><span class="group-label">Grupo '+gL(i)+'</span><span class="group-status">'+(ch.name||'')+'</span></div><table class="group-table"><thead><tr><th>Time</th><th>P</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th></tr></thead><tbody>';
+    h+='<div class="group-card"><div class="group-header"><span class="group-label">Grupo '+gL(i)+'</span><span class="group-status">'+(ch.name||'')+'</span></div><table class="group-table"><thead><tr><th>Time</th><th>Pts</th><th>P</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th></tr></thead><tbody>';
     en.forEach((e,p)=>{
       const tm=e.team||{},st={};(e.stats||[]).forEach(s=>{st[s.name]=s;});
       const gp=st.gamesPlayed?.displayValue||'0',w=st.wins?.displayValue||'0',t=st.ties?.displayValue||'0',l=st.losses?.displayValue||'0';
