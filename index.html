@@ -88,6 +88,7 @@
   .team-cell .pos { font-weight: 700; color: #64748b; min-width: 16px; font-size: .75rem; }
   .team-cell .flag { width: 22px; height: 16px; border-radius: 2px; object-fit: cover; flex-shrink: 0; }
   .team-cell .name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .team-cell .name:hover { overflow: visible; white-space: normal; word-break: break-word; background: #1a2332; position: relative; z-index: 2; padding: 2px 4px; border-radius: 4px; }
   .qualified-1 td:first-child .team-cell .pos { color: #22c55e; }
   .qualified-2 td:first-child .team-cell .pos { color: #3b82f6; }
   .pts-cell { font-weight: 800; font-size: .95rem; color: #f59e0b; }
@@ -349,6 +350,26 @@
 const ESPN_SB = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard';
 const ESPN_ST = 'https://site.api.espn.com/apis/v2/sports/soccer/fifa.world/standings';
 const REFRESH_MS = 180000;
+
+// Mapa de tradução inglês → português
+const PT_NAMES = {
+  'Mexico':'México','South Korea':'Coreia do Sul','Czech Republic':'Tchéquia','South Africa':'África do Sul',
+  'Canada':'Canadá','Switzerland':'Suíça','Bosnia and Herzegovina':'Bósnia','Qatar':'Catar',
+  'Brazil':'Brasil','Morocco':'Marrocos','Scotland':'Escócia','Haiti':'Haiti',
+  'USA':'Estados Unidos','Australia':'Austrália','Paraguay':'Paraguai','Türkiye':'Turquia',
+  'Germany':'Alemanha','Ivory Coast':'Costa do Marfim','Ecuador':'Equador','Curaçao':'Curaçau',
+  'Netherlands':'Holanda','Japan':'Japão','Sweden':'Suécia','Tunisia':'Tunísia',
+  'New Zealand':'Nova Zelândia','Iran':'Irã','Belgium':'Bélgica','Egypt':'Egito',
+  'Spain':'Espanha','Uruguay':'Uruguai','Cape Verde':'Cabo Verde','Saudi Arabia':'Arábia Saudita',
+  'Norway':'Noruega','France':'França','Senegal':'Senegal','Iraq':'Iraque',
+  'Argentina':'Argentina','Austria':'Áustria','Jordan':'Jordânia','Algeria':'Argélia',
+  'Colombia':'Colômbia','DR Congo':'RD Congo','Portugal':'Portugal','Uzbekistan':'Uzbequistão',
+  'England':'Inglaterra','Ghana':'Gana','Panama':'Panamá','Croatia':'Croácia',
+  'Korea Republic':'Coreia do Sul','Korea DPR':'Coreia do Norte','China PR':'China',
+  'Chinese Taipei':'Taipé Chinês','IR Iran':'Irã','Czechia':'Tchéquia',
+  'Bosnia-Herzegovina':'Bósnia','Côte d\'Ivoire':'Costa do Marfim',
+};
+function pt(name) { return PT_NAMES[name] || name; }
 const COPA_START = new Date('2026-06-11T00:00:00-03:00');
 const COPA_END = new Date('2026-07-19T23:59:00-03:00');
 
@@ -441,7 +462,7 @@ function renderGroups(d) {
       const tm=e.team||{},st={};(e.stats||[]).forEach(s=>{st[s.name]=s;});
       const gp=st.gamesPlayed?.displayValue||'0',w=st.wins?.displayValue||'0',t=st.ties?.displayValue||'0',l=st.losses?.displayValue||'0';
       const pts=st.points?.displayValue||'0',gf=st.pointsFor?.displayValue||st.goalsFor?.displayValue||'0',ga=st.pointsAgainst?.displayValue||st.goalsAgainst?.displayValue||'0',gd=st.pointDifferential?.displayValue||st.goalDifference?.displayValue||'0';
-      const ab=tm.abbreviation||'',dn=tm.displayName||tm.name||'?',rk=(e.note||{}).rank||0;
+      const ab=tm.abbreviation||'',dn=pt(tm.displayName||tm.name||'?'),rk=(e.note||{}).rank||0;
       let rc='';if(rk===1)rc='qualified-1';else if(rk===2)rc='qualified-2';
       const gc=gd.startsWith('-')?'gd-neg':(gd==='0'?'':'gd-pos');
       h+='<tr class="'+rc+'"><td><div class="team-cell"><span class="pos">'+(p+1)+'</span><img class="flag" src="'+flagUrl(ab)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+dn+'</span></div></td><td class="pts-cell">'+pts+'</td><td>'+gp+'</td><td>'+w+'</td><td>'+t+'</td><td>'+l+'</td><td>'+gf+'</td><td>'+ga+'</td><td class="'+gc+'">'+gd+'</td></tr>';
@@ -507,7 +528,7 @@ function renderGames() {
     const co=e.competitions?.[0]||{},cmp=co.competitors||[];
     const ho=cmp.find(c=>c.homeAway==='home')||cmp[0]||{},aw=cmp.find(c=>c.homeAway==='away')||cmp[1]||{};
     const ht=ho.team||{},at=aw.team||{},st=getStatus(e);
-    const ha=ht.abbreviation||'',aa=at.abbreviation||'',hn=ht.displayName||ht.name||'?',an=at.displayName||at.name||'?';
+    const ha=ht.abbreviation||'',aa=at.abbreviation||'',hn=pt(ht.displayName||ht.name||'?'),an=pt(at.displayName||at.name||'?');
     const hs=ho.score??'',as=aw.score??'',ven=co.venue?.fullName||'';
     const clock=co.status?.displayClock||'';let sl,sc;if(st==='live'){sl='🔴 '+clock;sc='live';}else if(st==='final'){sl='✅ Encerrado';sc='final';}else{sl='⏳ '+fmtTime(e.date);sc='scheduled';}
     h+='<div class="game-card"><div class="game-time"><div class="date">'+fmtDate(e.date)+'</div><div class="time">'+fmtTime(e.date)+'</div></div><div class="game-teams"><div class="team-row"><img class="flag" src="'+flagUrl(ha)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+hn+'</span><span class="score-display">'+(hs!==''&&hs!==null?hs:'-')+'</span></div><div class="team-row"><img class="flag" src="'+flagUrl(aa)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+an+'</span><span class="score-display">'+(as!==''&&as!==null?as:'-')+'</span></div></div><div class="game-status '+sc+'">'+sl+'</div>'+(ven?'<div class="game-venue">📍 '+ven+'</div>':'')+'</div>';
@@ -563,7 +584,7 @@ function buildRound32(standingsData) {
       return {
         pos: pos + 1,
         abbr: tm.abbreviation || '',
-        name: tm.displayName || tm.name || '?',
+        name: pt(tm.displayName || tm.name || '?'),
         pts: pts,
         gd: gd,
         gf: gf
