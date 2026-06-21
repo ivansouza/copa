@@ -725,49 +725,40 @@ function renderBracket(events, standingsData) {
     existingEvents[st].push(e);
   });
 
+  // Função para simular uma rodada
+  function simulateRound(matches) {
+    const winners = [];
+    for (let i = 0; i < matches.length; i += 2) {
+      const m1 = matches[i];
+      const m2 = matches[i+1];
+      if (!m1 || !m2) break;
+      const w1 = simulateWinner(m1);
+      const w2 = simulateWinner(m2);
+      if (w1 && w2) {
+        winners.push({ a: w1, b: w2 });
+      }
+    }
+    return winners;
+  }
+
   // Simula os resultados
-  // Segunda Fase
-  const r16 = [];
-  for (let i = 0; i < round32.length; i += 2) {
-    const w1 = simulateWinner(round32[i]);
-    const w2 = simulateWinner(round32[i+1]);
-    if (w1 && w2) {
-      r16.push({ a: w1, b: w2, label: 'Oitavas' });
-    }
-  }
-
-  // Quartas
-  const qf = [];
-  for (let i = 0; i < r16.length; i += 2) {
-    const w1 = simulateWinner(r16[i]);
-    const w2 = simulateWinner(r16[i+1]);
-    if (w1 && w2) {
-      qf.push({ a: w1, b: w2, label: 'Quartas' });
-    }
-  }
-
-  // Semifinais
-  const sf = [];
-  for (let i = 0; i < qf.length; i += 2) {
-    const w1 = simulateWinner(qf[i]);
-    const w2 = simulateWinner(qf[i+1]);
-    if (w1 && w2) {
-      sf.push({ a: w1, b: w2, label: 'Semi' });
-    }
-  }
+  const r16 = simulateRound(round32);
+  const qf = simulateRound(r16);
+  const sf = simulateRound(qf);
 
   // Final e 3º lugar
-  const thirdPlace = sf.length >= 2 ? {
-    a: simulateWinner({ a: sf[0].b, b: sf[1].a }),
-    b: simulateWinner({ a: sf[0].a, b: sf[1].b }),
-    label: '3º Lugar'
-  } : null;
-
-  const finalMatch = sf.length >= 2 ? {
-    a: simulateWinner(sf[0]),
-    b: simulateWinner(sf[1]),
-    label: 'Final'
-  } : null;
+  let thirdPlace = null;
+  let finalMatch = null;
+  if (sf.length >= 2) {
+    thirdPlace = {
+      a: simulateWinner({ a: sf[0].b, b: sf[1].a }),
+      b: simulateWinner({ a: sf[0].a, b: sf[1].b })
+    };
+    finalMatch = {
+      a: simulateWinner(sf[0]),
+      b: simulateWinner(sf[1])
+    };
+  }
 
   // Renderiza
   let h = '<div class="bracket-section"><div class="bracket">';
