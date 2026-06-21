@@ -6,7 +6,9 @@
 <meta name="theme-color" content="#0f172a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Copa 2026 ESPN">
+<meta name="apple-mobile-web-app-title" content="Copa 2026">
+<link rel="manifest" href="/copa/manifest.json">
+<link rel="apple-touch-icon" href="/copa/icon-192.png">
 <title>Copa do Mundo 2026 — ESPN API</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
@@ -833,6 +835,11 @@ document.getElementById('gameFilter')?.addEventListener('input', renderGames);
 // Auto refresh
 loadAll();
 setInterval(loadAll, REFRESH_MS);
+
+// Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/copa/sw.js');
+}
 </script>
 </body>
 </html>
