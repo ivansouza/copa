@@ -1161,7 +1161,7 @@
 
     // Jogos futuros / ao vivo
     allUpcomingGames = games
-      .filter(g => g.time_elapsed !== 'finished' || g.finished !== 'TRUE')
+      .filter(g => g.time_elapsed !== "finished" && g.finished !== "TRUE")
       .sort((a, b) => {
         const dateA = toBrasiliaTime(a.local_date, a.stadium_id);
         const dateB = toBrasiliaTime(b.local_date, b.stadium_id);
