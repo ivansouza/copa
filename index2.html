@@ -362,8 +362,9 @@ function toDateStr(d) { return d.getFullYear()+String(d.getMonth()+1).padStart(2
 function getStatus(e) {
   const t = e.status?.type;
   if (!t) return 'scheduled';
-  if (t.id==='2'||t.description==='In Progress') return 'live';
-  if (t.id==='3'||t.completed||t.description==='Full Time') return 'final';
+  const desc = (t.description||'').toLowerCase();
+  if (t.id==='2'||desc==='in progress'||desc==='first half'||desc==='second half'||desc==='half time'||desc==='halftime'||desc==='extra time'||desc==='penalty') return 'live';
+  if (t.id==='3'||t.completed||desc==='full time'||desc==='final'||desc==='finished') return 'final';
   return 'scheduled';
 }
 
@@ -506,7 +507,7 @@ function renderGames() {
     const ht=ho.team||{},at=aw.team||{},st=getStatus(e);
     const ha=ht.abbreviation||'',aa=at.abbreviation||'',hn=ht.displayName||ht.name||'?',an=at.displayName||at.name||'?';
     const hs=ho.score??'',as=aw.score??'',ven=co.venue?.fullName||'';
-    let sl,sc;if(st==='live'){sl='🔴 AO VIVO';sc='live';}else if(st==='final'){sl='✅ Encerrado';sc='final';}else{sl='⏳ '+fmtTime(e.date);sc='scheduled';}
+    const clock=co.status?.displayClock||'';let sl,sc;if(st==='live'){sl='🔴 '+clock;sc='live';}else if(st==='final'){sl='✅ Encerrado';sc='final';}else{sl='⏳ '+fmtTime(e.date);sc='scheduled';}
     h+='<div class="game-card"><div class="game-time"><div class="date">'+fmtDate(e.date)+'</div><div class="time">'+fmtTime(e.date)+'</div></div><div class="game-teams"><div class="team-row"><img class="flag" src="'+flagUrl(ha)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+hn+'</span><span class="score-display">'+(hs!==''&&hs!==null?hs:'-')+'</span></div><div class="team-row"><img class="flag" src="'+flagUrl(aa)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+an+'</span><span class="score-display">'+(as!==''&&as!==null?as:'-')+'</span></div></div><div class="game-status '+sc+'">'+sl+'</div>'+(ven?'<div class="game-venue">📍 '+ven+'</div>':'')+'</div>';
   });
   h+='</div>';c.innerHTML=h;
