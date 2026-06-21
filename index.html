@@ -458,7 +458,18 @@ function renderGroups(d) {
   kids.forEach((ch,i)=>{
     const en = ch.standings?.entries||[];
     h+='<div class="group-card"><div class="group-header"><span class="group-label">Grupo '+gL(i)+'</span><span class="group-status">'+(ch.name||'')+'</span></div><table class="group-table"><thead><tr><th>Time</th><th>Pts</th><th>P</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th></tr></thead><tbody>';
-    en.forEach((e,p)=>{
+    // Garante ordenação: pontos > saldo > gols pró
+    const sorted = [...en].sort((a,b)=>{
+      const sa={};(a.stats||[]).forEach(s=>{sa[s.name]=s;});
+      const sb={};(b.stats||[]).forEach(s=>{sb[s.name]=s;});
+      const pa=parseInt(sa.points?.value||0),pb=parseInt(sb.points?.value||0);
+      if(pb!==pa)return pb-pa;
+      const ga=parseInt(sa.pointDifferential?.value||sa.goalDifference?.value||0),gb=parseInt(sb.pointDifferential?.value||sb.goalDifference?.value||0);
+      if(gb!==ga)return gb-ga;
+      const fa=parseInt(sa.pointsFor?.value||sa.goalsFor?.value||0),fb=parseInt(sb.pointsFor?.value||sb.goalsFor?.value||0);
+      return fb-fa;
+    });
+    sorted.forEach((e,p)=>{
       const tm=e.team||{},st={};(e.stats||[]).forEach(s=>{st[s.name]=s;});
       const gp=st.gamesPlayed?.displayValue||'0',w=st.wins?.displayValue||'0',t=st.ties?.displayValue||'0',l=st.losses?.displayValue||'0';
       const pts=st.points?.displayValue||'0',gf=st.pointsFor?.displayValue||st.goalsFor?.displayValue||'0',ga=st.pointsAgainst?.displayValue||st.goalsAgainst?.displayValue||'0',gd=st.pointDifferential?.displayValue||st.goalDifference?.displayValue||'0';
