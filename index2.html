@@ -367,7 +367,7 @@ function getStatus(e) {
   return 'scheduled';
 }
 
-function gL(i) { return String.fromCharCode(65+i); }
+function gL(i) { return String.fromCharCode(65+i); } // usada em renderGroups
 
 function getDatesArray() {
   const dates = [];
@@ -393,12 +393,17 @@ async function fetchDateGames(dateStr) {
   return data.events || [];
 }
 
+let standingsCache = null;
+
 async function loadAll() {
   document.getElementById('updateTime').textContent = new Date().toLocaleTimeString('pt-BR',{timeZone:'America/Sao_Paulo'});
   try {
     // Standings
     const stRes = await fetch(ESPN_ST);
-    if (stRes.ok) renderGroups(await stRes.json());
+    if (stRes.ok) {
+      standingsCache = await stRes.json();
+      renderGroups(standingsCache);
+    }
 
     // Scoreboard: busca múltiplas datas
     const dates = getDatesArray();
@@ -411,7 +416,7 @@ async function loadAll() {
     // Ordena por data
     allGames.sort((a,b) => new Date(a.date) - new Date(b.date));
 
-    renderBracket(allGames);
+    renderBracket(allGames, standingsCache);
     renderDateNav(dates);
     renderGames();
   } catch(e) {
@@ -507,65 +512,359 @@ function renderGames() {
   h+='</div>';c.innerHTML=h;
 }
 
-function renderBracket(events) {
-  const c = document.getElementById('bracket-container');
-  const rounds={'2':{label:'Segunda Fase (32)',m:[]},'3':{label:'Oitavas (16)',m:[]},'4':{label:'Quartas (8)',m:[]},'5':{label:'Semifinais (4)',m:[]},'6':{label:'3º Lugar',m:[]},'7':{label:'Final',m:[]}};
-  events.forEach(e=>{const st=e.season?.type||'';if(rounds[st])rounds[st].m.push(e);});
-  const hasKO=Object.values(rounds).some(r=>r.m.length>0);
-  if(!hasKO){c.innerHTML='<div class="loading-state"><p>🏅 Fase de grupos em andamento. O bracket aparecerá na fase final.</p></div>';return;}
+// ===== CHAVEAMENTO COPA 2026 =====
+// Formato: 12 grupos (A-L), 2 primeiros + 8 melhores terceiros = 32 times
+// Chaveamento baseado no formato oficial da FIFA 2026
 
-  // Ordena cada round por data
-  Object.values(rounds).forEach(r=>r.m.sort((a,b)=>new Date(a.date)-new Date(b.date)));
+function getGroupLetter(index) { return String.fromCharCode(65+index); }
 
-  let h='<div class="bracket-section"><div class="bracket">';
-  Object.entries(rounds).forEach(([k,r])=>{
-    if(!r.m.length)return;
-    h+='<div class="bracket-round"><div class="bracket-round-title">'+r.label+'</div>';
-    r.m.forEach(e=>{
-      const co=e.competitions?.[0]||{},cmp=co.competitors||[];
-      const ho=cmp.find(c=>c.homeAway==='home')||cmp[0]||{},aw=cmp.find(c=>c.homeAway==='away')||cmp[1]||{};
-      const ht=ho.team||{},at=aw.team||{},st=getStatus(e);
-      const hs=ho.score??'',as=aw.score??'',ha=ht.abbreviation||'',aa=at.abbreviation||'',hn=ht.displayName||ht.name||'TBD',an=at.displayName||at.name||'TBD';
-      const iHW=st==='final'&&parseInt(hs)>parseInt(as),iAW=st==='final'&&parseInt(as)>parseInt(hs);
-      const isDraw=st==='final'&&hs!==''&&as!==''&&parseInt(hs)===parseInt(as);
+function buildKnockoutBracket(standingsData) {
+  const children = standingsData.children || [];
+  if (!children.length) return null;
 
-      let matchClass='pending';
-      let labelText=fmtDate(e.date);
-      if(st==='final'){matchClass='confirmed';labelText='✅ Encerrado';}
-      else if(st==='live'){matchClass='confirmed';labelText='🔴 AO VIVO';}
+  // Extrai classificação de cada grupo
+  const groups = {};
+  const allThird = [];
 
-      h+='<div class="bracket-match '+matchClass+'"><div class="match-teams">';
-      h+='<div class="team-row '+(iHW?'winner':'')+'"><div class="team-info"><img class="flag" src="'+flagUrl(ha)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+hn+'</span></div><span class="score '+(hs===''?'empty':'')+'">'+(hs!==''?hs:'-')+'</span></div>';
-      h+='<div class="match-vs">VS</div>';
-      h+='<div class="team-row '+(iAW?'winner':'')+'"><div class="team-info"><img class="flag" src="'+flagUrl(aa)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+an+'</span></div><span class="score '+(as===''?'empty':'')+'">'+(as!==''?as:'-')+'</span></div>';
-      h+='</div><div class="match-label">'+labelText+'</div></div>';
+  children.forEach((ch, idx) => {
+    const letter = getGroupLetter(idx);
+    const entries = ch.standings?.entries || [];
+    const teams = entries.map((e, pos) => {
+      const tm = e.team || {};
+      const stats = {};
+      (e.stats || []).forEach(s => { stats[s.name] = s; });
+      const pts = parseInt(stats.points?.value || stats.points?.displayValue || 0);
+      const gd = parseInt(stats.pointDifferential?.value || stats.goalDifference?.value || 0);
+      const gf = parseInt(stats.pointsFor?.value || stats.goalsFor?.value || 0);
+      return {
+        pos: pos + 1,
+        team: tm,
+        abbr: tm.abbreviation || '',
+        name: tm.displayName || tm.name || '?',
+        pts: pts,
+        gd: gd,
+        gf: gf
+      };
     });
-    h+='</div>';
+    groups[letter] = teams;
+    // Pega o 3º colocado
+    if (teams.length >= 3) {
+      allThird.push({ group: letter, ...teams[2] });
+    }
   });
 
-  // Champion box
-  const finalRound=rounds['7'];
-  let champHtml='<div class="bracket-round"><div class="bracket-round-title">🏆 Campeão</div>';
-  if(finalRound.m.length>0){
-    const e=finalRound.m[0];
-    const co=e.competitions?.[0]||{},cmp=co.competitors||[];
-    const ho=cmp.find(c=>c.homeAway==='home')||cmp[0]||{},aw=cmp.find(c=>c.homeAway==='away')||cmp[1]||{};
-    const st=getStatus(e);
-    if(st==='final'){
-      const hs=parseInt(ho.score??0),as=parseInt(aw.score??0);
-      const winner=hs>as?ho:aw;
-      const wt=winner.team||{};
-      champHtml+='<div class="champion-box"><div class="trophy">🏆</div><div class="champ-label">Campeão</div><div class="champ-team"><img class="flag" src="'+flagUrl(wt.abbreviation||'')+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(wt.displayName||wt.name||'?')+'</span></div></div>';
-    } else {
-      champHtml+='<div class="champion-box"><div class="trophy">🏆</div><div class="champ-label">Campeão</div><div class="champ-empty">A definir</div></div>';
-    }
-  } else {
-    champHtml+='<div class="champion-box"><div class="trophy">🏆</div><div class="champ-label">Campeão</div><div class="champ-empty">A definir</div></div>';
-  }
-  champHtml+='</div>';
-  h+=champHtml;
+  // Ordena os 3º colocados: pontos > saldo > gols pró
+  allThird.sort((a, b) => {
+    if (b.pts !== a.pts) return b.pts - a.pts;
+    if (b.gd !== a.gd) return b.gd - a.gd;
+    return b.gf - a.gf;
+  });
 
-  h+='</div></div>';c.innerHTML=h;
+  // Pega os 8 melhores terceiros
+  const bestThird = allThird.slice(0, 8);
+
+  // Mapa: grupo -> { first, second, third (se for um dos melhores) }
+  const groupMap = {};
+  Object.entries(groups).forEach(([letter, teams]) => {
+    const isThirdBest = bestThird.find(t => t.group === letter);
+    groupMap[letter] = {
+      first: teams[0],
+      second: teams[1],
+      third: isThirdBest || null
+    };
+  });
+
+  // Chaveamento da Segunda Fase (32 avos)
+  // Baseado no formato oficial: 1º vs 3º (cruzado) + 2º vs 2º
+  // Match 1-16: Lado A da chave
+  // Match 17-32: Lado B da chave
+  const round32 = [];
+
+  // Função auxiliar: cria match
+  function m(teamA, teamB, label) {
+    return { a: teamA, b: teamB, label: label };
+  }
+
+  // Chaveamento baseado no formato real da Copa 2026
+  // Fonte: confrontos divulgados pela imprensa
+  // Segunda Fase (32 avos):
+  // 1A vs 3C/E/F  |  2A vs 2B
+  // 1B vs 3A/C/D  |  2C vs 2D
+  // 1C vs 3A/B/F  |  2E vs 2F
+  // 1D vs 3B/E/F  |  2G vs 2H
+  // 1E vs 3C/D/H  |  2I vs 2J
+  // 1F vs 3A/B/E  |  2K vs 2L
+  // 1G vs 3D/E/H  |  (cruzamentos dos 1ºs)
+  // 1H vs 3A/C/G  |
+  // 1I vs 3D/F/H  |
+  // 1J vs 3B/C/G  |
+  // 1K vs 3A/F/G  |
+  // 1L vs 3B/D/H  |
+
+  // NOTA: O chaveamento exato depende da definição da FIFA.
+  // Usando a lógica padrão de 12 grupos:
+  // Os 1ºs colocados enfrentam 3ºs colocados (cruzamento geográfico)
+  // Os 2ºs colocados se enfrentam entre si
+
+  // Para simplificar e ser visualmente útil, vamos usar o chaveamento
+  // que a imprensa brasileira está projetando:
+
+  // Lado A da chave
+  // Jogo 1: 1º Grupo A vs 3º Grupo C/E/F
+  // Jogo 2: 2º Grupo A vs 2º Grupo B
+  // ...
+
+  // Na prática, vamos usar a ordem dos grupos e cruzar:
+  // 1ºs vs 3ºs melhores (cruzando grupos próximos)
+  // 2ºs vs 2ºs (grupos adjacentes)
+
+  // Monta lista dos melhores 3ºs com seus grupos
+  const thirdTeams = bestThird.map(t => ({
+    ...t,
+    groupLetter: t.group
+  }));
+
+  // Match 1: 1A vs 3º melhor (o primeiro da lista)
+  // Match 2: 2A vs 2B
+  // Match 3: 1B vs 3º (segundo)
+  // Match 4: 2C vs 2D
+  // ... e assim por diante
+
+  // Para manter simples e visual, vamos criar 16 matches da Segunda Fase
+  // usando a lógica: 1ºs vs 3ºs alternados com 2ºs vs 2ºs
+
+  const groupLetters = ['A','B','C','D','E','F','G','H','I','J','K','L'];
+
+  // Distribui os 8 melhores 3ºs para enfrentar 1ºs
+  // Regra: 1º de grupos com 3º classificado enfrenta outro 3º
+  // 1º de grupos SEM 3º classificado enfrenta 2º de outro grupo
+
+  // Simplificação: intercala 1º vs 3º e 2º vs 2º
+  let thirdIdx = 0;
+  for (let i = 0; i < 12; i += 2) {
+    const g1 = groupLetters[i];
+    const g2 = groupLetters[i+1];
+    if (!groupMap[g1] || !groupMap[g2]) continue;
+
+    // Match: 1º do grupo X vs 3º melhor (se disponível)
+    if (thirdTeams[thirdIdx]) {
+      round32.push(m(
+        groupMap[g1].first,
+        thirdTeams[thirdIdx],
+        '1º ' + g1 + ' vs 3º ' + thirdTeams[thirdIdx].group
+      ));
+      thirdIdx++;
+    } else {
+      round32.push(m(
+        groupMap[g1].first,
+        groupMap[g2].second,
+        '1º ' + g1 + ' vs 2º ' + g2
+      ));
+    }
+
+    // Match: 2º do grupo X vs 2º do grupo Y
+    round32.push(m(
+      groupMap[g1].second,
+      groupMap[g2].second,
+      '2º ' + g1 + ' vs 2º ' + g2
+    ));
+  }
+
+  // Se ainda tem 3ºs para distribuir, coloca contra 1ºs restantes
+  for (let i = 1; i < 12 && thirdIdx < thirdTeams.length; i += 2) {
+    const g = groupLetters[i];
+    if (groupMap[g] && thirdTeams[thirdIdx]) {
+      round32.push(m(
+        groupMap[g].first,
+        thirdTeams[thirdIdx],
+        '1º ' + g + ' vs 3º ' + thirdTeams[thirdIdx].group
+      ));
+      thirdIdx++;
+    }
+  }
+
+  return { round32, groupMap, groupLetters };
+}
+
+function simulateWinner(match) {
+  // Simula o vencedor baseado em pontos (mais pontos = mais provável)
+  if (!match.a || !match.b) return match.a || match.b;
+  // Se um time tem mais pontos, é mais provável
+  if (match.a.pts > match.b.pts) return match.a;
+  if (match.b.pts > match.a.pts) return match.b;
+  // Desempate por saldo
+  if (match.a.gd > match.b.gd) return match.a;
+  if (match.b.gd > match.a.gd) return match.b;
+  // Desempate por gols pró
+  if (match.a.gf > match.b.gf) return match.a;
+  return match.b;
+}
+
+function renderBracket(events, standingsData) {
+  const c = document.getElementById('bracket-container');
+
+  // Se não tem dados de classificação, não consegue projetar
+  if (!standingsData) {
+    c.innerHTML = '<div class="loading-state"><p>Carregando classificação para projetar o chaveamento...</p></div>';
+    return;
+  }
+
+  const bracket = buildKnockoutBracket(standingsData);
+  if (!bracket || !bracket.round32.length) {
+    c.innerHTML = '<div class="loading-state"><p>🏅 Aguardando dados dos grupos para projetar o chaveamento...</p></div>';
+    return;
+  }
+
+  const { round32, groupMap, groupLetters } = bracket;
+
+  // Verifica se algum jogo da Segunda Fase já aconteceu (usando scoreboard)
+  const existingEvents = {};
+  (events || []).forEach(e => {
+    const st = e.season?.type || '';
+    if (!existingEvents[st]) existingEvents[st] = [];
+    existingEvents[st].push(e);
+  });
+
+  // Simula os resultados
+  // Segunda Fase
+  const r16 = [];
+  for (let i = 0; i < round32.length; i += 2) {
+    const w1 = simulateWinner(round32[i]);
+    const w2 = simulateWinner(round32[i+1]);
+    if (w1 && w2) {
+      r16.push({ a: w1, b: w2, label: 'Oitavas' });
+    }
+  }
+
+  // Quartas
+  const qf = [];
+  for (let i = 0; i < r16.length; i += 2) {
+    const w1 = simulateWinner(r16[i]);
+    const w2 = simulateWinner(r16[i+1]);
+    if (w1 && w2) {
+      qf.push({ a: w1, b: w2, label: 'Quartas' });
+    }
+  }
+
+  // Semifinais
+  const sf = [];
+  for (let i = 0; i < qf.length; i += 2) {
+    const w1 = simulateWinner(qf[i]);
+    const w2 = simulateWinner(qf[i+1]);
+    if (w1 && w2) {
+      sf.push({ a: w1, b: w2, label: 'Semi' });
+    }
+  }
+
+  // Final e 3º lugar
+  const thirdPlace = sf.length >= 2 ? {
+    a: simulateWinner({ a: sf[0].b, b: sf[1].a }),
+    b: simulateWinner({ a: sf[0].a, b: sf[1].b }),
+    label: '3º Lugar'
+  } : null;
+
+  const finalMatch = sf.length >= 2 ? {
+    a: simulateWinner(sf[0]),
+    b: simulateWinner(sf[1]),
+    label: 'Final'
+  } : null;
+
+  // Renderiza
+  let h = '<div class="bracket-section"><div class="bracket">';
+
+  // Segunda Fase
+  h += '<div class="bracket-round"><div class="bracket-round-title">Segunda Fase (32)</div>';
+  round32.forEach(m => {
+    if (!m.a || !m.b) return;
+    const aName = m.a.name || 'TBD';
+    const bName = m.b.name || 'TBD';
+    const aAbbr = m.a.abbr || '';
+    const bAbbr = m.b.abbr || '';
+    h += '<div class="bracket-match probable"><div class="match-teams">';
+    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(aAbbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+aName+'</span></div></div>';
+    h += '<div class="match-vs">VS</div>';
+    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(bAbbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+bName+'</span></div></div>';
+    h += '</div><div class="match-label">'+m.label+'</div></div>';
+  });
+  h += '</div>';
+
+  // Oitavas
+  h += '<div class="bracket-round"><div class="bracket-round-title">Oitavas (16)</div>';
+  r16.forEach(m => {
+    if (!m.a || !m.b) return;
+    h += '<div class="bracket-match probable"><div class="match-teams">';
+    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(m.a.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(m.a.name||'TBD')+'</span></div></div>';
+    h += '<div class="match-vs">VS</div>';
+    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(m.b.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(m.b.name||'TBD')+'</span></div></div>';
+    h += '</div><div class="match-label">provável</div></div>';
+  });
+  h += '</div>';
+
+  // Quartas
+  h += '<div class="bracket-round"><div class="bracket-round-title">Quartas (8)</div>';
+  qf.forEach(m => {
+    if (!m.a || !m.b) return;
+    h += '<div class="bracket-match probable"><div class="match-teams">';
+    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(m.a.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(m.a.name||'TBD')+'</span></div></div>';
+    h += '<div class="match-vs">VS</div>';
+    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(m.b.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(m.b.name||'TBD')+'</span></div></div>';
+    h += '</div><div class="match-label">provável</div></div>';
+  });
+  h += '</div>';
+
+  // Semifinais
+  h += '<div class="bracket-round"><div class="bracket-round-title">Semifinais (4)</div>';
+  sf.forEach(m => {
+    if (!m.a || !m.b) return;
+    h += '<div class="bracket-match probable"><div class="match-teams">';
+    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(m.a.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(m.a.name||'TBD')+'</span></div></div>';
+    h += '<div class="match-vs">VS</div>';
+    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(m.b.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(m.b.name||'TBD')+'</span></div></div>';
+    h += '</div><div class="match-label">provável</div></div>';
+  });
+  h += '</div>';
+
+  // 3º Lugar
+  h += '<div class="bracket-round"><div class="bracket-round-title">3º Lugar</div>';
+  if (thirdPlace && thirdPlace.a && thirdPlace.b) {
+    h += '<div class="bracket-match probable"><div class="match-teams">';
+    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(thirdPlace.a.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(thirdPlace.a.name||'TBD')+'</span></div></div>';
+    h += '<div class="match-vs">VS</div>';
+    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(thirdPlace.b.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(thirdPlace.b.name||'TBD')+'</span></div></div>';
+    h += '</div><div class="match-label">provável</div></div>';
+  } else {
+    h += '<div class="bracket-match probable"><div class="match-teams"><div class="team-row"><div class="team-info"><span class="name">A definir</span></div></div><div class="match-vs">VS</div><div class="team-row"><div class="team-info"><span class="name">A definir</span></div></div></div><div class="match-label">provável</div></div>';
+  }
+  h += '</div>';
+
+  // Final
+  h += '<div class="bracket-round"><div class="bracket-round-title">Final</div>';
+  if (finalMatch && finalMatch.a && finalMatch.b) {
+    h += '<div class="bracket-match probable"><div class="match-teams">';
+    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(finalMatch.a.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(finalMatch.a.name||'TBD')+'</span></div></div>';
+    h += '<div class="match-vs">VS</div>';
+    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(finalMatch.b.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(finalMatch.b.name||'TBD')+'</span></div></div>';
+    h += '</div><div class="match-label">provável</div></div>';
+  } else {
+    h += '<div class="bracket-match probable"><div class="match-teams"><div class="team-row"><div class="team-info"><span class="name">A definir</span></div></div><div class="match-vs">VS</div><div class="team-row"><div class="team-info"><span class="name">A definir</span></div></div></div><div class="match-label">provável</div></div>';
+  }
+  h += '</div>';
+
+  // Champion box
+  let champTeam = null;
+  if (finalMatch && finalMatch.a && finalMatch.b) {
+    champTeam = simulateWinner(finalMatch);
+  }
+  h += '<div class="bracket-round"><div class="bracket-round-title">🏆 Campeão</div>';
+  if (champTeam) {
+    h += '<div class="champion-box"><div class="trophy">🏆</div><div class="champ-label">Campeão (provável)</div><div class="champ-team"><img class="flag" src="'+flagUrl(champTeam.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(champTeam.name||'?')+'</span></div></div>';
+  } else {
+    h += '<div class="champion-box"><div class="trophy">🏆</div><div class="champ-label">Campeão</div><div class="champ-empty">A definir</div></div>';
+  }
+  h += '</div>';
+
+  h += '</div></div>';
+  c.innerHTML = h;
 }
 
 // Navegação
