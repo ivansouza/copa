@@ -91,26 +91,175 @@
   .pts-cell { font-weight: 800; font-size: .95rem; color: #f59e0b; }
   .gd-neg { color: #ef4444; }
   .gd-pos { color: #22c55e; }
-  .bracket-section { margin-top: 1rem; overflow-x: auto; padding-bottom: 1rem; }
-  .bracket { display: flex; gap: 20px; min-width: 1100px; justify-content: center; padding: 1rem 0; }
-  .bracket-round { display: flex; flex-direction: column; justify-content: space-around; gap: 12px; min-width: 200px; }
-  .bracket-round-title { text-align: center; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #64748b; padding-bottom: 6px; border-bottom: 1px solid #2d3a4e; margin-bottom: 4px; }
-  .bracket-match { background: linear-gradient(145deg, #1e293b, #1a2332); border: 1px solid #2d3a4e; border-radius: 10px; padding: 10px 14px; transition: transform .15s, box-shadow .15s; }
-  .bracket-match:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(0,0,0,.3); }
-  .bracket-match .match-teams { display: flex; flex-direction: column; gap: 4px; }
-  .bracket-match .team-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 3px 0; }
-  .bracket-match .team-row .team-info { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; }
-  .bracket-match .team-row .team-info .flag { width: 18px; height: 13px; border-radius: 2px; object-fit: cover; flex-shrink: 0; }
-  .bracket-match .team-row .team-info .name { font-size: .78rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .bracket-match .team-row .score { font-weight: 800; font-size: .85rem; color: #f59e0b; min-width: 22px; text-align: center; }
+  /* ===== BRACKET MATA-MATA ===== */
+  .bracket-section {
+    margin-top: 1rem;
+    overflow-x: auto;
+    padding-bottom: 1rem;
+  }
+  .bracket {
+    display: flex;
+    gap: 20px;
+    min-width: 1100px;
+    justify-content: center;
+    padding: 1rem 0;
+  }
+  .bracket-round {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    gap: 12px;
+    min-width: 200px;
+  }
+  .bracket-round-title {
+    text-align: center;
+    font-size: .75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #64748b;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #2d3a4e;
+    margin-bottom: 4px;
+  }
+  .bracket-match {
+    background: linear-gradient(145deg, #1e293b, #1a2332);
+    border: 1px solid #2d3a4e;
+    border-radius: 10px;
+    padding: 10px 14px;
+    transition: transform .15s, box-shadow .15s;
+    position: relative;
+  }
+  .bracket-match:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(0,0,0,.3);
+  }
+  .bracket-match .match-teams {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .bracket-match .team-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 3px 0;
+  }
+  .bracket-match .team-row .team-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+  }
+  .bracket-match .team-row .team-info .flag {
+    width: 18px; height: 13px;
+    border-radius: 2px;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+  .bracket-match .team-row .team-info .name {
+    font-size: .78rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .bracket-match .team-row .score {
+    font-weight: 800;
+    font-size: .85rem;
+    color: #f59e0b;
+    min-width: 22px;
+    text-align: center;
+  }
   .bracket-match .team-row .score.empty { color: #475569; }
   .bracket-match .team-row.winner .team-info .name { color: #22c55e; }
   .bracket-match .team-row.winner .score { color: #22c55e; }
-  .bracket-match .match-label { font-size: .6rem; color: #475569; text-align: center; margin-top: 4px; padding-top: 4px; border-top: 1px solid #1e293b; }
-  .bracket-match.pending { opacity: .5; }
+  .bracket-match .match-vs {
+    text-align: center;
+    font-size: .65rem;
+    color: #475569;
+    font-weight: 500;
+    letter-spacing: 1px;
+    line-height: 1;
+  }
+  .bracket-match .match-label {
+    font-size: .6rem;
+    color: #475569;
+    text-align: center;
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px solid #1e293b;
+  }
+  .bracket-match.pending {
+    opacity: .5;
+  }
   .bracket-match.pending .team-row .team-info .name { color: #64748b; }
-  .bracket-match.confirmed { border-color: #22c55e44; }
-  .bracket-match.confirmed .match-label { color: #22c55e; font-weight: 600; }
+
+  /* Confirmado vs Provável */
+  .bracket-match.confirmed {
+    border-color: #22c55e44;
+  }
+  .bracket-match.confirmed .match-label {
+    color: #22c55e;
+    font-weight: 600;
+  }
+  .bracket-match.probable {
+    border-color: #f59e0b44;
+    border-style: dashed;
+  }
+  .bracket-match.probable .match-label {
+    color: #f59e0b;
+  }
+  .bracket-match.probable .team-row .team-info .name::after {
+    content: ' (provável)';
+    font-size: .6rem;
+    color: #f59e0b;
+    font-weight: 400;
+    margin-left: 2px;
+  }
+
+  /* Campeão */
+  .champion-box {
+    background: linear-gradient(135deg, #f59e0b22, #ef444422);
+    border: 2px solid #f59e0b;
+    border-radius: 14px;
+    padding: 16px;
+    text-align: center;
+    min-width: 180px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .champion-box .trophy { font-size: 2rem; }
+  .champion-box .champ-label {
+    font-size: .65rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #f59e0b;
+    font-weight: 700;
+  }
+  .champion-box .champ-team {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .champion-box .champ-team .flag { width: 32px; height: 22px; border-radius: 3px; }
+  .champion-box .champ-team .name {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #fbbf24;
+  }
+  .champion-box .champ-empty {
+    color: #475569;
+    font-size: .85rem;
+    font-weight: 500;
+  }
+
   .loading-state, .error-state { grid-column: 1 / -1; text-align: center; padding: 4rem 2rem; }
   .loading-state .spinner { width: 40px; height: 40px; border: 3px solid #2d3a4e; border-top-color: #f59e0b; border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 1rem; }
   @keyframes spin { to { transform: rotate(360deg); } }
@@ -364,6 +513,10 @@ function renderBracket(events) {
   events.forEach(e=>{const st=e.season?.type||'';if(rounds[st])rounds[st].m.push(e);});
   const hasKO=Object.values(rounds).some(r=>r.m.length>0);
   if(!hasKO){c.innerHTML='<div class="loading-state"><p>🏅 Fase de grupos em andamento. O bracket aparecerá na fase final.</p></div>';return;}
+
+  // Ordena cada round por data
+  Object.values(rounds).forEach(r=>r.m.sort((a,b)=>new Date(a.date)-new Date(b.date)));
+
   let h='<div class="bracket-section"><div class="bracket">';
   Object.entries(rounds).forEach(([k,r])=>{
     if(!r.m.length)return;
@@ -374,10 +527,44 @@ function renderBracket(events) {
       const ht=ho.team||{},at=aw.team||{},st=getStatus(e);
       const hs=ho.score??'',as=aw.score??'',ha=ht.abbreviation||'',aa=at.abbreviation||'',hn=ht.displayName||ht.name||'TBD',an=at.displayName||at.name||'TBD';
       const iHW=st==='final'&&parseInt(hs)>parseInt(as),iAW=st==='final'&&parseInt(as)>parseInt(hs);
-      h+='<div class="bracket-match '+(st==='scheduled'?'pending':'confirmed')+'"><div class="match-teams"><div class="team-row '+(iHW?'winner':'')+'"><div class="team-info"><img class="flag" src="'+flagUrl(ha)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+hn+'</span></div><span class="score '+(hs===''?'empty':'')+'">'+(hs!==''?hs:'-')+'</span></div><div class="team-row '+(iAW?'winner':'')+'"><div class="team-info"><img class="flag" src="'+flagUrl(aa)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+an+'</span></div><span class="score '+(as===''?'empty':'')+'">'+(as!==''?as:'-')+'</span></div></div><div class="match-label">'+(st==='final'?'✅ Encerrado':st==='live'?'🔴 AO VIVO':fmtDate(e.date))+'</div></div>';
+      const isDraw=st==='final'&&hs!==''&&as!==''&&parseInt(hs)===parseInt(as);
+
+      let matchClass='pending';
+      let labelText=fmtDate(e.date);
+      if(st==='final'){matchClass='confirmed';labelText='✅ Encerrado';}
+      else if(st==='live'){matchClass='confirmed';labelText='🔴 AO VIVO';}
+
+      h+='<div class="bracket-match '+matchClass+'"><div class="match-teams">';
+      h+='<div class="team-row '+(iHW?'winner':'')+'"><div class="team-info"><img class="flag" src="'+flagUrl(ha)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+hn+'</span></div><span class="score '+(hs===''?'empty':'')+'">'+(hs!==''?hs:'-')+'</span></div>';
+      h+='<div class="match-vs">VS</div>';
+      h+='<div class="team-row '+(iAW?'winner':'')+'"><div class="team-info"><img class="flag" src="'+flagUrl(aa)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+an+'</span></div><span class="score '+(as===''?'empty':'')+'">'+(as!==''?as:'-')+'</span></div>';
+      h+='</div><div class="match-label">'+labelText+'</div></div>';
     });
     h+='</div>';
   });
+
+  // Champion box
+  const finalRound=rounds['7'];
+  let champHtml='<div class="bracket-round"><div class="bracket-round-title">🏆 Campeão</div>';
+  if(finalRound.m.length>0){
+    const e=finalRound.m[0];
+    const co=e.competitions?.[0]||{},cmp=co.competitors||[];
+    const ho=cmp.find(c=>c.homeAway==='home')||cmp[0]||{},aw=cmp.find(c=>c.homeAway==='away')||cmp[1]||{};
+    const st=getStatus(e);
+    if(st==='final'){
+      const hs=parseInt(ho.score??0),as=parseInt(aw.score??0);
+      const winner=hs>as?ho:aw;
+      const wt=winner.team||{};
+      champHtml+='<div class="champion-box"><div class="trophy">🏆</div><div class="champ-label">Campeão</div><div class="champ-team"><img class="flag" src="'+flagUrl(wt.abbreviation||'')+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(wt.displayName||wt.name||'?')+'</span></div></div>';
+    } else {
+      champHtml+='<div class="champion-box"><div class="trophy">🏆</div><div class="champ-label">Campeão</div><div class="champ-empty">A definir</div></div>';
+    }
+  } else {
+    champHtml+='<div class="champion-box"><div class="trophy">🏆</div><div class="champ-label">Campeão</div><div class="champ-empty">A definir</div></div>';
+  }
+  champHtml+='</div>';
+  h+=champHtml;
+
   h+='</div></div>';c.innerHTML=h;
 }
 
