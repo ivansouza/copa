@@ -368,6 +368,57 @@ const PT_NAMES = {
   'Korea Republic':'Coreia do Sul','Korea DPR':'Coreia do Norte','China PR':'China',
   'Chinese Taipei':'Taipé Chinês','IR Iran':'Irã','Czechia':'Tchéquia',
   'Bosnia-Herzegovina':'Bósnia','Côte d\'Ivoire':'Costa do Marfim',
+  'Italy':'Itália','Chile':'Chile','Peru':'Peru','Venezuela':'Venezuela',
+  'Bolivia':'Bolívia','Poland':'Polônia','Denmark':'Dinamarca','Ukraine':'Ucrânia',
+  'Russia':'Rússia','Serbia':'Sérvia','Romania':'Romênia','Greece':'Grécia',
+  'Hungary':'Hungria','Slovakia':'Eslováquia','Slovenia':'Eslovênia','Nigeria':'Nigéria',
+  'Cameroon':'Camarões','Mali':'Mali','Burkina Faso':'Burquina Faso','Zambia':'Zâmbia',
+  'Guinea':'Guiné','Comoros':'Comores','Equatorial Guinea':'Guiné Equatorial',
+  'Sudan':'Sudão','South Sudan':'Sudão do Sul','Togo':'Togo','Namibia':'Namíbia',
+  'Angola':'Angola','Mozambique':'Moçambique','Tanzania':'Tanzânia','Kenya':'Quênia',
+  'Ethiopia':'Etiópia','Uganda':'Uganda','Rwanda':'Ruanda','Gambia':'Gâmbia',
+  'Sierra Leone':'Serra Leoa','Liberia':'Libéria','Benin':'Benim','Niger':'Níger',
+  'Chad':'Chade','Central African Republic':'República Centro-Africana',
+  'Congo':'Congo','Gabon':'Gabão','Mauritania':'Mauritânia','Malawi':'Malauí',
+  'Seychelles':'Seicheles','Mauritius':'Maurício','Eswatini':'Essuatíni',
+  'Lesotho':'Lesoto','Botswana':'Botsuana','Zimbabwe':'Zimbábue',
+  'India':'Índia','Pakistan':'Paquistão','Bangladesh':'Bangladesh',
+  'Sri Lanka':'Sri Lanka','Nepal':'Nepal','Bhutan':'Butão','Maldives':'Maldivas',
+  'Thailand':'Tailândia','Vietnam':'Vietnã','Indonesia':'Indonésia',
+  'Philippines':'Filipinas','Malaysia':'Malásia','Singapore':'Cingapura',
+  'Myanmar':'Mianmar','Cambodia':'Camboja','Laos':'Laos','Brunei':'Brunei',
+  'Timor-Leste':'Timor-Leste','Mongolia':'Mongólia','Kazakhstan':'Cazaquistão',
+  'Kyrgyzstan':'Quirguistão','Tajikistan':'Tadjiquistão','Turkmenistan':'Turcomenistão',
+  'Afghanistan':'Afeganistão','Syria':'Síria','Lebanon':'Líbano','Oman':'Omã',
+  'Yemen':'Iêmen','Kuwait':'Kuwait','Bahrain':'Barein','Palestine':'Palestina',
+  'Israel':'Israel','Cyprus':'Chipre','Malta':'Malta','Iceland':'Islândia',
+  'Ireland':'Irlanda','Northern Ireland':'Irlanda do Norte','Wales':'País de Gales',
+  'Finland':'Finlândia','Bulgaria':'Bulgária','Albania':'Albânia','North Macedonia':'Macedônia do Norte',
+  'Montenegro':'Montenegro','Kosovo':'Kosovo','Belarus':'Bielorrússia',
+  'Lithuania':'Lituânia','Latvia':'Letônia','Estonia':'Estônia','Georgia':'Geórgia',
+  'Armenia':'Armênia','Azerbaijan':'Azerbaijão','Moldova':'Moldávia',
+  'Fiji':'Fiji','Solomon Islands':'Ilhas Salomão','Vanuatu':'Vanuatu',
+  'New Caledonia':'Nova Caledônia','Tahiti':'Taiti','Papua New Guinea':'Papua-Nova Guiné',
+  'Samoa':'Samoa','Tonga':'Tonga','Cook Islands':'Ilhas Cook',
+  'American Samoa':'Samoa Americana','Cuba':'Cuba','Jamaica':'Jamaica',
+  'Trinidad and Tobago':'Trinidad e Tobago','Guyana':'Guiana','Suriname':'Suriname',
+  'Costa Rica':'Costa Rica','Honduras':'Honduras','El Salvador':'El Salvador',
+  'Guatemala':'Guatemala','Nicaragua':'Nicarágua','Belize':'Belize',
+  'Dominican Republic':'República Dominicana','Puerto Rico':'Porto Rico',
+  'Antigua and Barbuda':'Antígua e Barbuda','Saint Kitts and Nevis':'São Cristóvão e Neves',
+  'Dominica':'Dominica','Saint Lucia':'Santa Lúcia','Saint Vincent':'São Vicente',
+  'Grenada':'Granada','Barbados':'Barbados','Bermuda':'Bermudas',
+  'Bahamas':'Bahamas','Cayman Islands':'Ilhas Cayman','Turks and Caicos':'Turcas e Caicos',
+  'Montserrat':'Montserrat','British Virgin Islands':'Ilhas Virgens Britânicas',
+  'US Virgin Islands':'Ilhas Virgens Americanas','Anguilla':'Anguila',
+  'Aruba':'Aruba','Curacao':'Curaçau','Sint Maarten':'São Martinho',
+  'Greenland':'Groenlândia','Faroe Islands':'Ilhas Faroé','Gibraltar':'Gibraltar',
+  'Liechtenstein':'Liechtenstein','Luxembourg':'Luxemburgo','Monaco':'Mônaco',
+  'Andorra':'Andorra','San Marino':'San Marino','Vatican City':'Vaticano',
+  'Sao Tome and Principe':'São Tomé e Príncipe','Djibouti':'Djibuti',
+  'Eritrea':'Eritreia','Somalia':'Somália','Burundi':'Burundi',
+  'South Africa':'África do Sul','Cape Verde':'Cabo Verde',
+  'Hong Kong':'Hong Kong','Macau':'Macau','Chinese Taipei':'Taipé Chinês',
 };
 function pt(name) { return PT_NAMES[name] || name; }
 const COPA_START = new Date('2026-06-11T00:00:00-03:00');
@@ -520,11 +571,13 @@ function renderGames() {
     });
   }
 
-  // Filtro por time
+  // Filtro por time (inglês + português)
   if (f) {
-    filtered = filtered.filter(e => (e.competitions?.[0]?.competitors||[]).some(c =>
-      (c.team?.displayName||c.team?.name||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').includes(f)
-    ));
+    filtered = filtered.filter(e => (e.competitions?.[0]?.competitors||[]).some(c => {
+      const nomeEn = (c.team?.displayName||c.team?.name||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+      const nomePt = (PT_NAMES[c.team?.displayName||c.team?.name]||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+      return nomeEn.includes(f) || nomePt.includes(f);
+    }));
   }
 
   document.getElementById('gameCount').textContent = filtered.length + ' jogo' + (filtered.length !== 1 ? 's' : '');
