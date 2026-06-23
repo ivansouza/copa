@@ -94,6 +94,7 @@
   .pts-cell { font-weight: 800; font-size: .95rem; color: #f59e0b; }
   .gd-neg { color: #ef4444; }
   .gd-pos { color: #22c55e; }
+  .diff-row { background: rgba(234,179,8,0.08) !important; }
   /* ===== BRACKET MATA-MATA ===== */
   .bracket-section {
     margin-top: 1rem;
@@ -537,9 +538,10 @@ function renderGroups(d) {
       const tm=e.team||{}, ab=tm.abbreviation||'';
       const local = stats[ab];
       const espnSt = {}; (e.stats||[]).forEach(s => { espnSt[s.name] = s; });
+      const espnPts = parseInt(espnSt.points?.value||espnSt.points?.displayValue||0);
       // Se temos dados locais (time jogou), usa local. Senão, usa ESPN.
       const s = local && local.gp > 0 ? local : {
-        pts: parseInt(espnSt.points?.value||espnSt.points?.displayValue||0),
+        pts: espnPts,
         gp: parseInt(espnSt.gamesPlayed?.value||espnSt.gamesPlayed?.displayValue||0),
         w: parseInt(espnSt.wins?.value||espnSt.wins?.displayValue||0),
         t: parseInt(espnSt.ties?.value||espnSt.ties?.displayValue||0),
@@ -547,7 +549,7 @@ function renderGroups(d) {
         gf: parseInt(espnSt.pointsFor?.value||espnSt.goalsFor?.value||0),
         ga: parseInt(espnSt.pointsAgainst?.value||espnSt.goalsAgainst?.value||0)
       };
-      return { ...s, ab, dn: pt(tm.displayName||tm.name||'?'), rk: (e.note||{}).rank||0 };
+      return { ...s, ab, dn: pt(tm.displayName||tm.name||'?'), rk: (e.note||{}).rank||0, diff: local && local.gp > 0 && s.pts !== espnPts };
     });
     // Ordena: pontos > saldo > gols pró
     localStats.sort((a,b) => {
@@ -560,6 +562,7 @@ function renderGroups(d) {
       const gd = s.gf - s.ga;
       const gdStr = gd > 0 ? '+'+gd : String(gd);
       let rc=''; if(s.rk===1)rc='qualified-1'; else if(s.rk===2)rc='qualified-2';
+      if (s.diff) rc += ' diff-row';
       const gc = gd < 0 ? 'gd-neg' : (gd === 0 ? '' : 'gd-pos');
       h+='<tr class="'+rc+'"><td><div class="team-cell"><span class="pos">'+(p+1)+'</span><img class="flag" src="'+flagUrl(s.ab)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+s.dn+'</span></div></td><td class="pts-cell">'+s.pts+'</td><td>'+s.gp+'</td><td>'+s.w+'</td><td>'+s.t+'</td><td>'+s.l+'</td><td>'+s.gf+'</td><td>'+s.ga+'</td><td class="'+gc+'">'+gdStr+'</td></tr>';
     });
