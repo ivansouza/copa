@@ -461,7 +461,7 @@ function getDatesArray() {
 }
 
 async function fetchDateGames(dateStr) {
-  const url = ESPN_SB + '?dates=' + dateStr + '&limit=50';
+  const url = ESPN_SB + '?dates=' + dateStr + '&limit=50&_=' + Date.now();
   const res = await fetch(url);
   if (!res.ok) return [];
   const data = await res.json();
@@ -474,7 +474,7 @@ async function loadAll() {
   document.getElementById('updateTime').textContent = new Date().toLocaleTimeString('pt-BR',{timeZone:'America/Sao_Paulo'});
   try {
     // Standings
-    const stRes = await fetch(ESPN_ST);
+    const stRes = await fetch(ESPN_ST + '?_=' + Date.now());
     if (stRes.ok) {
       standingsCache = await stRes.json();
       renderGroups(standingsCache);
