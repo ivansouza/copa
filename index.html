@@ -507,9 +507,10 @@ function renderGroups(d) {
   const kids = d.children||[];
   if(!kids.length){c.innerHTML='<div class="error-state">Nenhum grupo encontrado.</div>';return;}
 
-  // Calcula estatísticas a partir dos jogos (allGames)
+  // Calcula estatísticas a partir dos jogos ENCERRADOS (allGames)
   const stats = {}; // { abbreviation: { pts, gp, w, t, l, gf, ga } }
   (allGames||[]).forEach(g => {
+    if (getStatus(g) !== 'final') return; // só conta jogos encerrados
     const co = g.competitions?.[0]||{};
     const cmp = co.competitors||[];
     if (cmp.length < 2) return;
@@ -664,9 +665,10 @@ function buildRound32(standingsData) {
   const children = standingsData.children || [];
   if (!children.length) return null;
 
-  // Calcula stats localmente (mesma lógica do renderGroups)
+  // Calcula stats localmente (só jogos encerrados)
   const localStats = {};
   (allGames||[]).forEach(g => {
+    if (getStatus(g) !== 'final') return;
     const co = g.competitions?.[0]||{}, cmp = co.competitors||[];
     if (cmp.length < 2) return;
     const home = cmp[0], away = cmp[1];
@@ -674,7 +676,7 @@ function buildRound32(standingsData) {
     if (!ha || !aa) return;
     const hg = parseInt(home.score)||0, ag = parseInt(away.score)||0;
     if (!localStats[ha]) localStats[ha] = { pts:0, gp:0, gf:0, ga:0 };
-    if (!localStats[aa]) localStats[aa] = { pts:0, gp:0, gf:0, ga:0 };
+    if (!localStats[aa]) localStats[aa] = { pts:0, gp:0, w:0, t:0, l:0, gf:0, ga:0 };
     localStats[ha].gp++; localStats[aa].gp++;
     localStats[ha].gf += hg; localStats[ha].ga += ag;
     localStats[aa].gf += ag; localStats[aa].ga += hg;
