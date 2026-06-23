@@ -560,7 +560,7 @@ function renderGroups(d) {
   // Calcula estatísticas a partir dos jogos ENCERRADOS (allGames)
   const stats = {}; // { abbreviation: { pts, gp, w, t, l, gf, ga } }
   (allGames||[]).forEach(g => {
-    if (getStatus(g) !== 'final') return; // só conta jogos encerrados
+    if (getStatus(g) === 'scheduled') return; // pula só os programados
     const co = g.competitions?.[0]||{};
     const cmp = co.competitors||[];
     if (cmp.length < 2) return;
@@ -732,7 +732,7 @@ function buildRound32(standingsData) {
   // Calcula stats localmente (só jogos encerrados)
   const localStats = {};
   (allGames||[]).forEach(g => {
-    if (getStatus(g) !== 'final') return;
+    if (getStatus(g) === 'scheduled') return;
     const co = g.competitions?.[0]||{}, cmp = co.competitors||[];
     if (cmp.length < 2) return;
     const home = cmp[0], away = cmp[1];
