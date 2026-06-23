@@ -617,7 +617,7 @@ function renderGames() {
     }));
   }
 
-  document.getElementById('gameCount').textContent = filtered.length + ' jogo' + (filtered.length !== 1 ? 's' : '');
+  document.getElementById('gameCount').textContent = filtered.length + ' de 104 jogos';
 
   if (!filtered.length) {
     c.innerHTML = '<div class="error-state">Nenhum jogo encontrado'+(f?' para "'+f+'"':'')+'.</div>';
