@@ -332,6 +332,7 @@
 
   <div id="section-bracket" class="section-content" style="display:none">
     <div class="section-title">🏅 Fase Final <span class="bar"></span></div>
+    <div style="font-size:.75rem;color:#64748b;margin-bottom:12px;text-align:center;">Horários em BRT (Brasília) — sujeitos a confirmação</div>
     <div id="bracket-container"><div class="loading-state"><div class="spinner"></div><p>Carregando bracket...</p></div></div>
   </div>
 
@@ -717,11 +718,13 @@ function buildRound32(standingsData) {
   // Datas prováveis para Segunda Fase (fontes: FIFA, Wikipedia)
   // Fase de grupos: 11-27/06 | 32 avos: 28/06-03/07 | Oitavas: 04-07/07
   // Quartas: 09-11/07 | Semi: 14-15/07 | 3º: 18/07 | Final: 19/07
+  // Horários em BRT (Brasília). Jogos na Costa Leste EUA (UTC-4) = BRT-1,
+  // mas alguns no Centro-Oeste (UTC-5) = BRT-2. Estimativa média BRT.
   const r32dates = [
-    '28/06 13:00','28/06 16:00','28/06 19:00','29/06 13:00',
-    '29/06 16:00','29/06 19:00','30/06 13:00','30/06 16:00',
-    '30/06 19:00','01/07 13:00','01/07 16:00','01/07 19:00',
-    '02/07 13:00','02/07 16:00','02/07 19:00','03/07 13:00'
+    '28/06 14:00','28/06 17:00','28/06 20:00','29/06 14:00',
+    '29/06 17:00','29/06 20:00','30/06 14:00','30/06 17:00',
+    '30/06 20:00','01/07 14:00','01/07 17:00','01/07 20:00',
+    '02/07 14:00','02/07 17:00','02/07 20:00','03/07 14:00'
   ];
 
   round32.push({ a: g('A',1), b: g('B',1), label: '2º A vs 2º B', date: r32dates[0] });
@@ -836,11 +839,11 @@ function renderBracket(events, standingsData) {
   h += '</div>';
 
   // Datas prováveis para fases seguintes
-  const r16dates = ['04/07 13:00','04/07 16:00','04/07 19:00','05/07 13:00','05/07 16:00','05/07 19:00','06/07 13:00','06/07 16:00','06/07 19:00','07/07 13:00','07/07 16:00','07/07 19:00'];
-  const qfDates  = ['09/07 13:00','09/07 16:00','10/07 13:00','10/07 16:00','11/07 13:00','11/07 16:00'];
-  const sfDates  = ['14/07 16:00','15/07 16:00'];
-  const thirdDate = '18/07 16:00';
-  const finalDate = '19/07 16:00';
+  const r16dates = ['04/07 14:00','04/07 17:00','04/07 20:00','05/07 14:00','05/07 17:00','05/07 20:00','06/07 14:00','06/07 17:00','06/07 20:00','07/07 14:00','07/07 17:00','07/07 20:00'];
+  const qfDates  = ['09/07 14:00','09/07 17:00','10/07 14:00','10/07 17:00','11/07 14:00','11/07 17:00'];
+  const sfDates  = ['14/07 17:00','15/07 17:00'];
+  const thirdDate = '18/07 17:00';
+  const finalDate = '19/07 17:00';
 
   // Oitavas
   h += '<div class="bracket-round"><div class="bracket-round-title">Oitavas (16)</div>';
