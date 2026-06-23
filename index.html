@@ -608,7 +608,10 @@ function renderGroups(d) {
         gf: parseInt(espnSt.pointsFor?.value||espnSt.goalsFor?.value||0),
         ga: parseInt(espnSt.pointsAgainst?.value||espnSt.goalsAgainst?.value||0)
       };
-      return { ...s, ab, dn: pt(tm.displayName||tm.name||'?'), rk: (e.note||{}).rank||0, diff: local && local.gp > 0 && s.pts !== espnPts };
+      const espnGf = parseInt(espnSt.pointsFor?.value||espnSt.goalsFor?.value||0);
+      const espnGa = parseInt(espnSt.pointsAgainst?.value||espnSt.goalsAgainst?.value||0);
+      const diff = local && local.gp > 0 && (s.pts !== espnPts || s.gf !== espnGf || s.ga !== espnGa);
+      return { ...s, ab, dn: pt(tm.displayName||tm.name||'?'), rk: (e.note||{}).rank||0, diff };
     });
     // Ordena: pontos > saldo > gols pró
     localStats.sort((a,b) => {
