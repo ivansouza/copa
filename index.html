@@ -714,22 +714,30 @@ function buildRound32(standingsData) {
 
   const round32 = [];
 
-  round32.push({ a: g('A',1), b: g('B',1), label: '2º A vs 2º B' });
-  round32.push({ a: g('E',0), b: t3group('1E'), label: '1º E vs 3º' });
-  round32.push({ a: g('F',0), b: g('C',1), label: '1º F vs 2º C' });
-  round32.push({ a: g('C',0), b: g('F',1), label: '1º C vs 2º F' });
-  round32.push({ a: g('I',0), b: t3group('1I'), label: '1º I vs 3º' });
-  round32.push({ a: g('E',1), b: g('I',1), label: '2º E vs 2º I' });
-  round32.push({ a: g('A',0), b: t3group('1A'), label: '1º A vs 3º' });
-  round32.push({ a: g('L',0), b: t3group('1L'), label: '1º L vs 3º' });
-  round32.push({ a: g('D',0), b: t3group('1D'), label: '1º D vs 3º' });
-  round32.push({ a: g('G',0), b: t3group('1G'), label: '1º G vs 3º' });
-  round32.push({ a: g('K',1), b: g('L',1), label: '2º K vs 2º L' });
-  round32.push({ a: g('H',0), b: g('J',1), label: '1º H vs 2º J' });
-  round32.push({ a: g('B',0), b: t3group('1B'), label: '1º B vs 3º' });
-  round32.push({ a: g('J',0), b: g('H',1), label: '1º J vs 2º H' });
-  round32.push({ a: g('K',0), b: t3group('1K'), label: '1º K vs 3º' });
-  round32.push({ a: g('D',1), b: g('G',1), label: '2º D vs 2º G' });
+  // Datas prováveis para Segunda Fase (Copa 2026: grupos ~11-27/06, 32 avos ~29/06-02/07)
+  const r32dates = [
+    '29/06 13:00','29/06 16:00','29/06 19:00','30/06 13:00',
+    '30/06 16:00','30/06 19:00','01/07 13:00','01/07 16:00',
+    '01/07 19:00','02/07 13:00','02/07 16:00','02/07 19:00',
+    '03/07 13:00','03/07 16:00','03/07 19:00','04/07 13:00'
+  ];
+
+  round32.push({ a: g('A',1), b: g('B',1), label: '2º A vs 2º B', date: r32dates[0] });
+  round32.push({ a: g('E',0), b: t3group('1E'), label: '1º E vs 3º', date: r32dates[1] });
+  round32.push({ a: g('F',0), b: g('C',1), label: '1º F vs 2º C', date: r32dates[2] });
+  round32.push({ a: g('C',0), b: g('F',1), label: '1º C vs 2º F', date: r32dates[3] });
+  round32.push({ a: g('I',0), b: t3group('1I'), label: '1º I vs 3º', date: r32dates[4] });
+  round32.push({ a: g('E',1), b: g('I',1), label: '2º E vs 2º I', date: r32dates[5] });
+  round32.push({ a: g('A',0), b: t3group('1A'), label: '1º A vs 3º', date: r32dates[6] });
+  round32.push({ a: g('L',0), b: t3group('1L'), label: '1º L vs 3º', date: r32dates[7] });
+  round32.push({ a: g('D',0), b: t3group('1D'), label: '1º D vs 3º', date: r32dates[8] });
+  round32.push({ a: g('G',0), b: t3group('1G'), label: '1º G vs 3º', date: r32dates[9] });
+  round32.push({ a: g('K',1), b: g('L',1), label: '2º K vs 2º L', date: r32dates[10] });
+  round32.push({ a: g('H',0), b: g('J',1), label: '1º H vs 2º J', date: r32dates[11] });
+  round32.push({ a: g('B',0), b: t3group('1B'), label: '1º B vs 3º', date: r32dates[12] });
+  round32.push({ a: g('J',0), b: g('H',1), label: '1º J vs 2º H', date: r32dates[13] });
+  round32.push({ a: g('K',0), b: t3group('1K'), label: '1º K vs 3º', date: r32dates[14] });
+  round32.push({ a: g('D',1), b: g('G',1), label: '2º D vs 2º G', date: r32dates[15] });
 
   return round32;
 }
@@ -821,7 +829,7 @@ function renderBracket(events, standingsData) {
     h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(aAbbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+aName+'</span></div></div>';
     h += '<div class="match-vs">VS</div>';
     h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(bAbbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+bName+'</span></div></div>';
-    h += '</div><div class="match-label">'+m.label+'</div></div>';
+    h += '</div><div class="match-label">'+(m.date ? m.date+' — ' : '')+m.label+'</div></div>';
   });
   h += '</div>';
 
