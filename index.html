@@ -715,35 +715,31 @@ function buildRound32(standingsData) {
 
   const round32 = [];
 
-  // Datas prováveis para Segunda Fase (fontes: FIFA, Wikipedia)
+  // Datas e horários OFICIAIS da Segunda Fase (fonte: NBC Sports / FIFA)
+  // Horários em ET (Eastern Time = UTC-4). BRT = ET+1.
   // Fase de grupos: 11-27/06 | 32 avos: 28/06-03/07 | Oitavas: 04-07/07
   // Quartas: 09-11/07 | Semi: 14-15/07 | 3º: 18/07 | Final: 19/07
-  // Horários em BRT (Brasília) — convertidos do horário local de cada cidade-sede
-  // Mapa de fusos: LA/Seattle/Vancouver/SF (UTC-7) = local+4h
-  //   Dallas/Houston/KC (UTC-5) = local+2h | CDMX/Monterrey (UTC-6) = local+3h
-  //   NY/Boston/Atlanta/Miami/Toronto (UTC-4) = local+1h
-  // Horários locais estimados: 13h, 16h, 19h (faixas típicas FIFA)
-  // Match 73: LA (UTC-7) → 13h local = 17h BRT
-  // Match 74: Boston (UTC-4) → 16h local = 17h BRT
-  // Match 75: Monterrey (UTC-6) → 19h local = 22h BRT
-  // Match 76: Houston (UTC-5) → 13h local = 15h BRT
-  // Match 77: NY (UTC-4) → 16h local = 17h BRT
-  // Match 78: Dallas (UTC-5) → 19h local = 21h BRT
-  // Match 79: CDMX (UTC-6) → 13h local = 16h BRT
-  // Match 80: Atlanta (UTC-4) → 16h local = 17h BRT
-  // Match 81: SF (UTC-7) → 19h local = 23h BRT
-  // Match 82: Seattle (UTC-7) → 13h local = 17h BRT
-  // Match 83: Toronto (UTC-4) → 16h local = 17h BRT
-  // Match 84: LA (UTC-7) → 19h local = 23h BRT
-  // Match 85: Vancouver (UTC-7) → 13h local = 17h BRT
-  // Match 86: Miami (UTC-4) → 16h local = 17h BRT
-  // Match 87: Kansas City (UTC-5) → 19h local = 21h BRT
-  // Match 88: Dallas (UTC-5) → 13h local = 15h BRT
+  // Match 73: 28/06 3pm ET (LA) = 16h BRT
+  // Match 76: 29/06 1pm ET (Houston) = 14h BRT
+  // Match 74: 29/06 4:30pm ET (Boston) = 17h30 BRT
+  // Match 75: 29/06 9pm ET (Monterrey) = 22h BRT
+  // Match 78: 30/06 1pm ET (Dallas) = 14h BRT
+  // Match 77: 30/06 5pm ET (NY) = 18h BRT
+  // Match 79: 30/06 9pm ET (CDMX) = 22h BRT
+  // Match 80: 01/07 12pm ET (Atlanta) = 13h BRT
+  // Match 82: 01/07 4pm ET (Seattle) = 17h BRT
+  // Match 81: 01/07 8pm ET (SF) = 21h BRT
+  // Match 84: 02/07 3pm ET (LA) = 16h BRT
+  // Match 83: 02/07 7pm ET (Toronto) = 20h BRT
+  // Match 85: 02/07 11pm ET (Vancouver) = 00h BRT (03/07)
+  // Match 88: 03/07 2pm ET (Dallas) = 15h BRT
+  // Match 86: 03/07 6pm ET (Miami) = 19h BRT
+  // Match 87: 03/07 9:30pm ET (KC) = 22h30 BRT
   const r32dates = [
-    '28/06 17h','28/06 17h','28/06 22h','29/06 15h',
-    '29/06 17h','29/06 21h','30/06 16h','30/06 17h',
-    '30/06 23h','01/07 17h','01/07 17h','01/07 23h',
-    '02/07 17h','02/07 17h','02/07 21h','03/07 15h'
+    '28/06 16h','29/06 14h','29/06 17h30','29/06 22h',
+    '30/06 14h','30/06 18h','30/06 22h','01/07 13h',
+    '01/07 17h','01/07 21h','02/07 16h','02/07 20h',
+    '03/07 00h','03/07 15h','03/07 19h','03/07 22h30'
   ];
 
   round32.push({ a: g('A',1), b: g('B',1), label: '2º A vs 2º B', date: r32dates[0] });
@@ -858,18 +854,30 @@ function renderBracket(events, standingsData) {
   h += '</div>';
 
   // Datas prováveis para fases seguintes
-  // Oitavas: Philadelphia (UTC-4=BRT+1), Houston (UTC-5=BRT+2), NY (UTC-4=BRT+1),
-  //   CDMX (UTC-6=BRT+3), Atlanta (UTC-4=BRT+1), Kansas City (UTC-5=BRT+2), Seattle (UTC-7=BRT+4)
-  // 8 jogos em 4 dias. Horários locais típicos 13h/16h/19h.
-  const r16dates = ['04/07 14h','04/07 15h','04/07 17h','05/07 14h','05/07 17h','05/07 20h','06/07 17h','06/07 20h','06/07 23h','07/07 17h','07/07 20h','07/07 23h'];
-  // Quartas: Boston (UTC-4=BRT+1), LA (UTC-7=BRT+4), Miami (UTC-4=BRT+1), Kansas City (UTC-5=BRT+2)
-  const qfDates  = ['09/07 17h','09/07 20h','10/07 17h','10/07 23h','11/07 17h','11/07 21h'];
-  // Semi: Dallas (UTC-5=BRT+2), Atlanta (UTC-4=BRT+1)
-  const sfDates  = ['14/07 21h','15/07 20h'];
-  // 3º lugar: Miami (UTC-4=BRT+1)
-  const thirdDate = '18/07 17h';
-  // Final: NY (UTC-4=BRT+1)
-  const finalDate = '19/07 17h';
+  // Oitavas (fontes: NBC Sports)
+  // Match 90: 04/07 1pm ET (Houston) = 14h BRT
+  // Match 89: 04/07 5pm ET (Philadelphia) = 18h BRT
+  // Match 91: 05/07 4pm ET (NY) = 17h BRT
+  // Match 92: 05/07 8pm ET (CDMX) = 21h BRT
+  // Match 93: 06/07 3pm ET (Dallas) = 16h BRT
+  // Match 94: 06/07 8pm ET (Seattle) = 21h BRT
+  // Match 95: 07/07 12pm ET (Atlanta) = 13h BRT
+  // Match 96: 07/07 4pm ET (Vancouver) = 17h BRT
+  const r16dates = ['04/07 14h','04/07 18h','05/07 17h','05/07 21h','06/07 16h','06/07 21h','07/07 13h','07/07 17h'];
+  // Quartas (fontes: NBC Sports)
+  // Match 97: 09/07 4pm ET (Boston) = 17h BRT
+  // Match 98: 10/07 3pm ET (LA) = 16h BRT
+  // Match 99: 11/07 5pm ET (Miami) = 18h BRT
+  // Match 100: 11/07 9pm ET (KC) = 22h BRT
+  const qfDates  = ['09/07 17h','10/07 16h','11/07 18h','11/07 22h'];
+  // Semifinais (fontes: NBC Sports)
+  // Match 101: 14/07 3pm ET (Dallas) = 16h BRT
+  // Match 102: 15/07 3pm ET (Atlanta) = 16h BRT
+  const sfDates  = ['14/07 16h','15/07 16h'];
+  // 3º lugar: 18/07 5pm ET (Miami) = 18h BRT
+  const thirdDate = '18/07 18h';
+  // Final: 19/07 3pm ET (NY) = 16h BRT
+  const finalDate = '19/07 16h';
 
   // Oitavas
   h += '<div class="bracket-round"><div class="bracket-round-title">Oitavas (16)</div>';
