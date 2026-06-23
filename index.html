@@ -492,6 +492,7 @@ async function loadAll() {
     // Ordena por data
     allGames.sort((a,b) => new Date(a.date) - new Date(b.date));
 
+    renderGroups(standingsCache); // re-renderiza com allGames populado
     renderBracket(allGames, standingsCache);
     renderDateNav(dates);
     renderGames();
