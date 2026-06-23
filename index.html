@@ -452,7 +452,7 @@ function getDatesArray() {
   today.setHours(0,0,0,0);
   // Busca desde o início da Copa até o fim (para calcular pontos corretamente)
   const start = new Date(COPA_START);
-  const end = new Date(Math.min(COPA_END.getTime(), new Date(today.getTime() + 14*86400000).getTime()));
+  const end = new Date(COPA_END);
   const d = new Date(start);
   while (d <= end) {
     dates.push(new Date(d));
