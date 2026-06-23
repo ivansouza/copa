@@ -506,29 +506,60 @@ function renderGroups(d) {
   const c = document.getElementById('groups-container');
   const kids = d.children||[];
   if(!kids.length){c.innerHTML='<div class="error-state">Nenhum grupo encontrado.</div>';return;}
+
+  // Constrói mapa: abbreviation -> grupo
+  const teamGroup = {};
+  kids.forEach((ch,i)=>{
+    (ch.standings?.entries||[]).forEach(e => {
+      const ab = (e.team||{}).abbreviation || '';
+      if (ab) teamGroup[ab] = gL(i);
+    });
+  });
+
+  // Calcula estatísticas a partir dos jogos (allGames)
+  const stats = {}; // { abbreviation: { pts, gp, w, t, l, gf, ga } }
+  (allGames||[]).forEach(g => {
+    const co = g.competitions?.[0]||{};
+    const cmp = co.competitors||[];
+    if (cmp.length < 2) return;
+    const home = cmp[0], away = cmp[1];
+    const ha = home.team?.abbreviation || '', aa = away.team?.abbreviation || '';
+    if (!ha || !aa) return;
+    const hg = parseInt(home.score)||0, ag = parseInt(away.score)||0;
+    // Inicializa se não existir
+    if (!stats[ha]) stats[ha] = { pts:0, gp:0, w:0, t:0, l:0, gf:0, ga:0 };
+    if (!stats[aa]) stats[aa] = { pts:0, gp:0, w:0, t:0, l:0, gf:0, ga:0 };
+    stats[ha].gp++; stats[aa].gp++;
+    stats[ha].gf += hg; stats[ha].ga += ag;
+    stats[aa].gf += ag; stats[aa].ga += hg;
+    if (hg > ag) { stats[ha].w++; stats[ha].pts += 3; stats[aa].l++; }
+    else if (ag > hg) { stats[aa].w++; stats[aa].pts += 3; stats[ha].l++; }
+    else { stats[ha].t++; stats[ha].pts++; stats[aa].t++; stats[aa].pts++; }
+  });
+
   let h='<div class="groups-grid">';
   kids.forEach((ch,i)=>{
     const en = ch.standings?.entries||[];
     h+='<div class="group-card"><div class="group-header"><span class="group-label">Grupo '+gL(i)+'</span><span class="group-status">'+(ch.name||'')+'</span></div><table class="group-table"><thead><tr><th>Time</th><th>Pts</th><th>P</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th></tr></thead><tbody>';
-    // Garante ordenação: pontos > saldo > gols pró
-    const sorted = [...en].sort((a,b)=>{
-      const sa={};(a.stats||[]).forEach(s=>{sa[s.name]=s;});
-      const sb={};(b.stats||[]).forEach(s=>{sb[s.name]=s;});
-      const pa=parseInt(sa.points?.value||0),pb=parseInt(sb.points?.value||0);
-      if(pb!==pa)return pb-pa;
-      const ga=parseInt(sa.pointDifferential?.value||sa.goalDifference?.value||0),gb=parseInt(sb.pointDifferential?.value||sb.goalDifference?.value||0);
-      if(gb!==ga)return gb-ga;
-      const fa=parseInt(sa.pointsFor?.value||sa.goalsFor?.value||0),fb=parseInt(sb.pointsFor?.value||sb.goalsFor?.value||0);
-      return fb-fa;
+    // Monta array com stats calculados localmente
+    const localStats = en.map(e => {
+      const tm=e.team||{}, ab=tm.abbreviation||'';
+      const s = stats[ab] || { pts:0, gp:0, w:0, t:0, l:0, gf:0, ga:0 };
+      return { ...s, ab, dn: pt(tm.displayName||tm.name||'?'), rk: (e.note||{}).rank||0 };
     });
-    sorted.forEach((e,p)=>{
-      const tm=e.team||{},st={};(e.stats||[]).forEach(s=>{st[s.name]=s;});
-      const gp=st.gamesPlayed?.displayValue||'0',w=st.wins?.displayValue||'0',t=st.ties?.displayValue||'0',l=st.losses?.displayValue||'0';
-      const pts=st.points?.displayValue||'0',gf=st.pointsFor?.displayValue||st.goalsFor?.displayValue||'0',ga=st.pointsAgainst?.displayValue||st.goalsAgainst?.displayValue||'0',gd=st.pointDifferential?.displayValue||st.goalDifference?.displayValue||'0';
-      const ab=tm.abbreviation||'',dn=pt(tm.displayName||tm.name||'?'),rk=(e.note||{}).rank||0;
-      let rc='';if(rk===1)rc='qualified-1';else if(rk===2)rc='qualified-2';
-      const gc=gd.startsWith('-')?'gd-neg':(gd==='0'?'':'gd-pos');
-      h+='<tr class="'+rc+'"><td><div class="team-cell"><span class="pos">'+(p+1)+'</span><img class="flag" src="'+flagUrl(ab)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+dn+'</span></div></td><td class="pts-cell">'+pts+'</td><td>'+gp+'</td><td>'+w+'</td><td>'+t+'</td><td>'+l+'</td><td>'+gf+'</td><td>'+ga+'</td><td class="'+gc+'">'+gd+'</td></tr>';
+    // Ordena: pontos > saldo > gols pró
+    localStats.sort((a,b) => {
+      if (b.pts !== a.pts) return b.pts - a.pts;
+      const gda = a.gf - a.ga, gdb = b.gf - b.ga;
+      if (gdb !== gda) return gdb - gda;
+      return b.gf - a.gf;
+    });
+    localStats.forEach((s, p) => {
+      const gd = s.gf - s.ga;
+      const gdStr = gd > 0 ? '+'+gd : String(gd);
+      let rc=''; if(s.rk===1)rc='qualified-1'; else if(s.rk===2)rc='qualified-2';
+      const gc = gd < 0 ? 'gd-neg' : (gd === 0 ? '' : 'gd-pos');
+      h+='<tr class="'+rc+'"><td><div class="team-cell"><span class="pos">'+(p+1)+'</span><img class="flag" src="'+flagUrl(s.ab)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+s.dn+'</span></div></td><td class="pts-cell">'+s.pts+'</td><td>'+s.gp+'</td><td>'+s.w+'</td><td>'+s.t+'</td><td>'+s.l+'</td><td>'+s.gf+'</td><td>'+s.ga+'</td><td class="'+gc+'">'+gdStr+'</td></tr>';
     });
     h+='</tbody></table></div>';
   });
@@ -632,6 +663,32 @@ function buildRound32(standingsData) {
   const children = standingsData.children || [];
   if (!children.length) return null;
 
+  // Recalcula stats localmente igual no renderGroups
+  const teamGroup = {};
+  children.forEach((ch, idx) => {
+    (ch.standings?.entries||[]).forEach(e => {
+      const ab = (e.team||{}).abbreviation || '';
+      if (ab) teamGroup[ab] = getGroupLetter(idx);
+    });
+  });
+  const localStats = {};
+  (allGames||[]).forEach(g => {
+    const co = g.competitions?.[0]||{}, cmp = co.competitors||[];
+    if (cmp.length < 2) return;
+    const home = cmp[0], away = cmp[1];
+    const ha = home.team?.abbreviation || '', aa = away.team?.abbreviation || '';
+    if (!ha || !aa) return;
+    const hg = parseInt(home.score)||0, ag = parseInt(away.score)||0;
+    if (!localStats[ha]) localStats[ha] = { pts:0, gp:0, w:0, t:0, l:0, gf:0, ga:0 };
+    if (!localStats[aa]) localStats[aa] = { pts:0, gp:0, w:0, t:0, l:0, gf:0, ga:0 };
+    localStats[ha].gp++; localStats[aa].gp++;
+    localStats[ha].gf += hg; localStats[ha].ga += ag;
+    localStats[aa].gf += ag; localStats[aa].ga += hg;
+    if (hg > ag) { localStats[ha].w++; localStats[ha].pts += 3; localStats[aa].l++; }
+    else if (ag > hg) { localStats[aa].w++; localStats[aa].pts += 3; localStats[ha].l++; }
+    else { localStats[ha].t++; localStats[ha].pts++; localStats[aa].t++; localStats[aa].pts++; }
+  });
+
   // Extrai classificação de cada grupo
   const groups = {};
   const allThird = [];
@@ -641,18 +698,15 @@ function buildRound32(standingsData) {
     const entries = ch.standings?.entries || [];
     const teams = entries.map((e, pos) => {
       const tm = e.team || {};
-      const stats = {};
-      (e.stats || []).forEach(s => { stats[s.name] = s; });
-      const pts = parseInt(stats.points?.value || stats.points?.displayValue || 0);
-      const gd = parseInt(stats.pointDifferential?.value || stats.goalDifference?.value || 0);
-      const gf = parseInt(stats.pointsFor?.value || stats.goalsFor?.value || 0);
+      const ab = tm.abbreviation || '';
+      const s = localStats[ab] || { pts:0, gf:0, ga:0 };
       return {
         pos: pos + 1,
-        abbr: tm.abbreviation || '',
+        abbr: ab,
         name: pt(tm.displayName || tm.name || '?'),
-        pts: pts,
-        gd: gd,
-        gf: gf
+        pts: s.pts,
+        gd: s.gf - s.ga,
+        gf: s.gf
       };
     });
     groups[letter] = teams;
