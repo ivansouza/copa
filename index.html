@@ -936,7 +936,6 @@ function renderStats() {
   // Calcula estatísticas dos times a partir dos jogos encerrados
   const stats = {};
   const teamNames = {};
-  const teamAbbr = {};
   (allGames||[]).forEach(g => {
     if (getStatus(g) === 'scheduled') return;
     const co = g.competitions?.[0]||{}, cmp = co.competitors||[];
@@ -949,7 +948,6 @@ function renderStats() {
     if (!stats[aa]) stats[aa] = { pts:0, gp:0, gf:0, ga:0, w:0, t:0, l:0 };
     teamNames[ha] = pt(home.team?.displayName || home.team?.name || ha);
     teamNames[aa] = pt(away.team?.displayName || away.team?.name || aa);
-    teamAbbr[ha] = ha; teamAbbr[aa] = aa;
     stats[ha].gp++; stats[aa].gp++;
     stats[ha].gf += hg; stats[ha].ga += ag;
     stats[aa].gf += ag; stats[aa].ga += hg;
@@ -960,59 +958,152 @@ function renderStats() {
 
   const teams = Object.keys(stats).map(ab => ({
     ab, name: teamNames[ab],
-    ...stats[ab], gd: stats[ab].gf - stats[ab].ga
+    ...stats[ab], gd: stats[ab].gf - stats[ab].ga,
+    ap: stats[ab].gp > 0 ? Math.round(stats[ab].pts / (stats[ab].gp * 3) * 100) : 0
   }));
 
-  // Top 5 em gols
-  const topGols = [...teams].sort((a,b) => b.gf - a.gf).slice(0, 5);
+  // Top 5 gols
+  const topGols = [...teams].sort((a,b) => b.gf - a.gf || b.gd - a.gd).slice(0, 5);
 
-  // Times desclassificados (jogaram pelo menos 1 jogo, não têm chance de passar)
-  // Critério: times que já jogaram 2+ jogos e estão em 4º lugar no grupo
-  // ou times que jogaram 3 jogos e não estão entre os 2 primeiros
+  // Defesa mais sólida (menos GC, entre times com 2+ jogos)
+  const defesa = [...teams].filter(t => t.gp >= 2).sort((a,b) => a.ga - b.ga || b.gp - a.gp).slice(0, 5);
+
+  // Melhor saldo
+  const topSaldo = [...teams].sort((a,b) => b.gd - a.gd || b.gf - a.gf).slice(0, 5);
+
+  // Grupo com mais gols
+  const grupoGols = {};
+  (allGames||[]).forEach(g => {
+    if (getStatus(g) === 'scheduled') return;
+    const co = g.competitions?.[0]||{}, cmp = co.competitors||[];
+    if (cmp.length < 2) return;
+    const hg = parseInt(cmp[0].score)||0, ag = parseInt(cmp[1].score)||0;
+    // Pega o grupo do jogo (season.slug tipo "fifa.world.group-a")
+    const slug = g.season?.slug || '';
+    const grp = slug.match(/group-(\w)/i);
+    const letter = grp ? grp[1].toUpperCase() : '?';
+    if (!grupoGols[letter]) grupoGols[letter] = { total: 0, jogos: 0 };
+    grupoGols[letter].total += hg + ag;
+    grupoGols[letter].jogos++;
+  });
+  const topGrupos = Object.keys(grupoGols).map(g => ({ grupo: g, ...grupoGols[g] }))
+    .sort((a,b) => b.total - a.total).slice(0, 5);
+
+  // Maior goleada
+  let maiorGoleada = null;
+  (allGames||[]).forEach(g => {
+    if (getStatus(g) === 'scheduled') return;
+    const co = g.competitions?.[0]||{}, cmp = co.competitors||[];
+    if (cmp.length < 2) return;
+    const hg = parseInt(cmp[0].score)||0, ag = parseInt(cmp[1].score)||0;
+    const diff = Math.abs(hg - ag);
+    if (diff > (maiorGoleada?.diff || 0)) {
+      const hName = pt(cmp[0].team?.displayName || cmp[0].team?.name || '');
+      const aName = pt(cmp[1].team?.displayName || cmp[1].team?.name || '');
+      maiorGoleada = { hName, aName, hg, ag, diff, hAbbr: cmp[0].team?.abbreviation, aAbbr: cmp[1].team?.abbreviation };
+    }
+  });
+
+  // Times desclassificados
   const eliminated = teams.filter(t => {
     if (t.gp < 2) return false;
-    // Verifica se o time está eliminado matematicamente
-    // Simplificação: times com 0 pontos após 2+ jogos, ou 4º lugar com 3 jogos
     if (t.gp >= 3 && t.pts < 4) return true;
     if (t.gp >= 2 && t.pts === 0) return true;
     return false;
-  }).sort((a,b) => a.name.localeCompare(b.name, 'pt-BR'));
+  }).sort((a,b) => b.pts - a.pts || b.gp - a.gp);
+
+  // Total de gols na fase de grupos
+  const totalGols = teams.reduce((s, t) => s + t.gf, 0);
+  const totalJogos = teams.reduce((s, t) => s + t.gp, 0) / 2;
+  const mediaGols = totalJogos > 0 ? (totalGols / totalJogos).toFixed(1) : '0';
+
+  // ---- RENDER ----
+  function card(title, color, content) {
+    return '<div style="margin-bottom:1.5rem;"><h3 style="font-size:1rem;font-weight:700;margin-bottom:.8rem;color:'+color+';">'+title+'</h3>'+content+'</div>';
+  }
+  function row(medal, flag, name, val, unit) {
+    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:linear-gradient(145deg,#1e293b,#1a2332);border:1px solid #2d3a4e;border-radius:8px;">'
+      + '<span style="font-weight:800;font-size:.9rem;min-width:24px;color:#f59e0b;">'+medal+'</span>'
+      + '<img class="flag" src="'+flagUrl(flag)+'" alt="" style="width:20px;height:14px;border-radius:2px;" loading="lazy" onerror="this.style.display=\'none\'">'
+      + '<span style="flex:1;font-weight:600;font-size:.85rem;">'+name+'</span>'
+      + '<span style="font-weight:800;font-size:1rem;color:#22c55e;">'+val+'</span>'
+      + '<span style="font-size:.7rem;color:#64748b;">'+unit+'</span></div>';
+  }
 
   let h = '';
 
+  // Resumo do torneio
+  h += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:1.5rem;">';
+  h += '<div style="text-align:center;padding:12px;background:linear-gradient(145deg,#1e293b,#1a2332);border:1px solid #2d3a4e;border-radius:10px;"><div style="font-size:1.4rem;font-weight:800;color:#f59e0b;">'+totalGols+'</div><div style="font-size:.7rem;color:#64748b;margin-top:2px;">⚽ Gols na fase</div></div>';
+  h += '<div style="text-align:center;padding:12px;background:linear-gradient(145deg,#1e293b,#1a2332);border:1px solid #2d3a4e;border-radius:10px;"><div style="font-size:1.4rem;font-weight:800;color:#22c55e;">'+mediaGols+'</div><div style="font-size:.7rem;color:#64748b;margin-top:2px;">📊 Média por jogo</div></div>';
+  h += '<div style="text-align:center;padding:12px;background:linear-gradient(145deg,#1e293b,#1a2332);border:1px solid #2d3a4e;border-radius:10px;"><div style="font-size:1.4rem;font-weight:800;color:#3b82f6;">'+totalJogos+'</div><div style="font-size:.7rem;color:#64748b;margin-top:2px;">📅 Jogos realizados</div></div>';
+  h += '<div style="text-align:center;padding:12px;background:linear-gradient(145deg,#1e293b,#1a2332);border:1px solid #2d3a4e;border-radius:10px;"><div style="font-size:1.4rem;font-weight:800;color:#a855f7;">'+teams.length+'</div><div style="font-size:.7rem;color:#64748b;margin-top:2px;">🏳️ Times em campo</div></div>';
+  h += '</div>';
+
   // Top 5 gols
-  h += '<div style="margin-bottom:2rem;">';
-  h += '<h3 style="font-size:1.1rem;font-weight:700;margin-bottom:1rem;color:#f59e0b;">⚽ Times com mais gols</h3>';
-  h += '<div style="display:flex;flex-direction:column;gap:8px;">';
-  topGols.forEach((t, i) => {
-    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i+1)+'.';
-    h += '<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:linear-gradient(145deg,#1e293b,#1a2332);border:1px solid #2d3a4e;border-radius:10px;">';
-    h += '<span style="font-weight:800;font-size:1rem;min-width:28px;color:#f59e0b;">'+medal+'</span>';
-    h += '<img class="flag" src="'+flagUrl(t.ab)+'" alt="" style="width:22px;height:16px;border-radius:2px;" loading="lazy" onerror="this.style.display=\'none\'">';
-    h += '<span style="flex:1;font-weight:600;font-size:.9rem;">'+t.name+'</span>';
-    h += '<span style="font-weight:800;font-size:1.1rem;color:#22c55e;">'+t.gf+'</span>';
-    h += '<span style="font-size:.75rem;color:#64748b;">gols</span>';
-    h += '</div>';
-  });
-  h += '</div></div>';
+  h += card('⚽ Times com mais gols', '#f59e0b',
+    '<div style="display:flex;flex-direction:column;gap:6px;">'
+    + topGols.map((t,i) => row(i<3?'🥇🥈🥉'[i]:'#'+(i+1), t.ab, t.name, t.gf, 'gols'+(t.gp>1?' em '+t.gp+'j':'')).replace('🥇🥈🥉','🥇').replace('🥇🥈','🥇')).join('')
+    + '</div>');
+
+  // Defesa mais sólida
+  h += card('🛡️ Defesas mais sólidas (menos gols sofridos)', '#3b82f6',
+    '<div style="display:flex;flex-direction:column;gap:6px;">'
+    + defesa.map((t,i) => row('#'+(i+1), t.ab, t.name, t.ga, 'gols sofridos'+(t.gp>1?' em '+t.gp+'j':''))).join('')
+    + '</div>');
+
+  // Melhor saldo
+  h += card('📊 Melhor saldo de gols', '#22c55e',
+    '<div style="display:flex;flex-direction:column;gap:6px;">'
+    + topSaldo.map((t,i) => row('#'+(i+1), t.ab, t.name, (t.gd>0?'+':'')+t.gd, 'saldo')).join('')
+    + '</div>');
+
+  // Grupo com mais gols
+  h += card('🔥 Grupos com mais gols', '#ef4444',
+    '<div style="display:flex;flex-direction:column;gap:6px;">'
+    + topGrupos.map((g,i) => {
+      const medal = i<3?'🥇🥈🥉'[i]:'#'+(i+1);
+      return '<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:linear-gradient(145deg,#1e293b,#1a2332);border:1px solid #2d3a4e;border-radius:8px;">'
+        + '<span style="font-weight:800;font-size:.9rem;min-width:24px;color:#f59e0b;">'+medal+'</span>'
+        + '<span style="font-weight:700;font-size:.85rem;color:#f59e0b;min-width:70px;">Grupo '+g.grupo+'</span>'
+        + '<span style="flex:1;font-weight:600;font-size:.85rem;">'+g.jogos+' jogos</span>'
+        + '<span style="font-weight:800;font-size:1rem;color:#ef4444;">'+g.total+'</span>'
+        + '<span style="font-size:.7rem;color:#64748b;">gols</span></div>';
+    }).join('')
+    + '</div>');
+
+  // Maior goleada
+  if (maiorGoleada) {
+    h += card('💥 Maior goleada', '#a855f7',
+      '<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:linear-gradient(145deg,#1e293b,#1a2332);border:1px solid #2d3a4e;border-radius:10px;">'
+      + '<div style="display:flex;align-items:center;gap:8px;flex:1;">'
+      + '<img class="flag" src="'+flagUrl(maiorGoleada.hAbbr)+'" alt="" style="width:22px;height:16px;border-radius:2px;" loading="lazy" onerror="this.style.display=\'none\'">'
+      + '<span style="font-weight:600;font-size:.85rem;">'+maiorGoleada.hName+'</span>'
+      + '</div>'
+      + '<div style="font-weight:800;font-size:1.2rem;color:#f59e0b;">'+maiorGoleada.hg+' × '+maiorGoleada.ag+'</div>'
+      + '<div style="display:flex;align-items:center;gap:8px;flex:1;justify-content:flex-end;">'
+      + '<span style="font-weight:600;font-size:.85rem;">'+maiorGoleada.aName+'</span>'
+      + '<img class="flag" src="'+flagUrl(maiorGoleada.aAbbr)+'" alt="" style="width:22px;height:16px;border-radius:2px;" loading="lazy" onerror="this.style.display=\'none\'">'
+      + '</div>'
+      + '<div style="font-size:.7rem;color:#64748b;min-width:50px;text-align:right;">'+maiorGoleada.diff+' gols de diferença</div>'
+      + '</div>');
+  }
 
   // Desclassificados
-  h += '<div>';
-  h += '<h3 style="font-size:1.1rem;font-weight:700;margin-bottom:1rem;color:#ef4444;">🚫 Times desclassificados</h3>';
-  if (eliminated.length === 0) {
-    h += '<div style="padding:2rem;text-align:center;color:#64748b;font-size:.9rem;">Nenhum time eliminado ainda.</div>';
-  } else {
-    h += '<div style="display:flex;flex-direction:column;gap:6px;">';
-    eliminated.forEach(t => {
-      h += '<div style="display:flex;align-items:center;gap:10px;padding:8px 14px;background:linear-gradient(145deg,#1e293b,#1a2332);border:1px solid #2d3a4e;border-radius:8px;opacity:.7;">';
-      h += '<img class="flag" src="'+flagUrl(t.ab)+'" alt="" style="width:20px;height:14px;border-radius:2px;" loading="lazy" onerror="this.style.display=\'none\'">';
-      h += '<span style="flex:1;font-weight:500;font-size:.85rem;">'+t.name+'</span>';
-      h += '<span style="font-size:.75rem;color:#64748b;">'+t.gp+' jogos, '+t.pts+' pts</span>';
-      h += '</div>';
-    });
-    h += '</div>';
-  }
-  h += '</div>';
+  h += card('🚫 Times desclassificados', '#ef4444',
+    eliminated.length === 0
+      ? '<div style="padding:1.5rem;text-align:center;color:#64748b;font-size:.85rem;">Nenhum time eliminado ainda.</div>'
+      : '<div style="display:flex;flex-direction:column;gap:4px;">'
+        + eliminated.map(t => {
+          const ap = t.gp > 0 ? Math.round(t.pts / (t.gp * 3) * 100) : 0;
+          return '<div style="display:flex;align-items:center;gap:8px;padding:6px 12px;background:linear-gradient(145deg,#1e293b,#1a2332);border:1px solid #2d3a4e;border-radius:8px;opacity:.65;">'
+            + '<img class="flag" src="'+flagUrl(t.ab)+'" alt="" style="width:18px;height:12px;border-radius:2px;" loading="lazy" onerror="this.style.display=\'none\'">'
+            + '<span style="flex:1;font-weight:500;font-size:.8rem;">'+t.name+'</span>'
+            + '<span style="font-size:.7rem;color:#64748b;">'+t.pts+'pts em '+t.gp+'j</span>'
+            + '<span style="font-size:.7rem;color:'+(ap<20?'#ef4444':'#64748b')+';font-weight:600;">'+ap+'%</span>'
+            + '</div>';
+        }).join('')
+        + '</div>');
 
   c.innerHTML = h;
 }
