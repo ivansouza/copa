@@ -983,15 +983,23 @@ function renderStats() {
       });
     });
   }
+  // Fallback: se não tem standingsCache, tenta inferir grupo pelo nome do evento
   const grupoGols = {};
   (allGames||[]).forEach(g => {
     if (getStatus(g) === 'scheduled') return;
     const co = g.competitions?.[0]||{}, cmp = co.competitors||[];
     if (cmp.length < 2) return;
     const hg = parseInt(cmp[0].score)||0, ag = parseInt(cmp[1].score)||0;
-    // Pega o grupo do primeiro time
+    // Tenta extrair grupo do nome do evento: "Group A: ..." ou "... (Group A)"
+    let letter = '?';
     const ab = cmp[0].team?.abbreviation || '';
-    const letter = teamGroup[ab] || '?';
+    if (teamGroup[ab]) {
+      letter = teamGroup[ab];
+    } else {
+      const name = g.name || g.shortName || '';
+      const m = name.match(/group\s*([a-l])/i);
+      if (m) letter = m[1].toUpperCase();
+    }
     if (!grupoGols[letter]) grupoGols[letter] = { total: 0, jogos: 0 };
     grupoGols[letter].total += hg + ag;
     grupoGols[letter].jogos++;
