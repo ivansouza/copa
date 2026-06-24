@@ -1117,6 +1117,25 @@ function renderStats() {
   c.innerHTML = h;
 }
 
+function isGroupFinished(groupLetter, standingsData) {
+  // Verifica se um grupo já terminou usando os dados de classificação
+  // Um grupo tem 4 times, cada time joga 3 jogos = 6 jogos no total
+  // Se todos os 4 times já jogaram 3 jogos, o grupo terminou
+  if (!standingsData) return false;
+  const children = standingsData.children || [];
+  const idx = groupLetter.charCodeAt(0) - 65;
+  if (idx < 0 || idx >= children.length) return false;
+  const entries = children[idx]?.standings?.entries || [];
+  if (entries.length < 4) return false;
+  // Verifica se todos os 4 times jogaram 3 partidas
+  return entries.every(e => {
+    const stats = e.stats || [];
+    const gamesPlayed = stats.find(s => s.name === 'gamesPlayed');
+    const gp = gamesPlayed ? parseInt(gamesPlayed.value || gamesPlayed.displayValue || 0) : 0;
+    return gp >= 3;
+  });
+}
+
 function renderBracket(events, standingsData) {
   const c = document.getElementById('bracket-container');
 
@@ -1191,11 +1210,18 @@ function renderBracket(events, standingsData) {
     const bName = m.b.name || 'A definir';
     const aAbbr = m.a.abbr || '';
     const bAbbr = m.b.abbr || '';
-    h += '<div class="bracket-match probable"><div class="match-teams">';
+    // Extrai grupos do label pra verificar se já terminaram
+    const labelGroups = (m.label||'').match(/[1-3]º ([A-L])/g) || [];
+    const allGroupsFinished = labelGroups.every(lg => {
+      const letter = lg.slice(-1);
+      return isGroupFinished(letter, standingsData);
+    });
+    const isProbable = !allGroupsFinished;
+    h += '<div class="bracket-match'+(isProbable?' probable':'')+'"><div class="match-teams">';
     h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(aAbbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+aName+'</span></div></div>';
     h += '<div class="match-vs">X</div>';
     h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(bAbbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+bName+'</span></div></div>';
-    h += '</div><div class="match-label">'+(m.date ? m.date+' — ' : '')+m.label+'</div></div>';
+    h += '</div><div class="match-label">'+(m.date ? m.date+' — ' : '')+m.label+(isProbable?' — provável':'')+'</div></div>';
   });
   h += '</div>';
 
