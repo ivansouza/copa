@@ -971,13 +971,18 @@ function renderBracket(events, standingsData) {
   let thirdPlace = null;
   let finalMatch = null;
   if (sf.length >= 2) {
+    // Perdedores das semis = o time que NÃO venceu cada semi
+    const sf0Winner = simulateWinner(sf[0]);
+    const sf1Winner = simulateWinner(sf[1]);
+    const sf0Loser = sf0Winner === sf[0].a ? sf[0].b : sf[0].a;
+    const sf1Loser = sf1Winner === sf[1].a ? sf[1].b : sf[1].a;
     thirdPlace = {
-      a: simulateWinner({ a: sf[0].b, b: sf[1].a }),
-      b: simulateWinner({ a: sf[0].a, b: sf[1].b })
+      a: sf0Loser,
+      b: sf1Loser
     };
     finalMatch = {
-      a: simulateWinner(sf[0]),
-      b: simulateWinner(sf[1])
+      a: sf0Winner,
+      b: sf1Winner
     };
   }
 
