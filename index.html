@@ -971,18 +971,18 @@ function renderStats() {
   // Melhor saldo
   const topSaldo = [...teams].sort((a,b) => b.gd - a.gd || b.gf - a.gf).slice(0, 5);
 
-  // Grupo com mais gols — extrai time→grupo do DOM (tabela já renderizada)
+  // Grupo com mais gols — constrói mapa abbr→grupo a partir dos dados de standings
   const teamGroup = {};
-  document.querySelectorAll('.group-card').forEach(card => {
-    const header = card.querySelector('.group-label');
-    if (!header) return;
-    const letter = header.textContent.replace('Grupo ','').trim();
-    card.querySelectorAll('.team-cell .flag').forEach(flag => {
-      const src = flag.getAttribute('src') || '';
-      const m = src.match(/\/([a-z]{3})\.png/i);
-      if (m) teamGroup[m[1].toUpperCase()] = letter;
+  if (standingsCache && standingsCache.children) {
+    standingsCache.children.forEach((ch, i) => {
+      const letter = gL(i);
+      const entries = ch.standings?.entries || [];
+      entries.forEach(e => {
+        const ab = e.team?.abbreviation || '';
+        if (ab) teamGroup[ab] = letter;
+      });
     });
-  });
+  }
   const grupoGols = {};
   (allGames||[]).forEach(g => {
     if (getStatus(g) === 'scheduled') return;
