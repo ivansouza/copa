@@ -971,35 +971,26 @@ function renderStats() {
   // Melhor saldo
   const topSaldo = [...teams].sort((a,b) => b.gd - a.gd || b.gf - a.gf).slice(0, 5);
 
-  // Grupo com mais gols
-  // Mapa time → grupo (usa dados de classificação)
+  // Grupo com mais gols — extrai time→grupo do DOM (tabela já renderizada)
   const teamGroup = {};
-  if (standingsCache) {
-    (standingsCache.children||[]).forEach((ch, idx) => {
-      const letter = String.fromCharCode(65 + idx);
-      (ch.standings?.entries||[]).forEach(e => {
-        const ab = (e.team||{}).abbreviation || '';
-        if (ab) teamGroup[ab] = letter;
-      });
+  document.querySelectorAll('.group-card').forEach(card => {
+    const header = card.querySelector('.group-label');
+    if (!header) return;
+    const letter = header.textContent.replace('Grupo ','').trim();
+    card.querySelectorAll('.team-cell .flag').forEach(flag => {
+      const src = flag.getAttribute('src') || '';
+      const m = src.match(/\/([a-z]{3})\.png/i);
+      if (m) teamGroup[m[1].toUpperCase()] = letter;
     });
-  }
-  // Fallback: se não tem standingsCache, tenta inferir grupo pelo nome do evento
+  });
   const grupoGols = {};
   (allGames||[]).forEach(g => {
     if (getStatus(g) === 'scheduled') return;
     const co = g.competitions?.[0]||{}, cmp = co.competitors||[];
     if (cmp.length < 2) return;
     const hg = parseInt(cmp[0].score)||0, ag = parseInt(cmp[1].score)||0;
-    // Tenta extrair grupo do nome do evento: "Group A: ..." ou "... (Group A)"
-    let letter = '?';
     const ab = cmp[0].team?.abbreviation || '';
-    if (teamGroup[ab]) {
-      letter = teamGroup[ab];
-    } else {
-      const name = g.name || g.shortName || '';
-      const m = name.match(/group\s*([a-l])/i);
-      if (m) letter = m[1].toUpperCase();
-    }
+    const letter = teamGroup[ab] || '?';
     if (!grupoGols[letter]) grupoGols[letter] = { total: 0, jogos: 0 };
     grupoGols[letter].total += hg + ag;
     grupoGols[letter].jogos++;
