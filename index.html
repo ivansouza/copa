@@ -787,6 +787,14 @@ function buildRound32(standingsData) {
         gf: gf
       };
     });
+    // Reordena times por pontos > saldo > gols pró
+    teams.sort((a, b) => {
+      if (b.pts !== a.pts) return b.pts - a.pts;
+      if (b.gd !== a.gd) return b.gd - a.gd;
+      return b.gf - a.gf;
+    });
+    // Reatribui posições
+    teams.forEach((t, i) => t.pos = i + 1);
     groups[letter] = teams;
     if (teams.length >= 3) {
       allThird.push({ group: letter, ...teams[2] });
