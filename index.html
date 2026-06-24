@@ -1102,7 +1102,12 @@ document.querySelectorAll('.nav-btn').forEach(btn=>{
     document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     document.querySelectorAll('.section-content').forEach(s=>s.style.display='none');
-    document.getElementById('section-'+btn.dataset.section).style.display='block';
+    const sectionId = 'section-'+btn.dataset.section;
+    document.getElementById(sectionId).style.display='block';
+    // Se clicou em Mata-Mata, recalcula o bracket com dados frescos
+    if (btn.dataset.section === 'bracket' && standingsCache) {
+      renderBracket(allGames || [], standingsCache);
+    }
   });
 });
 
