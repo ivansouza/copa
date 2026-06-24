@@ -972,16 +972,26 @@ function renderStats() {
   const topSaldo = [...teams].sort((a,b) => b.gd - a.gd || b.gf - a.gf).slice(0, 5);
 
   // Grupo com mais gols
+  // Mapa time → grupo (usa dados de classificação)
+  const teamGroup = {};
+  if (standingsCache) {
+    (standingsCache.children||[]).forEach((ch, idx) => {
+      const letter = String.fromCharCode(65 + idx);
+      (ch.standings?.entries||[]).forEach(e => {
+        const ab = (e.team||{}).abbreviation || '';
+        if (ab) teamGroup[ab] = letter;
+      });
+    });
+  }
   const grupoGols = {};
   (allGames||[]).forEach(g => {
     if (getStatus(g) === 'scheduled') return;
     const co = g.competitions?.[0]||{}, cmp = co.competitors||[];
     if (cmp.length < 2) return;
     const hg = parseInt(cmp[0].score)||0, ag = parseInt(cmp[1].score)||0;
-    // Pega o grupo do jogo (season.slug tipo "fifa.world.group-a")
-    const slug = g.season?.slug || '';
-    const grp = slug.match(/group-(\w)/i);
-    const letter = grp ? grp[1].toUpperCase() : '?';
+    // Pega o grupo do primeiro time
+    const ab = cmp[0].team?.abbreviation || '';
+    const letter = teamGroup[ab] || '?';
     if (!grupoGols[letter]) grupoGols[letter] = { total: 0, jogos: 0 };
     grupoGols[letter].total += hg + ag;
     grupoGols[letter].jogos++;
@@ -1043,7 +1053,7 @@ function renderStats() {
   // Top 5 gols
   h += card('⚽ Times com mais gols', '#f59e0b',
     '<div style="display:flex;flex-direction:column;gap:6px;">'
-    + topGols.map((t,i) => row(i<3?'🥇🥈🥉'[i]:'#'+(i+1), t.ab, t.name, t.gf, 'gols'+(t.gp>1?' em '+t.gp+'j':'')).replace('🥇🥈🥉','🥇').replace('🥇🥈','🥇')).join('')
+    + topGols.map((t,i) => row(['🥇','🥈','🥉','#4','#5'][i]||'#'+(i+1), t.ab, t.name, t.gf, 'gols'+(t.gp>1?' em '+t.gp+'j':''))).join('')
     + '</div>');
 
   // Defesa mais sólida
