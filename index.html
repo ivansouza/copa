@@ -1050,11 +1050,29 @@ function renderStats() {
     }
   });
 
-  // Times desclassificados
+  // Constrói mapa: abbr → posição no grupo (1=primeiro, 2=segundo, etc)
+  const teamPosition = {};
+  if (standingsCache && standingsCache.children) {
+    standingsCache.children.forEach(ch => {
+      const entries = ch.standings?.entries || [];
+      entries.forEach((e, idx) => {
+        const ab = e.team?.abbreviation || '';
+        if (ab) teamPosition[ab] = idx + 1; // posição 1-based
+      });
+    });
+  }
+
+  // Times desclassificados: 3º e 4º colocados em grupos com 3+ jogos
   const eliminated = teams.filter(t => {
     if (t.gp < 2) return false;
-    if (t.gp >= 3 && t.pts < 4) return true;
-    if (t.gp >= 2 && t.pts === 0) return true;
+    const pos = teamPosition[t.abbr];
+    // Se sabemos a posição e é 3º ou 4º, está eliminado
+    if (pos >= 3) return true;
+    // Se não temos posição (grupo incompleto), usa regra antiga
+    if (!pos) {
+      if (t.gp >= 3 && t.pts < 4) return true;
+      if (t.gp >= 2 && t.pts === 0) return true;
+    }
     return false;
   }).sort((a,b) => b.pts - a.pts || b.gp - a.gp);
 
