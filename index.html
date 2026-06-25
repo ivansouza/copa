@@ -1413,34 +1413,67 @@ function renderClassifiedPanel(standingsData) {
     return;
   }
 
-  // Pega os times classificados (1º e 2º de cada grupo)
+  // Calcula stats localmente (igual ao buildRound32)
+  const localStats = {};
+  (allGames||[]).forEach(g => {
+    if (getStatus(g) === 'scheduled') return;
+    const co = g.competitions?.[0]||{}, cmp = co.competitors||[];
+    if (cmp.length < 2) return;
+    const home = cmp[0], away = cmp[1];
+    const ha = home.team?.abbreviation || '', aa = away.team?.abbreviation || '';
+    if (!ha || !aa) return;
+    const hg = parseInt(home.score)||0, ag = parseInt(away.score)||0;
+    if (!localStats[ha]) localStats[ha] = { pts:0, gp:0, gf:0, ga:0 };
+    if (!localStats[aa]) localStats[aa] = { pts:0, gp:0, gf:0, ga:0 };
+    localStats[ha].gp++; localStats[aa].gp++;
+    localStats[ha].gf += hg; localStats[ha].ga += ag;
+    localStats[aa].gf += ag; localStats[aa].ga += hg;
+    if (hg > ag) { localStats[ha].pts += 3; }
+    else if (ag > hg) { localStats[aa].pts += 3; }
+    else { localStats[ha].pts++; localStats[aa].pts++; }
+  });
+
   const classified = [];
-  const probable = [];
   const children = standingsData.children || [];
 
   children.forEach((ch, idx) => {
     const letter = gL(idx);
     const entries = ch.standings?.entries || [];
+    // Ordena igual ao renderGroups: pontos > saldo > gols pró
     const teams = entries.map((e, pos) => {
       const tm = e.team || {};
+      const ab = tm.abbreviation || '';
+      const local = localStats[ab];
+      const espnSt = {}; (e.stats||[]).forEach(s => { espnSt[s.name] = s; });
+      const pts = local && local.gp > 0 ? local.pts : parseInt(espnSt.points?.value||espnSt.points?.displayValue||0);
+      const gf = local && local.gp > 0 ? local.gf : parseInt(espnSt.pointsFor?.value||espnSt.goalsFor?.value||0);
+      const ga = local && local.gp > 0 ? local.ga : parseInt(espnSt.pointsAgainst?.value||espnSt.goalsAgainst?.value||0);
       return {
-        pos: pos + 1,
-        abbr: tm.abbreviation || '',
+        abbr: ab,
         name: pt(tm.displayName || tm.name || '?'),
-        group: letter
+        group: letter,
+        pts: pts,
+        gd: gf - ga,
+        gf: gf,
+        gp: local?.gp || parseInt(espnSt.gamesPlayed?.value||0)
       };
     });
-    // 1º e 2º de cada grupo
-    if (teams.length >= 1) classified.push({ ...teams[0], status: 'confirmed' });
+    // Ordena por pontos > saldo > gols pró
+    teams.sort((a, b) => {
+      if (b.pts !== a.pts) return b.pts - a.pts;
+      if (b.gd !== a.gd) return b.gd - a.gd;
+      return b.gf - a.gf;
+    });
+    // 1º lugar: sempre confirmado
+    if (teams.length >= 1) {
+      classified.push({ ...teams[0], status: 'confirmed' });
+    }
+    // 2º lugar: confirmado se o grupo terminou (todos jogaram 3 jogos)
     if (teams.length >= 2) {
-      // 2º lugar é confirmado se o grupo terminou
       const finished = isGroupFinished(letter, standingsData);
       classified.push({ ...teams[1], status: finished ? 'confirmed' : 'probable' });
     }
   });
-
-  // Adiciona 3ºs colocados que avançam (se já definidos)
-  // Vamos usar os dados do bracket se disponíveis
 
   let h = '<div class="classified-panel">';
   h += '<div class="panel-title"><span class="bracket-icon">[</span> CLASSIFICADOS PARA A SEGUNDA FASE <span class="bracket-icon">]</span></div>';
