@@ -882,12 +882,50 @@ function buildRound32(standingsData) {
   // Match 88: 03/07 2pm ET (Dallas) = 15h BRT
   // Match 86: 03/07 6pm ET (Miami) = 19h BRT
   // Match 87: 03/07 9:30pm ET (KC) = 22h30 BRT
-  const r32dates = [
-    '28/06 16h','29/06 14h','29/06 17h30','29/06 22h',
-    '30/06 14h','30/06 18h','30/06 22h','01/07 13h',
-    '01/07 17h','01/07 21h','02/07 16h','02/07 20h',
-    '03/07 00h','03/07 15h','03/07 19h','03/07 22h30'
+  // Mapa de fusos: cidade → offset do ET (Eastern Time = UTC-4)
+  // ET = UTC-4, CT = UTC-5, MT = UTC-6, PT = UTC-7
+  // offsetET = quantas horas a cidade está ATRASADA em relação ao ET
+  // Ex: LA (PT) = UTC-7 → 3h atrás do ET → offsetET = 3
+  const cityOffset = {
+    'LA': 3, 'Houston': 1, 'Boston': 0, 'Monterrey': 1,
+    'Dallas': 1, 'NY': 0, 'CDMX': 1, 'Atlanta': 0,
+    'Seattle': 3, 'SF': 3, 'Toronto': 0, 'Vancouver': 3,
+    'Miami': 0, 'KC': 1
+  };
+  // Horários em ET (Eastern Time), cidade
+  const r32meta = [
+    { et: '28/06 15h', city: 'LA' },       // Match 73
+    { et: '29/06 13h', city: 'Houston' },   // Match 76
+    { et: '29/06 16h30', city: 'Boston' },  // Match 74
+    { et: '29/06 21h', city: 'Monterrey' }, // Match 75
+    { et: '30/06 13h', city: 'Dallas' },    // Match 78
+    { et: '30/06 17h', city: 'NY' },        // Match 77
+    { et: '30/06 21h', city: 'CDMX' },      // Match 79
+    { et: '01/07 12h', city: 'Atlanta' },   // Match 80
+    { et: '01/07 16h', city: 'Seattle' },   // Match 82
+    { et: '01/07 20h', city: 'SF' },        // Match 81
+    { et: '02/07 15h', city: 'LA' },        // Match 84
+    { et: '02/07 19h', city: 'Toronto' },   // Match 83
+    { et: '02/07 23h', city: 'Vancouver' }, // Match 85
+    { et: '03/07 14h', city: 'Dallas' },    // Match 88
+    { et: '03/07 18h', city: 'Miami' },     // Match 86
+    { et: '03/07 21h30', city: 'KC' }       // Match 87
   ];
+  // Converte ET → BRT (ET+1) considerando virada de dia
+  function etToBrt(etStr) {
+    const [datePart, timePart] = etStr.split(' ');
+    const hasHalf = timePart.includes('30');
+    const clean = timePart.replace('h','').replace('30','');
+    let h = parseInt(clean);
+    let [d, month] = datePart.split('/').map(Number);
+    h += 1; // ET → BRT = +1h
+    if (h >= 24) { h -= 24; d += 1; }
+    const dd = d < 10 ? '0'+d : d;
+    const mm = month < 10 ? '0'+month : month;
+    const hh = h < 10 ? '0'+h : h;
+    return dd+'/'+mm+' '+hh+(hasHalf ? 'h30' : 'h');
+  }
+  const r32dates = r32meta.map(m => etToBrt(m.et));
 
   function t3label(key) {
     if (!C) return '3º';
