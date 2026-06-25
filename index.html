@@ -1251,7 +1251,8 @@ function renderStats() {
           const pts = parseInt(espnSt.points?.value||espnSt.points?.displayValue||0);
           const gf = parseInt(espnSt.pointsFor?.value||espnSt.goalsFor?.value||0);
           const ga = parseInt(espnSt.pointsAgainst?.value||espnSt.goalsAgainst?.value||0);
-          allThird.push({ group: String.fromCharCode(65+idx), abbr: ab, pts, gd: gf-ga, gf, gp });
+          const nm = pt(tm.displayName || tm.name || ab);
+          allThird.push({ group: String.fromCharCode(65+idx), abbr: ab, name: nm, pts, gd: gf-ga, gf, gp });
         }
       });
     });
@@ -1352,6 +1353,26 @@ function renderStats() {
       + '<img class="flag" src="'+flagUrl(maiorGoleada.aAbbr)+'" alt="" style="width:22px;height:16px;border-radius:2px;" loading="lazy" onerror="this.style.display=\'none\'">'
       + '</div>'
       + '<div style="font-size:.7rem;color:#64748b;min-width:50px;text-align:right;">'+maiorGoleada.diff+' gols de diferença</div>'
+      + '</div>');
+  }
+
+  // Prováveis 3º lugares (top 8)
+  const bestThird = allThird.slice(0, 8);
+  if (bestThird.length > 0) {
+    h += card('🏅 Prováveis 3ºs lugares (8 melhores)', '#a855f7',
+      '<div style="display:flex;flex-direction:column;gap:4px;">'
+      + bestThird.map((t, i) => {
+        const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '#'+(i+1);
+        const isBest = i < 8;
+        return '<div style="display:flex;align-items:center;gap:8px;padding:6px 12px;background:linear-gradient(145deg,#1e293b,#1a2332);border:1px solid '+(isBest?'#a855f744':'#2d3a4e')+';border-radius:8px;">'
+          + '<span style="min-width:24px;font-size:.75rem;font-weight:700;color:'+(i<3?'#f59e0b':'#64748b')+';">'+medal+'</span>'
+          + '<img class="flag" src="'+flagUrl(t.abbr)+'" alt="" style="width:18px;height:12px;border-radius:2px;" loading="lazy" onerror="this.style.display=\'none\'">'
+          + '<span style="flex:1;font-weight:500;font-size:.8rem;">'+t.name+'</span>'
+          + '<span style="font-size:.7rem;color:#a855f7;">Grupo '+t.group+'</span>'
+          + '<span style="font-size:.7rem;color:#64748b;">'+t.pts+'pts</span>'
+          + '<span style="font-size:.7rem;color:'+(t.gd>0?'#22c55e':t.gd<0?'#ef4444':'#64748b')+';">'+(t.gd>0?'+':'')+t.gd+'</span>'
+          + '</div>';
+      }).join('')
       + '</div>');
   }
 
