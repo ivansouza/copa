@@ -368,8 +368,7 @@
   </div>
 </div>
 
-<script><script>
-const ESPN_SB = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard';
+<script>const ESPN_SB = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard';
 const ESPN_ST = 'https://site.api.espn.com/apis/v2/sports/soccer/fifa.world/standings';
 const REFRESH_MS = 180000;
 
@@ -1466,7 +1465,6 @@ setInterval(loadAll, REFRESH_MS);
 // Service Worker
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/copa/sw.js');
-}
-</script></script>
+}</script>
 </body>
 </html>
