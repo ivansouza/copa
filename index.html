@@ -1460,7 +1460,7 @@ function renderClassifiedPanel(standingsData) {
   children.forEach((ch, idx) => {
     const letter = gL(idx);
     const entries = ch.standings?.entries || [];
-    // Ordena igual ao renderGroups: pontos > saldo > gols pró
+    // Usa o rank real do note quando disponível (mais confiável que posição no array)
     const teams = entries.map((e, pos) => {
       const tm = e.team || {};
       const ab = tm.abbreviation || '';
@@ -1469,6 +1469,7 @@ function renderClassifiedPanel(standingsData) {
       const pts = local && local.gp > 0 ? local.pts : parseInt(espnSt.points?.value||espnSt.points?.displayValue||0);
       const gf = local && local.gp > 0 ? local.gf : parseInt(espnSt.pointsFor?.value||espnSt.goalsFor?.value||0);
       const ga = local && local.gp > 0 ? local.ga : parseInt(espnSt.pointsAgainst?.value||espnSt.goalsAgainst?.value||0);
+      const rank = (e.note||{}).rank || (pos + 1);
       return {
         abbr: ab,
         name: pt(tm.displayName || tm.name || '?'),
@@ -1476,15 +1477,21 @@ function renderClassifiedPanel(standingsData) {
         pts: pts,
         gd: gf - ga,
         gf: gf,
-        gp: local?.gp || parseInt(espnSt.gamesPlayed?.value||0)
+        gp: local?.gp || parseInt(espnSt.gamesPlayed?.value||0),
+        rank: rank
       };
     });
-    // Ordena por pontos > saldo > gols pró
-    teams.sort((a, b) => {
-      if (b.pts !== a.pts) return b.pts - a.pts;
-      if (b.gd !== a.gd) return b.gd - a.gd;
-      return b.gf - a.gf;
-    });
+    // Ordena por rank real (do note) quando disponível, senão por pontos
+    const hasRank = teams.some(t => t.rank && t.rank !== (teams.indexOf(t)+1));
+    if (hasRank) {
+      teams.sort((a, b) => a.rank - b.rank);
+    } else {
+      teams.sort((a, b) => {
+        if (b.pts !== a.pts) return b.pts - a.pts;
+        if (b.gd !== a.gd) return b.gd - a.gd;
+        return b.gf - a.gf;
+      });
+    }
     // 1º lugar: sempre confirmado
     if (teams.length >= 1) {
       classified.push({ ...teams[0], status: 'confirmed' });
