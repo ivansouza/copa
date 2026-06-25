@@ -271,6 +271,68 @@
   .error-state .retry-btn:hover { background: #2563eb; }
   .games-section { margin-top: 1rem; }
   .live-section { margin-top: 1rem; }
+  .classified-panel {
+    background: linear-gradient(145deg, #1e293b, #1a2332);
+    border: 1px solid #2d3a4e;
+    border-radius: 14px;
+    padding: 1.2rem;
+  }
+  .classified-panel .panel-title {
+    font-size: .85rem;
+    font-weight: 700;
+    color: #f59e0b;
+    text-align: center;
+    margin-bottom: 1rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .classified-panel .panel-title .bracket-icon { color: #64748b; }
+  .classified-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .classified-grid .team-slot {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    background: #0f172a;
+    border: 1px solid #2d3a4e;
+    border-radius: 8px;
+    font-size: .72rem;
+    font-weight: 600;
+    color: #94a3b8;
+    transition: all .2s;
+    min-height: 32px;
+  }
+  .classified-grid .team-slot .flag {
+    width: 18px; height: 13px;
+    border-radius: 2px;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+  .classified-grid .team-slot .name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .classified-grid .team-slot.empty {
+    justify-content: center;
+    color: #2d3a4e;
+    font-size: .65rem;
+  }
+  .classified-grid .team-slot.confirmed {
+    border-color: #22c55e44;
+    color: #e2e8f0;
+  }
+  .classified-grid .team-slot.probable {
+    border-color: #f59e0b44;
+    color: #94a3b8;
+  }
+  @media (max-width: 600px) {
+    .classified-grid { grid-template-columns: repeat(2, 1fr); }
+  }
   .live-container {
     max-width: 720px;
     margin: 0 auto;
@@ -409,6 +471,7 @@
   <div id="section-bracket" class="section-content" style="display:none">
     <div class="section-title">🏅 Fase Final <span class="bar"></span></div>
     <div style="font-size:.75rem;color:#64748b;margin-bottom:12px;text-align:center;">Horários em BRT (Brasília)</div>
+    <div id="classified-panel" style="margin-bottom:1.5rem;"></div>
     <div id="bracket-container"><div class="loading-state"><div class="spinner"></div><p>Carregando bracket...</p></div></div>
   </div>
 
@@ -645,6 +708,7 @@ async function loadAll() {
     allGames.sort((a,b) => new Date(a.date) - new Date(b.date));
 
     renderGroups(standingsCache); // re-renderiza com allGames populado
+    renderClassifiedPanel(standingsCache);
     renderBracket(allGames, standingsCache);
     renderDateNav(dates);
     renderGames();
@@ -1330,6 +1394,64 @@ function isGroupFinished(groupLetter, standingsData) {
   return teamAbs.every(ab => gamesPerTeam[ab] >= 3);
 }
 
+function renderClassifiedPanel(standingsData) {
+  const c = document.getElementById('classified-panel');
+  if (!standingsData || !standingsData.children) {
+    c.innerHTML = '';
+    return;
+  }
+
+  // Pega os times classificados (1º e 2º de cada grupo)
+  const classified = [];
+  const probable = [];
+  const children = standingsData.children || [];
+
+  children.forEach((ch, idx) => {
+    const letter = gL(idx);
+    const entries = ch.standings?.entries || [];
+    const teams = entries.map((e, pos) => {
+      const tm = e.team || {};
+      return {
+        pos: pos + 1,
+        abbr: tm.abbreviation || '',
+        name: pt(tm.displayName || tm.name || '?'),
+        group: letter
+      };
+    });
+    // 1º e 2º de cada grupo
+    if (teams.length >= 1) classified.push({ ...teams[0], status: 'confirmed' });
+    if (teams.length >= 2) {
+      // 2º lugar é confirmado se o grupo terminou
+      const finished = isGroupFinished(letter, standingsData);
+      classified.push({ ...teams[1], status: finished ? 'confirmed' : 'probable' });
+    }
+  });
+
+  // Adiciona 3ºs colocados que avançam (se já definidos)
+  // Vamos usar os dados do bracket se disponíveis
+
+  let h = '<div class="classified-panel">';
+  h += '<div class="panel-title"><span class="bracket-icon">[</span> CLASSIFICADOS PARA A SEGUNDA FASE <span class="bracket-icon">]</span></div>';
+  h += '<div class="classified-grid">';
+
+  // Mostra até 32 slots
+  for (let i = 0; i < 32; i++) {
+    const t = classified[i];
+    if (t) {
+      const cls = t.status === 'confirmed' ? 'team-slot confirmed' : 'team-slot probable';
+      h += '<div class="'+cls+'">';
+      h += '<img class="flag" src="'+flagUrl(t.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'">';
+      h += '<span class="name">'+t.name+'</span>';
+      h += '</div>';
+    } else {
+      h += '<div class="team-slot empty">⏳</div>';
+    }
+  }
+
+  h += '</div></div>';
+  c.innerHTML = h;
+}
+
 function renderBracket(events, standingsData) {
   const c = document.getElementById('bracket-container');
 
@@ -1535,6 +1657,7 @@ document.querySelectorAll('.nav-btn').forEach(btn=>{
     document.getElementById(sectionId).style.display='block';
     // Se clicou em Mata-Mata, recalcula o bracket com dados frescos
     if (btn.dataset.section === 'bracket' && standingsCache) {
+      renderClassifiedPanel(standingsCache);
       renderBracket(allGames || [], standingsCache);
     }
     // Se clicou em Estatísticas, renderiza
