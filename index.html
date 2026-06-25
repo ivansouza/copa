@@ -1052,22 +1052,40 @@ function renderStats() {
 
   // Constrói mapa: abbr → posição no grupo (1=primeiro, 2=segundo, etc)
   const teamPosition = {};
+  const allThird = [];
   if (standingsCache && standingsCache.children) {
-    standingsCache.children.forEach(ch => {
+    standingsCache.children.forEach((ch, idx) => {
       const entries = ch.standings?.entries || [];
-      entries.forEach((e, idx) => {
+      entries.forEach((e, pos) => {
         const ab = e.team?.abbreviation || '';
-        if (ab) teamPosition[ab] = idx + 1; // posição 1-based
+        if (ab) teamPosition[ab] = pos + 1; // posição 1-based
+        // Guarda 3ºs colocados
+        if (pos === 2) {
+          const tm = e.team || {};
+          const espnSt = {}; (e.stats||[]).forEach(s => { espnSt[s.name] = s; });
+          const gp = parseInt(espnSt.gamesPlayed?.value||espnSt.gamesPlayed?.displayValue||0);
+          const pts = parseInt(espnSt.points?.value||espnSt.points?.displayValue||0);
+          const gf = parseInt(espnSt.pointsFor?.value||espnSt.goalsFor?.value||0);
+          const ga = parseInt(espnSt.pointsAgainst?.value||espnSt.goalsAgainst?.value||0);
+          allThird.push({ group: String.fromCharCode(65+idx), abbr: ab, pts, gd: gf-ga, gf, gp });
+        }
       });
     });
   }
+  // Ordena 3ºs: pontos > saldo > gols pró
+  allThird.sort((a, b) => {
+    if (b.pts !== a.pts) return b.pts - a.pts;
+    if (b.gd !== a.gd) return b.gd - a.gd;
+    return b.gf - a.gf;
+  });
+  const bestThirdAbs = allThird.slice(0, 8).map(t => t.abbr);
 
-  // Times desclassificados: 3º e 4º colocados em grupos com 3+ jogos
+  // Times desclassificados: 4ºs + 3ºs que NÃO estão entre os 8 melhores
   const eliminated = teams.filter(t => {
     if (t.gp < 2) return false;
     const pos = teamPosition[t.abbr];
-    // Se sabemos a posição e é 3º ou 4º, está eliminado
-    if (pos >= 3) return true;
+    if (pos === 4) return true; // 4º sempre eliminado
+    if (pos === 3) return !bestThirdAbs.includes(t.abbr); // 3º só eliminado se não for um dos 8 melhores
     // Se não temos posição (grupo incompleto), usa regra antiga
     if (!pos) {
       if (t.gp >= 3 && t.pts < 4) return true;
