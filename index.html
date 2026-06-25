@@ -323,12 +323,24 @@
     font-size: .65rem;
   }
   .classified-grid .team-slot.confirmed {
-    border-color: #22c55e44;
+    border: 2px solid #22c55e;
     color: #e2e8f0;
+    box-shadow: 0 0 12px rgba(34,197,94,0.5), 0 0 24px rgba(34,197,94,0.2);
+    animation: pulse-glow-green 1.5s infinite;
+  }
+  @keyframes pulse-glow-green {
+    0%, 100% { box-shadow: 0 0 10px rgba(34,197,94,0.4), 0 0 20px rgba(34,197,94,0.15); }
+    50% { box-shadow: 0 0 18px rgba(34,197,94,0.7), 0 0 36px rgba(34,197,94,0.3); }
   }
   .classified-grid .team-slot.probable {
-    border-color: #f59e0b44;
+    border: 2px solid #f59e0b;
     color: #94a3b8;
+    box-shadow: 0 0 12px rgba(245,158,11,0.5), 0 0 24px rgba(245,158,11,0.2);
+    animation: pulse-glow-orange 1.5s infinite;
+  }
+  @keyframes pulse-glow-orange {
+    0%, 100% { box-shadow: 0 0 10px rgba(245,158,11,0.4), 0 0 20px rgba(245,158,11,0.15); }
+    50% { box-shadow: 0 0 18px rgba(245,158,11,0.7), 0 0 36px rgba(245,158,11,0.3); }
   }
   @media (max-width: 600px) {
     .classified-grid { grid-template-columns: repeat(2, 1fr); }
