@@ -1323,6 +1323,8 @@ function renderStats() {
   const hasStandings = standingsCache && standingsCache.children && standingsCache.children.length > 0;
   const eliminated = hasStandings ? teams.filter(t => {
     if (t.gp < 2) return false;
+    // Se o time está no top 8 dos 3ºs, não pode estar eliminado
+    if (bestThirdAbs.includes(t.ab)) return false;
     return isMathematicallyEliminated(t, teamPosition, allThird, standingsCache);
   }).sort((a,b) => b.pts - a.pts || b.gp - a.gp) : [];
 
