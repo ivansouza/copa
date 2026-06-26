@@ -1428,6 +1428,13 @@ function isGroupFinished(groupLetter, standingsData) {
   return teamAbs.every(ab => gamesPerTeam[ab] >= 3);
 }
 
+function isMathematicallyQualified(teamPts, thirdPts, thirdRemainingGames) {
+  // Um time está matematicamente classificado se o 3º lugar
+  // não pode mais alcançá-lo, mesmo vencendo todos os jogos restantes
+  const maxThirdPts = thirdPts + (thirdRemainingGames * 3);
+  return teamPts > maxThirdPts;
+}
+
 function renderClassifiedPanel(standingsData) {
   const c = document.getElementById('classified-panel');
   if (!standingsData || !standingsData.children) {
@@ -1493,14 +1500,19 @@ function renderClassifiedPanel(standingsData) {
         return b.gf - a.gf;
       });
     }
-    // 1º lugar: sempre confirmado
+    // 1º lugar: confirmado se grupo terminou OU se já está matematicamente garantido
     if (teams.length >= 1) {
-      classified.push({ ...teams[0], status: 'confirmed' });
+      const finished = isGroupFinished(letter, standingsData);
+      const third = teams[2];
+      const mathQual = third ? isMathematicallyQualified(teams[0].pts, third.pts, 3 - third.gp) : false;
+      classified.push({ ...teams[0], status: (finished || mathQual) ? 'confirmed' : 'probable' });
     }
-    // 2º lugar: confirmado se o grupo terminou (todos jogaram 3 jogos)
+    // 2º lugar: confirmado se grupo terminou OU se já está matematicamente garantido
     if (teams.length >= 2) {
       const finished = isGroupFinished(letter, standingsData);
-      classified.push({ ...teams[1], status: finished ? 'confirmed' : 'probable' });
+      const third = teams[2];
+      const mathQual = third ? isMathematicallyQualified(teams[1].pts, third.pts, 3 - third.gp) : false;
+      classified.push({ ...teams[1], status: (finished || mathQual) ? 'confirmed' : 'probable' });
     }
   });
 
