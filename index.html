@@ -1151,6 +1151,58 @@ function simulateWinner(match) {
   return match.b;
 }
 
+function isMathematicallyEliminated(t, teamPosition, allThird, standingsData) {
+  // Um time está matematicamente eliminado se NENHUM cenário possível
+  // permite ele se classificar (como 1º/2º do grupo ou top 8 dos 3ºs)
+  const pos = teamPosition[t.ab];
+  if (!pos) return false; // posição desconhecida = não elimina
+  
+  // 4º lugar: sempre eliminado (não tem como sair do 4º)
+  if (pos === 4) return true;
+  
+  // 3º lugar: verifica se pode entrar no top 8
+  if (pos === 3) {
+    // Calcula o máximo de pontos que este 3º pode alcançar
+    const remaining = 3 - t.gp;
+    const maxPts = t.pts + (remaining * 3);
+    
+    // Pior cenário para os 8º melhor 3º: todos os outros 3ºs
+    // que ainda podem jogar vencem seus jogos restantes
+    // Simula o pior 8º lugar possível
+    const simulated = allThird.map(a => {
+      const r = 3 - a.gp;
+      return { ...a, maxPts: a.pts + (r * 3) };
+    });
+    // Adiciona o time atual com seus pontos máximos
+    simulated.push({ ab: t.ab, pts: t.pts, maxPts: maxPts, gd: t.gd, gp: t.gp });
+    // Ordena por maxPts (pior caso: todos os outros 3ºs maximizam)
+    simulated.sort((a, b) => b.maxPts - a.maxPts || b.gd - a.gd || b.gf - a.gf);
+    // Pega o 8º melhor maxPts
+    const eighthMax = simulated[7]?.maxPts || 0;
+    // Se mesmo no máximo de pontos o time não alcança o 8º lugar, está eliminado
+    if (maxPts < eighthMax) return true;
+    // Se empata em pontos, precisa de saldo
+    if (maxPts === eighthMax) {
+      // Pior saldo possível para o time (perder todos os jogos por 5 gols)
+      const minGd = t.gd - (remaining * 5);
+      // Melhor saldo possível para o 8º (vencer todos por 5 gols)
+      const eighth = simulated[7];
+      const eighthRemaining = 3 - (eighth.gp || 0);
+      const maxEighthGd = (eighth.gd || 0) + (eighthRemaining * 5);
+      if (minGd < maxEighthGd) return true;
+    }
+    return false;
+  }
+  
+  // 1º ou 2º lugar: verifica se pode ser ultrapassado
+  if (pos === 1 || pos === 2) {
+    // Se já está classificado matematicamente, não está eliminado
+    return false;
+  }
+  
+  return false;
+}
+
 function renderStats() {
   const c = document.getElementById('stats-container');
 
@@ -1271,10 +1323,7 @@ function renderStats() {
   const hasStandings = standingsCache && standingsCache.children && standingsCache.children.length > 0;
   const eliminated = hasStandings ? teams.filter(t => {
     if (t.gp < 2) return false;
-    const pos = teamPosition[t.ab];
-    if (pos === 4) return true; // 4º sempre eliminado
-    if (pos === 3) return !bestThirdAbs.includes(t.ab); // 3º só eliminado se não for um dos 8 melhores
-    return false;
+    return isMathematicallyEliminated(t, teamPosition, allThird, standingsCache);
   }).sort((a,b) => b.pts - a.pts || b.gp - a.gp) : [];
 
   // Total de gols na fase de grupos
