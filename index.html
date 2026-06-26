@@ -1662,12 +1662,18 @@ function renderBracket(events, standingsData) {
     // Time A = primeiro grupo, Time B = segundo grupo (quando aplicável)
     const aGroupFinished = groupLetters.length >= 1 ? isGroupFinished(groupLetters[0], standingsData) : false;
     const bGroupFinished = groupLetters.length >= 2 ? isGroupFinished(groupLetters[1], standingsData) : false;
+    // Verifica se o match envolve um 3º lugar (sempre provável, pois depende do ranking)
+    const involvesThird = (m.label||'').includes('3º');
+    // Time A é provável se grupo não terminou OU se é 3º lugar
+    const aProbable = !aGroupFinished || (groupLetters.length >= 1 && involvesThird && m.label.includes('3º '+groupLetters[0]));
+    // Time B é provável se grupo não terminou OU se é 3º lugar
+    const bProbable = !bGroupFinished || (groupLetters.length >= 2 && involvesThird && m.label.includes('3º '+groupLetters[1]));
     // Confronto é provável se PELO MENOS UM time ainda não está confirmado
-    const isProbable = !(aGroupFinished && bGroupFinished);
+    const isProbable = aProbable || bProbable;
     h += '<div class="bracket-match'+(isProbable?' probable':'')+'"><div class="match-teams">';
-    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(aAbbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+aName+'</span>'+(aGroupFinished?'':'<span class="bracket-probable">(provável)</span>')+'</div></div>';
+    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(aAbbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+aName+'</span>'+(aProbable?'<span class="bracket-probable">(provável)</span>':'')+'</div></div>';
     h += '<div class="match-vs">X</div>';
-    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(bAbbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+bName+'</span>'+(bGroupFinished?'':'<span class="bracket-probable">(provável)</span>')+'</div></div>';
+    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(bAbbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+bName+'</span>'+(bProbable?'<span class="bracket-probable">(provável)</span>':'')+'</div></div>';
     h += '</div><div class="match-label">'+(m.date ? m.date+' — ' : '')+m.label+(isProbable?' — provável':'')+'</div></div>';
   });
   h += '</div>';
