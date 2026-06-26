@@ -1504,6 +1504,34 @@ function renderClassifiedPanel(standingsData) {
     }
   });
 
+  // Calcula os 8 melhores 3ºs colocados (igual à lógica das estatísticas)
+  const allThird = [];
+  children.forEach((ch, idx) => {
+    const letter = gL(idx);
+    const entries = ch.standings?.entries || [];
+    entries.forEach((e, pos) => {
+      const realRank = (e.note||{}).rank || (pos + 1);
+      if (realRank === 3) {
+        const tm = e.team || {};
+        const ab = tm.abbreviation || '';
+        const local = localStats[ab];
+        const espnSt = {}; (e.stats||[]).forEach(s => { espnSt[s.name] = s; });
+        const gp = local?.gp || parseInt(espnSt.gamesPlayed?.value||0);
+        const pts = local && local.gp > 0 ? local.pts : parseInt(espnSt.points?.value||espnSt.points?.displayValue||0);
+        const gf = local && local.gp > 0 ? local.gf : parseInt(espnSt.pointsFor?.value||espnSt.goalsFor?.value||0);
+        const ga = local && local.gp > 0 ? local.ga : parseInt(espnSt.pointsAgainst?.value||espnSt.goalsAgainst?.value||0);
+        allThird.push({ group: letter, abbr: ab, name: pt(tm.displayName || tm.name || ab), pts, gd: gf-ga, gf, gp });
+      }
+    });
+  });
+  allThird.sort((a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf);
+  const bestThird = allThird.slice(0, 8);
+
+  // Adiciona os 8 melhores 3ºs como 'probable' no final
+  bestThird.forEach(t => {
+    classified.push({ abbr: t.abbr, name: t.name, group: t.group, status: 'probable' });
+  });
+
   let h = '<div class="classified-panel">';
   h += '<div class="panel-title"><span class="bracket-icon">[</span> CLASSIFICADOS PARA A SEGUNDA FASE <span class="bracket-icon">]</span></div>';
   h += '<div class="classified-grid">';
