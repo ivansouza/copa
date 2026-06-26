@@ -1242,9 +1242,10 @@ function renderStats() {
       const entries = ch.standings?.entries || [];
       entries.forEach((e, pos) => {
         const ab = e.team?.abbreviation || '';
-        if (ab) teamPosition[ab] = pos + 1; // posição 1-based
-        // Guarda 3ºs colocados
-        if (pos === 2) {
+        const realRank = (e.note||{}).rank || (pos + 1);
+        if (ab) teamPosition[ab] = realRank; // posição real (do note)
+        // Guarda 3ºs colocados (usa rank real, não posição no array)
+        if (realRank === 3) {
           const tm = e.team || {};
           const espnSt = {}; (e.stats||[]).forEach(s => { espnSt[s.name] = s; });
           const gp = parseInt(espnSt.gamesPlayed?.value||espnSt.gamesPlayed?.displayValue||0);
