@@ -1428,11 +1428,21 @@ function isGroupFinished(groupLetter, standingsData) {
   return teamAbs.every(ab => gamesPerTeam[ab] >= 3);
 }
 
-function isMathematicallyQualified(teamPts, thirdPts, thirdRemainingGames) {
+function isMathematicallyQualified(teamPts, teamGd, thirdPts, thirdGd, thirdRemainingGames) {
   // Um time está matematicamente classificado se o 3º lugar
   // não pode mais alcançá-lo, mesmo vencendo todos os jogos restantes
   const maxThirdPts = thirdPts + (thirdRemainingGames * 3);
-  return teamPts > maxThirdPts;
+  if (teamPts > maxThirdPts) return true;
+  // Se pode empatar em pontos, verifica saldo de gols
+  // O 3º pode ganhar cada jogo restante por no máximo... vamos considerar
+  // um cenário realista: o 3º pode virar o saldo em até (thirdRemainingGames * 5) gols
+  // Enquanto o time pode perder por até (thirdRemainingGames * 5) gols
+  if (teamPts === maxThirdPts) {
+    const maxThirdGd = thirdGd + (thirdRemainingGames * 5); // 5 gols de diferença por jogo
+    const minTeamGd = teamGd - (thirdRemainingGames * 5);
+    return teamGd > maxThirdGd || (teamGd === maxThirdGd && teamPts > thirdPts);
+  }
+  return false;
 }
 
 function renderClassifiedPanel(standingsData) {
@@ -1504,14 +1514,14 @@ function renderClassifiedPanel(standingsData) {
     if (teams.length >= 1) {
       const finished = isGroupFinished(letter, standingsData);
       const third = teams[2];
-      const mathQual = third ? isMathematicallyQualified(teams[0].pts, third.pts, 3 - third.gp) : false;
+      const mathQual = third ? isMathematicallyQualified(teams[0].pts, teams[0].gd, third.pts, third.gd, 3 - third.gp) : false;
       classified.push({ ...teams[0], status: (finished || mathQual) ? 'confirmed' : 'probable' });
     }
     // 2º lugar: confirmado se grupo terminou OU se já está matematicamente garantido
     if (teams.length >= 2) {
       const finished = isGroupFinished(letter, standingsData);
       const third = teams[2];
-      const mathQual = third ? isMathematicallyQualified(teams[1].pts, third.pts, 3 - third.gp) : false;
+      const mathQual = third ? isMathematicallyQualified(teams[1].pts, teams[1].gd, third.pts, third.gd, 3 - third.gp) : false;
       classified.push({ ...teams[1], status: (finished || mathQual) ? 'confirmed' : 'probable' });
     }
   });
