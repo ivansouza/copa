@@ -1851,7 +1851,7 @@ function renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events) {
   });
   function getScore(abbr) {
     const s = scoreMap[abbr];
-    if (!s) return null;
+    if (!s) { console.log('getScore: no score for', abbr, 'keys:', Object.keys(scoreMap)); return null; }
     if (s.status === 'pre') return null;
     return s.score;
   }
