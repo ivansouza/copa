@@ -1833,9 +1833,35 @@ function renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events) {
   if (!c) return;
   // Mapa de placares
   const scoreMap = {};
+  // Busca dados frescos da API
+  try {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=20260628-20260704&_='+Date.now(), false);
+    xhr.send();
+    if (xhr.status === 200) {
+      const data = JSON.parse(xhr.responseText);
+      (data.events||[]).forEach(e => {
+        const slug = (e.season?.slug || '');
+        if (slug !== 'round-of-32') return;
+        const comp = e.competitions?.[0]||{};
+        const st = comp.status?.type||{};
+        const state = st.state||'';
+        if (state === 'pre') return;
+        const cmp = comp.competitors||[];
+        cmp.forEach(c => {
+          const ab = c.team?.abbreviation||'';
+          if (!ab) return;
+          if (!scoreMap[ab]) scoreMap[ab] = {};
+          scoreMap[ab].score = parseInt(c.score)||0;
+          scoreMap[ab].status = state;
+        });
+      });
+    }
+  } catch(e) {}
+  // Fallback: usa events passados
   (events||[]).forEach(e => {
     const slug = (e.season?.slug || '');
-    if (slug !== 'round-of-32') return; // só segunda fase
+    if (slug !== 'round-of-32') return;
     const comp = e.competitions?.[0]||{};
     const st = comp.status?.type||{};
     const state = st.state||'';
