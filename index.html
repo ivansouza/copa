@@ -1834,11 +1834,10 @@ function renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events) {
   // Mapa de placares: { abbr: { goalsFor, goalsAgainst, status } }
   const scoreMap = {};
   (events||[]).forEach(e => {
-    const seasonSlug = (e.season?.slug || '');
-    if (seasonSlug === 'group-stage') return; // só segunda fase em diante
     const comp = e.competitions?.[0]||{};
     const st = comp.status?.type||{};
     const state = st.state||'';
+    if (state === 'pre') return; // pula jogos não iniciados
     const cmp = comp.competitors||[];
     cmp.forEach(c => {
       const ab = c.team?.abbreviation||'';
