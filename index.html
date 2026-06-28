@@ -1833,11 +1833,15 @@ function renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events) {
   if (!c) return;
   // Mapa de placares: { abbr: { goalsFor, goalsAgainst, status } }
   const scoreMap = {};
+  let r32count = 0;
   (events||[]).forEach(e => {
+    const slug = (e.season?.slug || '');
+    if (slug !== 'round-of-32') return;
+    r32count++;
     const comp = e.competitions?.[0]||{};
     const st = comp.status?.type||{};
     const state = st.state||'';
-    if (state === 'pre') return; // pula jogos não iniciados
+    if (state === 'pre') return;
     const cmp = comp.competitors||[];
     cmp.forEach(c => {
       const ab = c.team?.abbreviation||'';
@@ -1847,6 +1851,7 @@ function renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events) {
       scoreMap[ab].status = state;
     });
   });
+  console.log('R32 events:', r32count, 'scoreMap:', Object.keys(scoreMap));
   function getScore(abbr) {
     const s = scoreMap[abbr];
     if (!s) return null;
