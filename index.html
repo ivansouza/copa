@@ -877,9 +877,9 @@ function renderGroups(d) {
   const stats = {}; // { abbreviation: { pts, gp, w, t, l, gf, ga } }
   (allGames||[]).forEach(g => {
     // Só considera jogos da fase de grupos (season.type 1 = group stage)
-    const seasonType = g.season?.type || 0;
-    if (seasonType !== 1) return;
-    if (getStatus(g) === 'scheduled') return; // pula só os programados
+    const seasonSlug = (g.season?.slug || '');
+    if (seasonSlug !== 'group-stage') return;
+    if (getStatus(g) === 'scheduled') return;
     const co = g.competitions?.[0]||{};
     const cmp = co.competitors||[];
     if (cmp.length < 2) return;
@@ -1054,8 +1054,8 @@ function buildRound32(standingsData) {
   // Calcula stats localmente (só jogos da fase de grupos)
   const localStats = {};
   (allGames||[]).forEach(g => {
-    const seasonType = g.season?.type || 0;
-    if (seasonType !== 1) return;
+    const seasonSlug = (g.season?.slug || '');
+    if (seasonSlug !== 'group-stage') return;
     if (getStatus(g) === 'scheduled') return;
     const co = g.competitions?.[0]||{}, cmp = co.competitors||[];
     if (cmp.length < 2) return;
@@ -1422,8 +1422,8 @@ function renderStats() {
   }
   const grupoGols = {};
   (allGames||[]).forEach(g => {
-    const seasonType = g.season?.type || 0;
-    if (seasonType !== 1) return;
+    const seasonSlug = (g.season?.slug || '');
+    if (seasonSlug !== 'group-stage') return;
     if (getStatus(g) === 'scheduled') return;
     const co = g.competitions?.[0]||{}, cmp = co.competitors||[];
     if (cmp.length < 2) return;
@@ -1440,8 +1440,8 @@ function renderStats() {
   // Maior goleada
   let maiorGoleada = null;
   (allGames||[]).forEach(g => {
-    const seasonType = g.season?.type || 0;
-    if (seasonType !== 1) return;
+    const seasonSlug = (g.season?.slug || '');
+    if (seasonSlug !== 'group-stage') return;
     if (getStatus(g) === 'scheduled') return;
     const co = g.competitions?.[0]||{}, cmp = co.competitors||[];
     if (cmp.length < 2) return;
@@ -1834,8 +1834,8 @@ function renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events) {
   // Mapa de placares: { abbr: { goalsFor, goalsAgainst, status } }
   const scoreMap = {};
   (events||[]).forEach(e => {
-    const seasonType = e.season?.type || 0;
-    if (seasonType < 2) return; // só segunda fase em diante
+    const seasonSlug = (e.season?.slug || '');
+    if (seasonSlug === 'group-stage') return; // só segunda fase em diante
     const comp = e.competitions?.[0]||{};
     const st = comp.status?.type||{};
     const state = st.state||'';
