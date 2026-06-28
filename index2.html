@@ -1787,14 +1787,28 @@ function renderClassifiedPanel(standingsData) {
 function renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace) {
   const c = document.getElementById('bracket-diagram');
   if (!c) return;
+  // Pares seguem a ordem do round32 no site (Match 73 a 88)
+  // Col1 = lado esquerdo, Col2 = lado direito
+  // Cada par = vencedores se enfrentam nas oitavas
+  // Pares seguem a ordem do round32 no site (0-1, 2-3, 4-5...)
+  // Col1 = lado esquerdo, Col2 = lado direito
+  // Cada par = vencedores se enfrentam nas oitavas
   const PARES = [
-    [["Canadá","África do Sul","https://a.espncdn.com/i/teamlogos/countries/500/can.png","https://a.espncdn.com/i/teamlogos/countries/500/rsa.png"],["Alemanha","Paraguai","https://a.espncdn.com/i/teamlogos/countries/500/ger.png","https://a.espncdn.com/i/teamlogos/countries/500/par.png"]],
+    // Par 0-1: Match 73 (2ºA vs 2ºB) + Match 74 (1ºE vs 3º)
+    [["África do Sul","Canadá","https://a.espncdn.com/i/teamlogos/countries/500/rsa.png","https://a.espncdn.com/i/teamlogos/countries/500/can.png"],["Alemanha","Paraguai","https://a.espncdn.com/i/teamlogos/countries/500/ger.png","https://a.espncdn.com/i/teamlogos/countries/500/par.png"]],
+    // Par 2-3: Match 75 (1ºF vs 2ºC) + Match 76 (1ºC vs 2ºF)
     [["Holanda","Marrocos","https://a.espncdn.com/i/teamlogos/countries/500/ned.png","https://a.espncdn.com/i/teamlogos/countries/500/mar.png"],["Brasil","Japão","https://a.espncdn.com/i/teamlogos/countries/500/bra.png","https://a.espncdn.com/i/teamlogos/countries/500/jpn.png"]],
+    // Par 4-5: Match 77 (1ºI vs 3º) + Match 78 (2ºE vs 2ºI)
     [["França","Suécia","https://a.espncdn.com/i/teamlogos/countries/500/fra.png","https://a.espncdn.com/i/teamlogos/countries/500/swe.png"],["Costa do Marfim","Noruega","https://a.espncdn.com/i/teamlogos/countries/500/civ.png","https://a.espncdn.com/i/teamlogos/countries/500/nor.png"]],
+    // Par 6-7: Match 79 (1ºA vs 3º) + Match 80 (1ºL vs 3º)
     [["México","Equador","https://a.espncdn.com/i/teamlogos/countries/500/mex.png","https://a.espncdn.com/i/teamlogos/countries/500/ecu.png"],["Inglaterra","RD Congo","https://a.espncdn.com/i/teamlogos/countries/500/eng.png","https://a.espncdn.com/i/teamlogos/countries/500/cod.png"]],
+    // Par 8-9: Match 81 (1ºD vs 3º) + Match 82 (1ºG vs 3º)
     [["Estados Unidos","Bósnia","https://a.espncdn.com/i/teamlogos/countries/500/usa.png","https://a.espncdn.com/i/teamlogos/countries/500/bih.png"],["Bélgica","Senegal","https://a.espncdn.com/i/teamlogos/countries/500/bel.png","https://a.espncdn.com/i/teamlogos/countries/500/sen.png"]],
-    [["Croácia","Portugal","https://a.espncdn.com/i/teamlogos/countries/500/cro.png","https://a.espncdn.com/i/teamlogos/countries/500/por.png"],["Espanha","Áustria","https://a.espncdn.com/i/teamlogos/countries/500/esp.png","https://a.espncdn.com/i/teamlogos/countries/500/aut.png"]],
+    // Par 10-11: Match 83 (2ºK vs 2ºL) + Match 84 (1ºH vs 2ºJ)
+    [["Portugal","Croácia","https://a.espncdn.com/i/teamlogos/countries/500/por.png","https://a.espncdn.com/i/teamlogos/countries/500/cro.png"],["Espanha","Áustria","https://a.espncdn.com/i/teamlogos/countries/500/esp.png","https://a.espncdn.com/i/teamlogos/countries/500/aut.png"]],
+    // Par 12-13: Match 85 (1ºB vs 3º) + Match 86 (1ºJ vs 2ºH)
     [["Suíça","Argélia","https://a.espncdn.com/i/teamlogos/countries/500/sui.png","https://a.espncdn.com/i/teamlogos/countries/500/alg.png"],["Argentina","Cabo Verde","https://a.espncdn.com/i/teamlogos/countries/500/arg.png","https://a.espncdn.com/i/teamlogos/countries/500/cpv.png"]],
+    // Par 14-15: Match 87 (1ºK vs 3º) + Match 88 (2ºD vs 2ºG)
     [["Colômbia","Gana","https://a.espncdn.com/i/teamlogos/countries/500/col.png","https://a.espncdn.com/i/teamlogos/countries/500/gha.png"],["Egito","Austrália","https://a.espncdn.com/i/teamlogos/countries/500/egy.png","https://a.espncdn.com/i/teamlogos/countries/500/aus.png"]],
   ];
   function cd(t1,t2,f1,f2){return '<div class="bd-m"><div class="t"><img class="fl" src="'+f1+'" alt="" loading="lazy"><span class="nm">'+t1+'</span></div><div class="v">✕</div><div class="t"><img class="fl" src="'+f2+'" alt="" loading="lazy"><span class="nm">'+t2+'</span></div></div>'}
