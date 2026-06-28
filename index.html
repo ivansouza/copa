@@ -1305,11 +1305,13 @@ function isMathematicallyEliminated(t, teamPosition, allThird, standingsData) {
 function renderStats() {
   const c = document.getElementById('stats-container');
 
-  // Calcula estatísticas dos times a partir dos jogos encerrados
+  // Calcula estatísticas dos times (inclui jogos AO VIVO)
   const stats = {};
   const teamNames = {};
+  const liveTeams = new Set();
   (allGames||[]).forEach(g => {
-    if (getStatus(g) === 'scheduled') return;
+    const st = getStatus(g);
+    if (st === 'scheduled') return;
     const co = g.competitions?.[0]||{}, cmp = co.competitors||[];
     if (cmp.length < 2) return;
     const home = cmp[0], away = cmp[1];
@@ -1320,6 +1322,8 @@ function renderStats() {
     if (!stats[aa]) stats[aa] = { pts:0, gp:0, gf:0, ga:0, w:0, t:0, l:0 };
     teamNames[ha] = pt(home.team?.displayName || home.team?.name || ha);
     teamNames[aa] = pt(away.team?.displayName || away.team?.name || aa);
+    // Marca times que estão AO VIVO
+    if (st === 'live') { liveTeams.add(ha); liveTeams.add(aa); }
     stats[ha].gp++; stats[aa].gp++;
     stats[ha].gf += hg; stats[ha].ga += ag;
     stats[aa].gf += ag; stats[aa].ga += hg;
@@ -1436,8 +1440,10 @@ function renderStats() {
   function card(title, color, content) {
     return '<div style="margin-bottom:1.5rem;"><h3 style="font-size:1rem;font-weight:700;margin-bottom:.8rem;color:'+color+';">'+title+'</h3>'+content+'</div>';
   }
-  function row(medal, flag, name, val, unit) {
-    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:linear-gradient(145deg,#1e293b,#1a2332);border:1px solid #2d3a4e;border-radius:8px;">'
+  function row(medal, flag, name, val, unit, isLive) {
+    const liveDot = isLive ? '<span style="display:inline-block;width:8px;height:8px;background:#ef4444;border-radius:50%;animation:pulse-dot 1.5s infinite;flex-shrink:0;"></span>' : '';
+    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:linear-gradient(145deg,#1e293b,#1a2332);border:1px solid '+(isLive?'#ef444444':'#2d3a4e')+';border-radius:8px;">'
+      + liveDot
       + '<span style="font-weight:800;font-size:.9rem;min-width:24px;color:#f59e0b;">'+medal+'</span>'
       + '<img class="flag" src="'+flagUrl(flag)+'" alt="" style="width:20px;height:14px;border-radius:2px;" loading="lazy" onerror="this.style.display=\'none\'">'
       + '<span style="flex:1;font-weight:600;font-size:.85rem;">'+name+'</span>'
@@ -1458,19 +1464,19 @@ function renderStats() {
   // Top 5 gols
   h += card('⚽ Times com mais gols', '#f59e0b',
     '<div style="display:flex;flex-direction:column;gap:6px;">'
-    + topGols.map((t,i) => row(['🥇','🥈','🥉','#4','#5'][i]||'#'+(i+1), t.ab, t.name, t.gf, 'gols'+(t.gp>1?' em '+t.gp+'j':''))).join('')
+    + topGols.map((t,i) => row(['🥇','🥈','🥉','#4','#5'][i]||'#'+(i+1), t.ab, t.name, t.gf, 'gols'+(t.gp>1?' em '+t.gp+'j':''), liveTeams.has(t.ab))).join('')
     + '</div>');
 
   // Defesa mais sólida
   h += card('🛡️ Defesas mais sólidas (menos gols sofridos)', '#3b82f6',
     '<div style="display:flex;flex-direction:column;gap:6px;">'
-    + defesa.map((t,i) => row('#'+(i+1), t.ab, t.name, t.ga, 'gols sofridos'+(t.gp>1?' em '+t.gp+'j':''))).join('')
+    + defesa.map((t,i) => row('#'+(i+1), t.ab, t.name, t.ga, 'gols sofridos'+(t.gp>1?' em '+t.gp+'j':''), liveTeams.has(t.ab))).join('')
     + '</div>');
 
   // Melhor saldo
   h += card('📊 Melhor saldo de gols', '#22c55e',
     '<div style="display:flex;flex-direction:column;gap:6px;">'
-    + topSaldo.map((t,i) => row('#'+(i+1), t.ab, t.name, (t.gd>0?'+':'')+t.gd, 'saldo')).join('')
+    + topSaldo.map((t,i) => row('#'+(i+1), t.ab, t.name, (t.gd>0?'+':'')+t.gd, 'saldo', liveTeams.has(t.ab))).join('')
     + '</div>');
 
   // Grupo com mais gols
