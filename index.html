@@ -1593,10 +1593,11 @@ function renderClassifiedPanel(standingsData) {
     return;
   }
 
-  // Calcula stats localmente (igual ao buildRound32)
+  // Calcula stats localmente (inclui jogos ao vivo)
   const localStats = {};
   (allGames||[]).forEach(g => {
-    if (getStatus(g) === 'scheduled') return;
+    const st = getStatus(g);
+    if (st === 'scheduled') return;
     const co = g.competitions?.[0]||{}, cmp = co.competitors||[];
     if (cmp.length < 2) return;
     const home = cmp[0], away = cmp[1];
