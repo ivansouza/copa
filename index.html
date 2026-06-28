@@ -1560,25 +1560,13 @@ function isGroupFinished(groupLetter, standingsData) {
   const entries = children[idx]?.standings?.entries || [];
   if (entries.length < 4) return false;
   // Verifica se todos os 4 times jogaram 3 partidas
-  // Usa os jogos encerrados (allGames) em vez dos dados da ESPN
-  // pra evitar inconsistência com o que é mostrado nos grupos
-  const teamAbs = entries.map(e => (e.team||{}).abbreviation || '').filter(Boolean);
-  if (teamAbs.length < 4) return false;
-  // Conta quantos jogos CADA time jogou (só jogos encerrados)
-  const gamesPerTeam = {};
-  teamAbs.forEach(ab => gamesPerTeam[ab] = 0);
-  (allGames||[]).forEach(g => {
-    if (getStatus(g) !== 'final') return;
-    const co = g.competitions?.[0]||{};
-    const cmp = co.competitors||[];
-    if (cmp.length < 2) return;
-    const ha = cmp[0].team?.abbreviation || '';
-    const aa = cmp[1].team?.abbreviation || '';
-    if (gamesPerTeam[ha] !== undefined) gamesPerTeam[ha]++;
-    if (gamesPerTeam[aa] !== undefined) gamesPerTeam[aa]++;
+  // Usa os dados da ESPN (gamesPlayed) que são mais confiáveis
+  const allPlayed3 = entries.every(e => {
+    const espnSt = {}; (e.stats||[]).forEach(s => { espnSt[s.name] = s; });
+    const gp = parseInt(espnSt.gamesPlayed?.value||0);
+    return gp >= 3;
   });
-  // Todos os 4 times precisam ter jogado 3 jogos
-  return teamAbs.every(ab => gamesPerTeam[ab] >= 3);
+  return allPlayed3;
 }
 
 function isMathematicallyQualified(teamPts, teamGd, thirdPts, thirdGd, thirdRemainingGames) {
