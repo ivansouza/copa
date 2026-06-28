@@ -187,6 +187,7 @@
     text-align: center;
   }
   .bracket-match .team-row .score.empty { color: #475569; }
+  .bracket-match .team-row .score-display { font-weight:800; font-size:.85rem; color:#f59e0b; min-width:22px; text-align:center; margin-left:4px; }
   .bracket-match .team-row.winner .team-info .name { color: #22c55e; }
   .bracket-match .team-row.winner .score { color: #22c55e; }
   .bracket-match .match-vs {
@@ -1937,6 +1938,25 @@ function renderBracket(events, standingsData) {
     return;
   }
 
+  // Mapa de placares dos jogos da segunda fase
+  const scoreMap = {};
+  (events||[]).forEach(e => {
+    const comp = e.competitions?.[0]||{};
+    const st = comp.status?.type||{};
+    const state = st.state||'';
+    if (state === 'pre' || state === 'scheduled') return;
+    const cmp = comp.competitors||[];
+    cmp.forEach(c => {
+      const ab = c.team?.abbreviation||'';
+      if (!ab) return;
+      const sc = parseInt(c.score);
+      if (isNaN(sc)) return;
+      if (!scoreMap[ab]) scoreMap[ab] = {};
+      scoreMap[ab].score = sc;
+      scoreMap[ab].status = state;
+    });
+  });
+
   // Verifica se algum jogo da Segunda Fase já aconteceu (usando scoreboard)
   const existingEvents = {};
   (events || []).forEach(e => {
@@ -2035,9 +2055,13 @@ function renderBracket(events, standingsData) {
     // Confronto é provável se PELO MENOS UM time ainda não está confirmado
     const isProbable = aProbable || bProbable;
     h += '<div class="bracket-match'+(isProbable?' probable':'')+'"><div class="match-teams">';
-    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(aAbbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+aName+'</span>'+(aProbable?'<span class="bracket-probable">(provável)</span>':'')+'</div></div>';
+    const aScore = scoreMap[aAbbr] ? scoreMap[aAbbr].score : null;
+    const bScore = scoreMap[bAbbr] ? scoreMap[bAbbr].score : null;
+    const aScoreHtml = aScore !== null ? '<span class="score-display">'+aScore+'</span>' : '';
+    const bScoreHtml = bScore !== null ? '<span class="score-display">'+bScore+'</span>' : '';
+    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(aAbbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+aName+'</span>'+aScoreHtml+(aProbable?'<span class="bracket-probable">(provável)</span>':'')+'</div></div>';
     h += '<div class="match-vs">X</div>';
-    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(bAbbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+bName+'</span>'+(bProbable?'<span class="bracket-probable">(provável)</span>':'')+'</div></div>';
+    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(bAbbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+bName+'</span>'+bScoreHtml+(bProbable?'<span class="bracket-probable">(provável)</span>':'')+'</div></div>';
     h += '</div><div class="match-label">'+(m.date ? m.date+' — ' : '')+m.label+(isProbable?' — provável':'')+'</div></div>';
   });
   h += '</div>';
