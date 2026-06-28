@@ -841,7 +841,6 @@ async function loadAll() {
 
     renderGroups(standingsCache); // re-renderiza com allGames populado
     renderClassifiedPanel(standingsCache);
-    renderBracketDiagram();
     renderBracket(allGames, standingsCache);
     renderDateNav(dates);
     renderGames();
@@ -1785,7 +1784,7 @@ function renderClassifiedPanel(standingsData) {
   c.innerHTML = h;
 }
 
-function renderBracketDiagram() {
+function renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace) {
   const c = document.getElementById('bracket-diagram');
   if (!c) return;
   const PARES = [
@@ -1799,17 +1798,32 @@ function renderBracketDiagram() {
     [["Colômbia","Gana","https://a.espncdn.com/i/teamlogos/countries/500/col.png","https://a.espncdn.com/i/teamlogos/countries/500/gha.png"],["Egito","Austrália","https://a.espncdn.com/i/teamlogos/countries/500/egy.png","https://a.espncdn.com/i/teamlogos/countries/500/aus.png"]],
   ];
   function cd(t1,t2,f1,f2){return '<div class="bd-m"><div class="t"><img class="fl" src="'+f1+'" alt="" loading="lazy"><span class="nm">'+t1+'</span></div><div class="v">✕</div><div class="t"><img class="fl" src="'+f2+'" alt="" loading="lazy"><span class="nm">'+t2+'</span></div></div>'}
-  function ph(t){return '<div class="bd-m bd-ph"><div class="t"><span class="nm">'+t+'</span></div></div>'}
+  function tm(t){if(!t)return '<div class="bd-m bd-ph"><div class="t"><span class="nm">─</span></div></div>';return '<div class="bd-m"><div class="t"><img class="fl" src="'+flagUrl(t.abbr)+'" alt="" loading="lazy"><span class="nm">'+(t.name||'?')+'</span></div></div>'}
+  function mc(a,b){if(!a||!b)return '<div class="bd-m bd-ph"><div class="t"><span class="nm">─</span></div></div>';return '<div class="bd-m"><div class="t"><img class="fl" src="'+flagUrl(a.abbr)+'" alt="" loading="lazy"><span class="nm">'+(a.name||'?')+'</span></div><div class="v">✕</div><div class="t"><img class="fl" src="'+flagUrl(b.abbr)+'" alt="" loading="lazy"><span class="nm">'+(b.name||'?')+'</span></div></div>'}
   let h='<div class="bd-wrap"><div class="bd">';
   h+='<div class="bd-r"><div class="bd-rt">16 avos</div>';for(let i=0;i<PARES.length;i++){const g=PARES[i][0];h+=cd(g[0],g[1],g[2],g[3])}h+='</div>';
   h+='<div class="bd-r"><div class="bd-rt">16 avos</div>';for(let i=0;i<PARES.length;i++){const g=PARES[i][1];h+=cd(g[0],g[1],g[2],g[3])}h+='</div>';
-  h+='<div class="bd-r"><div class="bd-rt">Oitavas</div>';for(let i=0;i<4;i++)h+=ph('─');h+='</div>';
-  h+='<div class="bd-r"><div class="bd-rt">Oitavas</div>';for(let i=0;i<4;i++)h+=ph('─');h+='</div>';
-  h+='<div class="bd-r"><div class="bd-rt">Quartas</div>';for(let i=0;i<2;i++)h+=ph('─');h+='</div>';
-  h+='<div class="bd-r"><div class="bd-rt">Quartas</div>';for(let i=0;i<2;i++)h+=ph('─');h+='</div>';
-  h+='<div class="bd-r"><div class="bd-rt">Semi</div>';h+=ph('─');h+='</div>';
-  h+='<div class="bd-r"><div class="bd-rt">Semi</div>';h+=ph('─');h+='</div>';
-  h+='<div class="bd-r"><div class="bd-rt">Final</div><div class="bd-tr"><svg viewBox="0 0 40 48"><rect x="8" y="38" width="24" height="4" rx="2" fill="#a07808"/><rect x="10" y="34" width="20" height="5" rx="1.5" fill="#d4a017"/><rect x="16" y="12" width="8" height="23" rx="2" fill="#d4a017"/><path d="M10,12 Q8,2 14,-4 Q18,-8 20,-9 Q22,-8 26,-4 Q32,2 30,12 Z" fill="#f0d060" stroke="#d4a017" stroke-width="1"/><path d="M10,6 Q4,4 6,12 Q7,16 12,14" fill="none" stroke="#d4a017" stroke-width="2" stroke-linecap="round"/><path d="M30,6 Q36,4 34,12 Q33,16 28,14" fill="none" stroke="#d4a017" stroke-width="2" stroke-linecap="round"/></svg><div class="l">🏆</div></div></div>';
+  h+='<div class="bd-r"><div class="bd-rt">Oitavas</div>';
+  if(r16&&r16.length){for(let i=0;i<4;i++){const m=r16[i];h+=m?mc(m.a,m.b):tm()} }else{for(let i=0;i<4;i++)h+=tm()}
+  h+='</div>';
+  h+='<div class="bd-r"><div class="bd-rt">Oitavas</div>';
+  if(r16&&r16.length>4){for(let i=4;i<8;i++){const m=r16[i];h+=m?mc(m.a,m.b):tm()} }else{for(let i=0;i<4;i++)h+=tm()}
+  h+='</div>';
+  h+='<div class="bd-r"><div class="bd-rt">Quartas</div>';
+  if(qf&&qf.length){for(let i=0;i<2;i++){const m=qf[i];h+=m?mc(m.a,m.b):tm()} }else{for(let i=0;i<2;i++)h+=tm()}
+  h+='</div>';
+  h+='<div class="bd-r"><div class="bd-rt">Quartas</div>';
+  if(qf&&qf.length>2){for(let i=2;i<4;i++){const m=qf[i];h+=m?mc(m.a,m.b):tm()} }else{for(let i=0;i<2;i++)h+=tm()}
+  h+='</div>';
+  h+='<div class="bd-r"><div class="bd-rt">Semi</div>';
+  if(sf&&sf.length>0){h+=mc(sf[0].a,sf[0].b)}else{h+=tm()}
+  h+='</div>';
+  h+='<div class="bd-r"><div class="bd-rt">Semi</div>';
+  if(sf&&sf.length>1){h+=mc(sf[1].a,sf[1].b)}else{h+=tm()}
+  h+='</div>';
+  h+='<div class="bd-r"><div class="bd-rt">Final</div>';
+  if(finalMatch){h+=mc(finalMatch.a,finalMatch.b)}else{h+=tm()}
+  h+='<div class="bd-tr"><svg viewBox="0 0 40 48"><rect x="8" y="38" width="24" height="4" rx="2" fill="#a07808"/><rect x="10" y="34" width="20" height="5" rx="1.5" fill="#d4a017"/><rect x="16" y="12" width="8" height="23" rx="2" fill="#d4a017"/><path d="M10,12 Q8,2 14,-4 Q18,-8 20,-9 Q22,-8 26,-4 Q32,2 30,12 Z" fill="#f0d060" stroke="#d4a017" stroke-width="1"/><path d="M10,6 Q4,4 6,12 Q7,16 12,14" fill="none" stroke="#d4a017" stroke-width="2" stroke-linecap="round"/><path d="M30,6 Q36,4 34,12 Q33,16 28,14" fill="none" stroke="#d4a017" stroke-width="2" stroke-linecap="round"/></svg><div class="l">🏆</div></div></div>';
   h+='</div></div>';
   c.innerHTML=h;
 }
@@ -1876,6 +1890,9 @@ function renderBracket(events, standingsData) {
       b: sf1Winner
     };
   }
+
+  // Renderiza diagrama
+  renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace);
 
   // Renderiza
   let h = '<div class="bracket-section"><div class="bracket">';
@@ -2026,7 +2043,6 @@ document.querySelectorAll('.nav-btn').forEach(btn=>{
     // Se clicou em Mata-Mata, recalcula o bracket com dados frescos
     if (btn.dataset.section === 'bracket' && standingsCache) {
       renderClassifiedPanel(standingsCache);
-      renderBracketDiagram();
       renderBracket(allGames || [], standingsCache);
     }
     // Se clicou em Estatísticas, renderiza
