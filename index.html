@@ -1403,12 +1403,13 @@ function renderStats() {
         // Guarda 3ºs colocados (usa rank real, não posição no array)
         if (realRank === 3) {
           const tm = e.team || {};
-          const espnSt = {}; (e.stats||[]).forEach(s => { espnSt[s.name] = s; });
-          const gp = parseInt(espnSt.gamesPlayed?.value||espnSt.gamesPlayed?.displayValue||0);
-          const pts = parseInt(espnSt.points?.value||espnSt.points?.displayValue||0);
-          const gf = parseInt(espnSt.pointsFor?.value||espnSt.goalsFor?.value||0);
-          const ga = parseInt(espnSt.pointsAgainst?.value||espnSt.goalsAgainst?.value||0);
           const nm = pt(tm.displayName || tm.name || ab);
+          // Usa stats LOCAIS (que incluem jogos ao vivo) em vez dos dados ESPN
+          const local = stats[ab];
+          const gp = local ? local.gp : 0;
+          const pts = local ? local.pts : 0;
+          const gf = local ? local.gf : 0;
+          const ga = local ? local.ga : 0;
           allThird.push({ group: String.fromCharCode(65+idx), abbr: ab, name: nm, pts, gd: gf-ga, gf, gp });
         }
       });
