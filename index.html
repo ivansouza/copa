@@ -1274,10 +1274,10 @@ function buildRound32(standingsData) {
   round32.push({ a: g('G',0), b: t3group('1G'), label: '1º G vs '+t3label('1G'), date: r32dates[8] });
   round32.push({ a: g('K',1), b: g('L',1), label: '2º K vs 2º L', date: r32dates[11] });
   round32.push({ a: g('H',0), b: g('J',1), label: '1º H vs 2º J', date: r32dates[10] });
-  round32.push({ a: g('B',0), b: t3group('1B'), label: '1º B vs '+t3label('1B'), date: r32dates[12] });
   round32.push({ a: g('J',0), b: g('H',1), label: '1º J vs 2º H', date: r32dates[14] });
-  round32.push({ a: g('K',0), b: t3group('1K'), label: '1º K vs '+t3label('1K'), date: r32dates[15] });
   round32.push({ a: g('D',1), b: g('G',1), label: '2º D vs 2º G', date: r32dates[13] });
+  round32.push({ a: g('B',0), b: t3group('1B'), label: '1º B vs '+t3label('1B'), date: r32dates[12] });
+  round32.push({ a: g('K',0), b: t3group('1K'), label: '1º K vs '+t3label('1K'), date: r32dates[15] });
 
   return round32;
 }
@@ -1880,10 +1880,10 @@ function renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events) {
     [["Estados Unidos","Bósnia","https://a.espncdn.com/i/teamlogos/countries/500/usa.png","https://a.espncdn.com/i/teamlogos/countries/500/bih.png"],["Bélgica","Senegal","https://a.espncdn.com/i/teamlogos/countries/500/bel.png","https://a.espncdn.com/i/teamlogos/countries/500/sen.png"]],
     // Par 10-11: Match 83 (2ºK vs 2ºL) + Match 84 (1ºH vs 2ºJ)
     [["Portugal","Croácia","https://a.espncdn.com/i/teamlogos/countries/500/por.png","https://a.espncdn.com/i/teamlogos/countries/500/cro.png"],["Espanha","Áustria","https://a.espncdn.com/i/teamlogos/countries/500/esp.png","https://a.espncdn.com/i/teamlogos/countries/500/aut.png"]],
-    // Par 12-13: Match 85 (1ºB vs 3º) + Match 86 (1ºJ vs 2ºH)
-    [["Suíça","Argélia","https://a.espncdn.com/i/teamlogos/countries/500/sui.png","https://a.espncdn.com/i/teamlogos/countries/500/alg.png"],["Argentina","Cabo Verde","https://a.espncdn.com/i/teamlogos/countries/500/arg.png","https://a.espncdn.com/i/teamlogos/countries/500/cpv.png"]],
-    // Par 14-15: Match 87 (1ºK vs 3º) + Match 88 (2ºD vs 2ºG)
-    [["Colômbia","Gana","https://a.espncdn.com/i/teamlogos/countries/500/col.png","https://a.espncdn.com/i/teamlogos/countries/500/gha.png"],["Egito","Austrália","https://a.espncdn.com/i/teamlogos/countries/500/egy.png","https://a.espncdn.com/i/teamlogos/countries/500/aus.png"]],
+    // Par 12-13: Match 86 (1ºJ vs 2ºH) + Match 88 (2ºD vs 2ºG)
+    [["Argentina","Cabo Verde","https://a.espncdn.com/i/teamlogos/countries/500/arg.png","https://a.espncdn.com/i/teamlogos/countries/500/cpv.png"],["Egito","Austrália","https://a.espncdn.com/i/teamlogos/countries/500/egy.png","https://a.espncdn.com/i/teamlogos/countries/500/aus.png"]],
+    // Par 14-15: Match 85 (1ºB vs 3º) + Match 87 (1ºK vs 3º)
+    [["Suíça","Argélia","https://a.espncdn.com/i/teamlogos/countries/500/sui.png","https://a.espncdn.com/i/teamlogos/countries/500/alg.png"],["Colômbia","Gana","https://a.espncdn.com/i/teamlogos/countries/500/col.png","https://a.espncdn.com/i/teamlogos/countries/500/gha.png"]],
   ];
   // Mapa de abreviaturas para os cards fixos (PARES)
   const abbrMap = {
