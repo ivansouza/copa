@@ -1834,6 +1834,8 @@ function renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events) {
   // Mapa de placares
   const scoreMap = {};
   (events||[]).forEach(e => {
+    const slug = (e.season?.slug || '');
+    if (slug === 'group-stage') return; // só segunda fase em diante
     const comp = e.competitions?.[0]||{};
     const st = comp.status?.type||{};
     const state = st.state||'';
