@@ -1835,6 +1835,8 @@ function renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events) {
   // Mapa de placares
   const scoreMap = {};
   (events||[]).forEach(e => {
+    const slug = (e.season?.slug || '');
+    if (slug !== 'round-of-32') return;
     const comp = e.competitions?.[0]||{};
     const st = comp.status?.type||{};
     const state = st.state||'';
@@ -1938,9 +1940,11 @@ function renderBracket(events, standingsData) {
     return;
   }
 
-  // Mapa de placares dos jogos da segunda fase
+  // Mapa de placares: SÓ jogos da segunda fase (round-of-32)
   const scoreMap = {};
   (events||[]).forEach(e => {
+    const slug = (e.season?.slug || '');
+    if (slug !== 'round-of-32') return;
     const comp = e.competitions?.[0]||{};
     const st = comp.status?.type||{};
     const state = st.state||'';
