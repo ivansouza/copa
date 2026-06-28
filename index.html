@@ -1199,7 +1199,7 @@ function buildRound32(standingsData) {
 
   // Mapa: número do match FIFA → índice no r32dates
   // r32meta ordem: [73, 76, 74, 75, 78, 77, 79, 80, 82, 81, 84, 83, 85, 88, 86, 87]
-  // round32.push ordem: [73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88]
+  // round32.push ordem: [73, 76, 74, 75, 78, 77, 79, 80, 82, 81, 84, 83, 85, 88, 86, 87]
   // Corrigindo os índices:
   // Match 73 (2º A vs 2º B) → r32dates[0]  ✅
   // Match 74 (1º E vs 3º)   → r32dates[2]  (29/06 16h30 ET → 17h30 BRT)
@@ -1217,22 +1217,31 @@ function buildRound32(standingsData) {
   // Match 86 (1º J vs 2º H) → r32dates[14] (03/07 18h ET → 19h BRT)
   // Match 87 (1º K vs 3º)   → r32dates[15] (03/07 21h30 ET → 22h30 BRT)
   // Match 88 (2º D vs 2º G) → r32dates[13] (03/07 14h ET → 15h BRT)
-  round32.push({ a: g('A',1), b: g('B',1), label: '2º A vs 2º B', date: r32dates[0] });
-  round32.push({ a: g('E',0), b: t3group('1E'), label: '1º E vs '+t3label('1E'), date: r32dates[2] });
-  round32.push({ a: g('F',0), b: g('C',1), label: '1º F vs 2º C', date: r32dates[3] });
-  round32.push({ a: g('C',0), b: g('F',1), label: '1º C vs 2º F', date: r32dates[1] });
-  round32.push({ a: g('I',0), b: t3group('1I'), label: '1º I vs '+t3label('1I'), date: r32dates[5] });
-  round32.push({ a: g('E',1), b: g('I',1), label: '2º E vs 2º I', date: r32dates[4] });
-  round32.push({ a: g('A',0), b: t3group('1A'), label: '1º A vs '+t3label('1A'), date: r32dates[6] });
-  round32.push({ a: g('L',0), b: t3group('1L'), label: '1º L vs '+t3label('1L'), date: r32dates[7] });
-  round32.push({ a: g('D',0), b: t3group('1D'), label: '1º D vs '+t3label('1D'), date: r32dates[9] });
-  round32.push({ a: g('G',0), b: t3group('1G'), label: '1º G vs '+t3label('1G'), date: r32dates[8] });
-  round32.push({ a: g('K',1), b: g('L',1), label: '2º K vs 2º L', date: r32dates[11] });
-  round32.push({ a: g('H',0), b: g('J',1), label: '1º H vs 2º J', date: r32dates[10] });
-  round32.push({ a: g('B',0), b: t3group('1B'), label: '1º B vs '+t3label('1B'), date: r32dates[12] });
-  round32.push({ a: g('J',0), b: g('H',1), label: '1º J vs 2º H', date: r32dates[14] });
-  round32.push({ a: g('K',0), b: t3group('1K'), label: '1º K vs '+t3label('1K'), date: r32dates[15] });
-  round32.push({ a: g('D',1), b: g('G',1), label: '2º D vs 2º G', date: r32dates[13] });
+  // ORDEM CORRETA para simulateRound (pares 0-1, 2-3, 4-5...):
+  // Par 0-1: Match 73 + Match 76 → Oitavas 89
+  // Par 2-3: Match 74 + Match 75 → Oitavas 90
+  // Par 4-5: Match 78 + Match 77 → Oitavas 91
+  // Par 6-7: Match 79 + Match 80 → Oitavas 92
+  // Par 8-9: Match 82 + Match 81 → Oitavas 93
+  // Par 10-11: Match 84 + Match 83 → Oitavas 94
+  // Par 12-13: Match 85 + Match 88 → Oitavas 95
+  // Par 14-15: Match 86 + Match 87 → Oitavas 96
+  round32.push({ a: g('A',1), b: g('B',1), label: '2º A vs 2º B', date: r32dates[0] });           // Match 73
+  round32.push({ a: g('C',0), b: g('F',1), label: '1º C vs 2º F', date: r32dates[1] });           // Match 76
+  round32.push({ a: g('E',0), b: t3group('1E'), label: '1º E vs '+t3label('1E'), date: r32dates[2] }); // Match 74
+  round32.push({ a: g('F',0), b: g('C',1), label: '1º F vs 2º C', date: r32dates[3] });           // Match 75
+  round32.push({ a: g('E',1), b: g('I',1), label: '2º E vs 2º I', date: r32dates[4] });           // Match 78
+  round32.push({ a: g('I',0), b: t3group('1I'), label: '1º I vs '+t3label('1I'), date: r32dates[5] }); // Match 77
+  round32.push({ a: g('A',0), b: t3group('1A'), label: '1º A vs '+t3label('1A'), date: r32dates[6] }); // Match 79
+  round32.push({ a: g('L',0), b: t3group('1L'), label: '1º L vs '+t3label('1L'), date: r32dates[7] }); // Match 80
+  round32.push({ a: g('G',0), b: t3group('1G'), label: '1º G vs '+t3label('1G'), date: r32dates[8] }); // Match 82
+  round32.push({ a: g('D',0), b: t3group('1D'), label: '1º D vs '+t3label('1D'), date: r32dates[9] }); // Match 81
+  round32.push({ a: g('H',0), b: g('J',1), label: '1º H vs 2º J', date: r32dates[10] });          // Match 84
+  round32.push({ a: g('K',1), b: g('L',1), label: '2º K vs 2º L', date: r32dates[11] });          // Match 83
+  round32.push({ a: g('B',0), b: t3group('1B'), label: '1º B vs '+t3label('1B'), date: r32dates[12] }); // Match 85
+  round32.push({ a: g('D',1), b: g('G',1), label: '2º D vs 2º G', date: r32dates[13] });          // Match 88
+  round32.push({ a: g('J',0), b: g('H',1), label: '1º J vs 2º H', date: r32dates[14] });          // Match 86
+  round32.push({ a: g('K',0), b: t3group('1K'), label: '1º K vs '+t3label('1K'), date: r32dates[15] }); // Match 87
 
   return round32;
 }
