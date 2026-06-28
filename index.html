@@ -872,9 +872,12 @@ function renderGroups(d) {
   const kids = d.children||[];
   if(!kids.length){c.innerHTML='<div class="error-state">Nenhum grupo encontrado.</div>';return;}
 
-  // Calcula estatísticas a partir dos jogos ENCERRADOS (allGames)
+  // Calcula estatísticas a partir dos jogos da FASE DE GRUPOS (allGames)
   const stats = {}; // { abbreviation: { pts, gp, w, t, l, gf, ga } }
   (allGames||[]).forEach(g => {
+    // Só considera jogos da fase de grupos (season.type 1 = group stage)
+    const seasonType = g.season?.type || 0;
+    if (seasonType !== 1) return;
     if (getStatus(g) === 'scheduled') return; // pula só os programados
     const co = g.competitions?.[0]||{};
     const cmp = co.competitors||[];
@@ -1047,9 +1050,11 @@ function buildRound32(standingsData) {
   const children = standingsData.children || [];
   if (!children.length) return null;
 
-  // Calcula stats localmente (só jogos encerrados)
+  // Calcula stats localmente (só jogos da fase de grupos)
   const localStats = {};
   (allGames||[]).forEach(g => {
+    const seasonType = g.season?.type || 0;
+    if (seasonType !== 1) return;
     if (getStatus(g) === 'scheduled') return;
     const co = g.competitions?.[0]||{}, cmp = co.competitors||[];
     if (cmp.length < 2) return;
@@ -1416,6 +1421,8 @@ function renderStats() {
   }
   const grupoGols = {};
   (allGames||[]).forEach(g => {
+    const seasonType = g.season?.type || 0;
+    if (seasonType !== 1) return;
     if (getStatus(g) === 'scheduled') return;
     const co = g.competitions?.[0]||{}, cmp = co.competitors||[];
     if (cmp.length < 2) return;
@@ -1432,6 +1439,8 @@ function renderStats() {
   // Maior goleada
   let maiorGoleada = null;
   (allGames||[]).forEach(g => {
+    const seasonType = g.season?.type || 0;
+    if (seasonType !== 1) return;
     if (getStatus(g) === 'scheduled') return;
     const co = g.competitions?.[0]||{}, cmp = co.competitors||[];
     if (cmp.length < 2) return;
