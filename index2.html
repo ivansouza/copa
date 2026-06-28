@@ -300,6 +300,16 @@
   .bd-tr .l{font-size:6px;color:#f0d060;letter-spacing:2px;text-transform:uppercase;margin-top:2px;font-family:ui-monospace,monospace;font-weight:700}
   .bd-ph .t{justify-content:center}
   .bd-ph .t .nm{color:#64748b;font-size:7px;text-align:center;flex:none;font-style:italic}
+  /* ── favorite picker ── */
+  .fav-section{margin-bottom:1rem;text-align:center}
+  .fav-title{font-size:.75rem;color:#94a3b8;margin-bottom:6px;font-weight:600}
+  .fav-grid{display:flex;flex-wrap:wrap;gap:4px;justify-content:center}
+  .fav-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border:1px solid #334155;border-radius:6px;background:#1e293b;color:#cbd5e1;font-size:11px;cursor:pointer;transition:all .15s;font-family:system-ui,sans-serif}
+  .fav-btn:hover{border-color:#d4a017;color:#f0d060}
+  .fav-btn.active{background:#d4a017;border-color:#d4a017;color:#0f1a0f;font-weight:700}
+  .fav-btn .fl{width:14px;height:10px;border-radius:1.5px;flex:none}
+  .fav-btn.clear{color:#64748b;font-size:10px}
+  .fav-btn.clear:hover{color:#ef4444;border-color:#ef4444}
   .classified-panel {
     background: linear-gradient(145deg, #1e293b, #1a2332);
     border: 1px solid #2d3a4e;
@@ -605,6 +615,10 @@
     <div id="classified-panel" style="margin-bottom:1.5rem;"></div>
     <div style="font-size:.7rem;color:#94a3b8;text-align:center;margin-bottom:6px;font-style:italic;">Simulação baseada em pontos dos Grupos</div>
     <div id="bracket-diagram" style="margin-bottom:1.5rem;"></div>
+    <div class="fav-section" id="favSection">
+      <div class="fav-title">🌟 Qual time você quer na final?</div>
+      <div class="fav-grid" id="favGrid"></div>
+    </div>
     <div id="bracket-container"><div class="loading-state"><div class="spinner"></div><p>Carregando bracket...</p></div></div>
   </div>
 
@@ -1261,15 +1275,34 @@ function buildRound32(standingsData) {
 function simulateWinner(match) {
   // Simula o vencedor baseado em pontos (mais pontos = mais provável)
   if (!match.a || !match.b) return match.a || match.b;
-  // Se um time tem mais pontos, é mais provável
   if (match.a.pts > match.b.pts) return match.a;
   if (match.b.pts > match.a.pts) return match.b;
-  // Desempate por saldo
   if (match.a.gd > match.b.gd) return match.a;
   if (match.b.gd > match.a.gd) return match.b;
-  // Desempate por gols pró
   if (match.a.gf > match.b.gf) return match.a;
   return match.b;
+}
+
+function simulateWinnerFav(match, favAbbr) {
+  // Se o favorito está no match, ele sempre vence
+  if (!match.a || !match.b) return match.a || match.b;
+  if (match.a.abbr === favAbbr) return match.a;
+  if (match.b.abbr === favAbbr) return match.b;
+  // Se não, simula normal
+  return simulateWinner(match);
+}
+
+function setFavorite(abbr, name) {
+  localStorage.setItem('bracketFav', abbr);
+  // Atualiza o texto do botão ativo
+  document.querySelectorAll('.fav-btn').forEach(b => b.classList.remove('active'));
+  if (abbr) {
+    const btn = document.querySelector('.fav-btn[data-abbr="'+abbr+'"]');
+    if (btn) btn.classList.add('active');
+  }
+  // Re-renderiza o bracket
+  const btn = document.querySelector('[data-section="bracket"]');
+  if (btn) btn.click();
 }
 
 function isMathematicallyEliminated(t, teamPosition, allThird, standingsData) {
@@ -1866,15 +1899,15 @@ function renderBracket(events, standingsData) {
     existingEvents[st].push(e);
   });
 
-  // Função para simular uma rodada
-  function simulateRound(matches) {
+  // Função para simular uma rodada (com favorito opcional)
+  function simulateRound(matches, fav) {
     const winners = [];
     for (let i = 0; i < matches.length; i += 2) {
       const m1 = matches[i];
       const m2 = matches[i+1];
       if (!m1 || !m2) break;
-      const w1 = simulateWinner(m1);
-      const w2 = simulateWinner(m2);
+      const w1 = fav ? simulateWinnerFav(m1, fav) : simulateWinner(m1);
+      const w2 = fav ? simulateWinnerFav(m2, fav) : simulateWinner(m2);
       if (w1 && w2) {
         winners.push({ a: w1, b: w2 });
       }
@@ -1882,32 +1915,53 @@ function renderBracket(events, standingsData) {
     return winners;
   }
 
+  // Pega o favorito salvo
+  const savedFav = localStorage.getItem('bracketFav') || '';
+
   // Simula os resultados
-  const r16 = simulateRound(round32);
-  const qf = simulateRound(r16);
-  const sf = simulateRound(qf);
+  const r16 = simulateRound(round32, savedFav);
+  const qf = simulateRound(r16, savedFav);
+  const sf = simulateRound(qf, savedFav);
 
   // Final e 3º lugar
   let thirdPlace = null;
   let finalMatch = null;
   if (sf.length >= 2) {
-    // Perdedores das semis = o time que NÃO venceu cada semi
-    const sf0Winner = simulateWinner(sf[0]);
-    const sf1Winner = simulateWinner(sf[1]);
+    const sf0Winner = savedFav ? simulateWinnerFav(sf[0], savedFav) : simulateWinner(sf[0]);
+    const sf1Winner = savedFav ? simulateWinnerFav(sf[1], savedFav) : simulateWinner(sf[1]);
     const sf0Loser = sf0Winner === sf[0].a ? sf[0].b : sf[0].a;
     const sf1Loser = sf1Winner === sf[1].a ? sf[1].b : sf[1].a;
-    thirdPlace = {
-      a: sf0Loser,
-      b: sf1Loser
-    };
-    finalMatch = {
-      a: sf0Winner,
-      b: sf1Winner
-    };
+    thirdPlace = { a: sf0Loser, b: sf1Loser };
+    finalMatch = { a: sf0Winner, b: sf1Winner };
   }
 
   // Renderiza diagrama
   renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace);
+
+  // Renderiza botões de favoritos (só na primeira vez)
+  const fg = document.getElementById('favGrid');
+  if (fg && !fg.children.length) {
+    const topTeams = [
+      {abbr:'BRA',name:'Brasil',flag:'https://a.espncdn.com/i/teamlogos/countries/500/bra.png'},
+      {abbr:'ARG',name:'Argentina',flag:'https://a.espncdn.com/i/teamlogos/countries/500/arg.png'},
+      {abbr:'GER',name:'Alemanha',flag:'https://a.espncdn.com/i/teamlogos/countries/500/ger.png'},
+      {abbr:'FRA',name:'França',flag:'https://a.espncdn.com/i/teamlogos/countries/500/fra.png'},
+      {abbr:'ENG',name:'Inglaterra',flag:'https://a.espncdn.com/i/teamlogos/countries/500/eng.png'},
+      {abbr:'ESP',name:'Espanha',flag:'https://a.espncdn.com/i/teamlogos/countries/500/esp.png'},
+      {abbr:'NED',name:'Holanda',flag:'https://a.espncdn.com/i/teamlogos/countries/500/ned.png'},
+      {abbr:'POR',name:'Portugal',flag:'https://a.espncdn.com/i/teamlogos/countries/500/por.png'},
+      {abbr:'BEL',name:'Bélgica',flag:'https://a.espncdn.com/i/teamlogos/countries/500/bel.png'},
+      {abbr:'COL',name:'Colômbia',flag:'https://a.espncdn.com/i/teamlogos/countries/500/col.png'},
+    ];
+    const savedFav = localStorage.getItem('bracketFav') || '';
+    let hh = '';
+    topTeams.forEach(t => {
+      const active = t.abbr === savedFav ? ' active' : '';
+      hh += '<button class="fav-btn'+active+'" data-abbr="'+t.abbr+'" onclick="setFavorite(\''+t.abbr+'\',\''+t.name+'\')"><img class="fl" src="'+t.flag+'" alt="" loading="lazy">'+t.name+'</button>';
+    });
+    hh += '<button class="fav-btn clear" onclick="setFavorite(\'\',\'\')">✕ Limpar</button>';
+    fg.innerHTML = hh;
+  }
 
   // Renderiza
   let h = '<div class="bracket-section"><div class="bracket">';
