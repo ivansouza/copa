@@ -1265,8 +1265,8 @@ function buildRound32(standingsData) {
   round32.push({ a: g('A',1), b: g('B',1), label: '2º A vs 2º B', date: r32dates[0] });
   round32.push({ a: g('E',0), b: t3group('1E'), label: '1º E vs '+t3label('1E'), date: r32dates[2] });
   round32.push({ a: g('F',0), b: g('C',1), label: '1º F vs 2º C', date: r32dates[3] });
-  round32.push({ a: g('C',0), b: g('F',1), label: '1º C vs 2º F', date: r32dates[1] });
   round32.push({ a: g('I',0), b: t3group('1I'), label: '1º I vs '+t3label('1I'), date: r32dates[5] });
+  round32.push({ a: g('C',0), b: g('F',1), label: '1º C vs 2º F', date: r32dates[1] });
   round32.push({ a: g('E',1), b: g('I',1), label: '2º E vs 2º I', date: r32dates[4] });
   round32.push({ a: g('A',0), b: t3group('1A'), label: '1º A vs '+t3label('1A'), date: r32dates[6] });
   round32.push({ a: g('L',0), b: t3group('1L'), label: '1º L vs '+t3label('1L'), date: r32dates[7] });
@@ -1870,10 +1870,10 @@ function renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events) {
   const PARES = [
     // Par 0-1: Match 73 (2ºA vs 2ºB) + Match 74 (1ºE vs 3º)
     [["África do Sul","Canadá","https://a.espncdn.com/i/teamlogos/countries/500/rsa.png","https://a.espncdn.com/i/teamlogos/countries/500/can.png"],["Alemanha","Paraguai","https://a.espncdn.com/i/teamlogos/countries/500/ger.png","https://a.espncdn.com/i/teamlogos/countries/500/par.png"]],
-    // Par 2-3: Match 75 (1ºF vs 2ºC) + Match 76 (1ºC vs 2ºF)
-    [["Holanda","Marrocos","https://a.espncdn.com/i/teamlogos/countries/500/ned.png","https://a.espncdn.com/i/teamlogos/countries/500/mar.png"],["Brasil","Japão","https://a.espncdn.com/i/teamlogos/countries/500/bra.png","https://a.espncdn.com/i/teamlogos/countries/500/jpn.png"]],
-    // Par 4-5: Match 77 (1ºI vs 3º) + Match 78 (2ºE vs 2ºI)
-    [["França","Suécia","https://a.espncdn.com/i/teamlogos/countries/500/fra.png","https://a.espncdn.com/i/teamlogos/countries/500/swe.png"],["Costa do Marfim","Noruega","https://a.espncdn.com/i/teamlogos/countries/500/civ.png","https://a.espncdn.com/i/teamlogos/countries/500/nor.png"]],
+    // Par 2-3: Match 75 (1ºF vs 2ºC) + Match 77 (1ºI vs 3º)
+    [["Holanda","Marrocos","https://a.espncdn.com/i/teamlogos/countries/500/ned.png","https://a.espncdn.com/i/teamlogos/countries/500/mar.png"],["França","Suécia","https://a.espncdn.com/i/teamlogos/countries/500/fra.png","https://a.espncdn.com/i/teamlogos/countries/500/swe.png"]],
+    // Par 4-5: Match 76 (1ºC vs 2ºF) + Match 78 (2ºE vs 2ºI)
+    [["Brasil","Japão","https://a.espncdn.com/i/teamlogos/countries/500/bra.png","https://a.espncdn.com/i/teamlogos/countries/500/jpn.png"],["Costa do Marfim","Noruega","https://a.espncdn.com/i/teamlogos/countries/500/civ.png","https://a.espncdn.com/i/teamlogos/countries/500/nor.png"]],
     // Par 6-7: Match 79 (1ºA vs 3º) + Match 80 (1ºL vs 3º)
     [["México","Equador","https://a.espncdn.com/i/teamlogos/countries/500/mex.png","https://a.espncdn.com/i/teamlogos/countries/500/ecu.png"],["Inglaterra","RD Congo","https://a.espncdn.com/i/teamlogos/countries/500/eng.png","https://a.espncdn.com/i/teamlogos/countries/500/cod.png"]],
     // Par 8-9: Match 81 (1ºD vs 3º) + Match 82 (1ºG vs 3º)
