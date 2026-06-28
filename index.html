@@ -1831,8 +1831,31 @@ function renderClassifiedPanel(standingsData) {
 function renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events) {
   const c = document.getElementById('bracket-diagram');
   if (!c) return;
-  // Mapa de placares: busca direto da API os jogos de hoje
+  // Mapa de placares
   const scoreMap = {};
+  // Tenta buscar dados frescos da API
+  async function fetchScores() {
+    try {
+      const res = await fetch('https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=20260628-20260704&_='+Date.now());
+      if (!res.ok) return;
+      const data = await res.json();
+      (data.events||[]).forEach(e => {
+        const comp = e.competitions?.[0]||{};
+        const st = comp.status?.type||{};
+        const state = st.state||'';
+        if (state === 'pre') return;
+        const cmp = comp.competitors||[];
+        cmp.forEach(c => {
+          const ab = c.team?.abbreviation||'';
+          if (!ab) return;
+          if (!scoreMap[ab]) scoreMap[ab] = {};
+          scoreMap[ab].score = parseInt(c.score)||0;
+          scoreMap[ab].status = state;
+        });
+      });
+    } catch(e) {}
+  }
+  // Também usa os events passados como fallback
   (events||[]).forEach(e => {
     const comp = e.competitions?.[0]||{};
     const st = comp.status?.type||{};
@@ -1967,8 +1990,10 @@ function renderBracket(events, standingsData) {
     finalMatch = { a: sf0Winner, b: sf1Winner };
   }
 
-  // Renderiza diagrama
+  // Renderiza diagrama (com fetch de placares)
   renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events);
+  // Re-renderiza após fetch dos placares
+  setTimeout(() => renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events), 2000);
 
   // Renderiza botões de favoritos (só na primeira vez)
   const fg = document.getElementById('favGrid');
