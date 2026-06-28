@@ -1842,12 +1842,12 @@ function renderBracket(events, standingsData) {
     // Time A = primeiro grupo, Time B = segundo grupo (quando aplicável)
     const aGroupFinished = groupLetters.length >= 1 ? isGroupFinished(groupLetters[0], standingsData) : false;
     const bGroupFinished = groupLetters.length >= 2 ? isGroupFinished(groupLetters[1], standingsData) : false;
-    // Verifica se o match envolve um 3º lugar (sempre provável, pois depende do ranking)
+    // Verifica se o match envolve um 3º lugar
     const involvesThird = (m.label||'').includes('3º');
-    // Time A é provável se grupo não terminou OU se é 3º lugar
-    const aProbable = !aGroupFinished || (groupLetters.length >= 1 && involvesThird && m.label.includes('3º '+groupLetters[0]));
-    // Time B é provável se grupo não terminou OU se é 3º lugar
-    const bProbable = !bGroupFinished || (groupLetters.length >= 2 && involvesThird && m.label.includes('3º '+groupLetters[1]));
+    // Time A é provável se grupo não terminou
+    const aProbable = !aGroupFinished;
+    // Time B é provável se grupo não terminou
+    const bProbable = !bGroupFinished;
     // Confronto é provável se PELO MENOS UM time ainda não está confirmado
     const isProbable = aProbable || bProbable;
     h += '<div class="bracket-match'+(isProbable?' probable':'')+'"><div class="match-teams">';
