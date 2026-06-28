@@ -2100,15 +2100,13 @@ function renderBracket(events, standingsData) {
   // Final: 19/07 3pm ET (NY) = 16h BRT
   const finalDate = '19/07 16h';
 
-  // Helper para renderizar time com (P) e score
+  // Helper para renderizar time com (P) - sem score (score só na Segunda Fase)
   function teamHtml(t, showProb) {
     if (!t) return '<span class="name">A definir</span>';
     const s = scoreMap[t.abbr];
     const confirmed = s && s.status !== 'pre' && s.status !== 'scheduled';
-    const sc = confirmed ? s.score : null;
-    const scHtml = sc !== null ? '<span class="score-display">'+sc+'</span>' : '';
     const probHtml = showProb && !confirmed ? ' <span class="bracket-probable">(P)</span>' : '';
-    return '<img class="flag" src="'+flagUrl(t.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(t.name||'A definir')+'</span>'+scHtml+probHtml;
+    return '<img class="flag" src="'+flagUrl(t.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(t.name||'A definir')+'</span>'+probHtml;
   }
   function matchHtml(m, label, showProb) {
     if (!m || !m.a || !m.b) return '<div class="bracket-match probable"><div class="match-teams"><div class="team-row"><div class="team-info"><span class="name">A definir</span></div></div><div class="match-vs">X</div><div class="team-row"><div class="team-info"><span class="name">A definir</span></div></div></div><div class="match-label">'+label+'</div></div>';
