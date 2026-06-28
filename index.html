@@ -1702,9 +1702,47 @@ function renderClassifiedPanel(standingsData) {
   allThird.sort((a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf);
   const bestThird = allThird.slice(0, 8);
 
-  // Adiciona os 8 melhores 3ºs como 'probable' no final
+  // Verifica se algum 3º já está matematicamente garantido
+  // (mesmo perdendo o último jogo, ainda fica entre os 8 melhores)
+  const thirdConfirmed = new Set();
+  allThird.forEach((t, idx) => {
+    if (idx >= 8) {
+      // Tá fora dos 8 melhores agora. Será que mesmo perdendo, algum dos 8
+      // melhores pode ser ultrapassado? Só se o 9º conseguir passar o 8º.
+      // Isso é complexo demais pra calcular sem simular todos os cenários.
+      return;
+    }
+    // Tá dentro dos 8 melhores. Verifica se o 9º (ou qualquer fora) pode ultrapassá-lo
+    const remaining = 3 - t.gp; // jogos restantes do time
+    if (remaining <= 0) {
+      // Já terminou todos os jogos do grupo
+      thirdConfirmed.add(t.abbr);
+      return;
+    }
+    // Pior cenário: o time perde todos os jogos restantes por 5-0
+    const worstPts = t.pts;
+    const worstGd = t.gd - (remaining * 5);
+    // Verifica se alguém FORA dos 8 melhores pode alcançar
+    let canBeOvertaken = false;
+    for (let j = 8; j < allThird.length; j++) {
+      const o = allThird[j];
+      const oRemaining = 3 - o.gp;
+      const maxOPts = o.pts + (oRemaining * 3);
+      const maxOGd = o.gd + (oRemaining * 5);
+      if (maxOPts > worstPts || (maxOPts === worstPts && maxOGd > worstGd)) {
+        canBeOvertaken = true;
+        break;
+      }
+    }
+    if (!canBeOvertaken) {
+      thirdConfirmed.add(t.abbr);
+    }
+  });
+
+  // Adiciona os 8 melhores 3ºs
   bestThird.forEach(t => {
-    classified.push({ abbr: t.abbr, name: t.name, group: t.group, status: 'probable' });
+    const status = thirdConfirmed.has(t.abbr) ? 'confirmed' : 'probable';
+    classified.push({ abbr: t.abbr, name: t.name, group: t.group, status });
   });
 
   let h = '<div class="classified-panel">';
