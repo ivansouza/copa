@@ -2100,66 +2100,44 @@ function renderBracket(events, standingsData) {
   // Final: 19/07 3pm ET (NY) = 16h BRT
   const finalDate = '19/07 16h';
 
+  // Helper para renderizar time com (P) e score
+  function teamHtml(t, showProb) {
+    if (!t) return '<span class="name">A definir</span>';
+    const s = scoreMap[t.abbr];
+    const confirmed = s && s.status !== 'pre' && s.status !== 'scheduled';
+    const sc = confirmed ? s.score : null;
+    const scHtml = sc !== null ? '<span class="score-display">'+sc+'</span>' : '';
+    const probHtml = showProb && !confirmed ? ' <span class="bracket-probable">(P)</span>' : '';
+    return '<img class="flag" src="'+flagUrl(t.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(t.name||'A definir')+'</span>'+scHtml+probHtml;
+  }
+  function matchHtml(m, label, showProb) {
+    if (!m || !m.a || !m.b) return '<div class="bracket-match probable"><div class="match-teams"><div class="team-row"><div class="team-info"><span class="name">A definir</span></div></div><div class="match-vs">X</div><div class="team-row"><div class="team-info"><span class="name">A definir</span></div></div></div><div class="match-label">'+label+'</div></div>';
+    return '<div class="bracket-match probable"><div class="match-teams"><div class="team-row"><div class="team-info">'+teamHtml(m.a, showProb)+'</div></div><div class="match-vs">X</div><div class="team-row"><div class="team-info">'+teamHtml(m.b, showProb)+'</div></div></div><div class="match-label">'+label+'</div></div>';
+  }
+
   // Oitavas
   h += '<div class="bracket-round"><div class="bracket-round-title">Oitavas (16)</div>';
-  r16.forEach((m,i) => {
-    if (!m.a || !m.b) return;
-    h += '<div class="bracket-match probable"><div class="match-teams">';
-    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(m.a.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(m.a.name||'A definir')+'</span></div></div>';
-    h += '<div class="match-vs">X</div>';
-    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(m.b.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(m.b.name||'A definir')+'</span></div></div>';
-    h += '</div><div class="match-label">'+(r16dates[i]||'')+' — provável</div></div>';
-  });
+  r16.forEach((m,i) => { h += matchHtml(m, (r16dates[i]||'')+' — provável', true); });
   h += '</div>';
 
   // Quartas
   h += '<div class="bracket-round"><div class="bracket-round-title">Quartas (8)</div>';
-  qf.forEach((m,i) => {
-    if (!m.a || !m.b) return;
-    h += '<div class="bracket-match probable"><div class="match-teams">';
-    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(m.a.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(m.a.name||'A definir')+'</span></div></div>';
-    h += '<div class="match-vs">X</div>';
-    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(m.b.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(m.b.name||'A definir')+'</span></div></div>';
-    h += '</div><div class="match-label">'+(qfDates[i]||'')+' — provável</div></div>';
-  });
+  qf.forEach((m,i) => { h += matchHtml(m, (qfDates[i]||'')+' — provável', true); });
   h += '</div>';
 
   // Semifinais
   h += '<div class="bracket-round"><div class="bracket-round-title">Semifinais (4)</div>';
-  sf.forEach((m,i) => {
-    if (!m.a || !m.b) return;
-    h += '<div class="bracket-match probable"><div class="match-teams">';
-    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(m.a.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(m.a.name||'A definir')+'</span></div></div>';
-    h += '<div class="match-vs">X</div>';
-    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(m.b.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(m.b.name||'A definir')+'</span></div></div>';
-    h += '</div><div class="match-label">'+(sfDates[i]||'')+' — provável</div></div>';
-  });
+  sf.forEach((m,i) => { h += matchHtml(m, (sfDates[i]||'')+' — provável', true); });
   h += '</div>';
 
   // 3º Lugar
   h += '<div class="bracket-round"><div class="bracket-round-title">3º Lugar</div>';
-  if (thirdPlace && thirdPlace.a && thirdPlace.b) {
-    h += '<div class="bracket-match probable"><div class="match-teams">';
-    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(thirdPlace.a.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(thirdPlace.a.name||'A definir')+'</span></div></div>';
-    h += '<div class="match-vs">X</div>';
-    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(thirdPlace.b.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(thirdPlace.b.name||'A definir')+'</span></div></div>';
-    h += '</div><div class="match-label">'+thirdDate+' — provável</div></div>';
-  } else {
-    h += '<div class="bracket-match probable"><div class="match-teams"><div class="team-row"><div class="team-info"><span class="name">A definir</span></div></div><div class="match-vs">X</div><div class="team-row"><div class="team-info"><span class="name">A definir</span></div></div></div><div class="match-label">'+thirdDate+' — provável</div></div>';
-  }
+  h += matchHtml(thirdPlace, thirdDate+' — provável', true);
   h += '</div>';
 
   // Final
   h += '<div class="bracket-round"><div class="bracket-round-title">Final</div>';
-  if (finalMatch && finalMatch.a && finalMatch.b) {
-    h += '<div class="bracket-match probable"><div class="match-teams">';
-    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(finalMatch.a.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(finalMatch.a.name||'A definir')+'</span></div></div>';
-    h += '<div class="match-vs">X</div>';
-    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(finalMatch.b.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(finalMatch.b.name||'A definir')+'</span></div></div>';
-    h += '</div><div class="match-label">'+finalDate+' — Final</div></div>';
-  } else {
-    h += '<div class="bracket-match probable"><div class="match-teams"><div class="team-row"><div class="team-info"><span class="name">A definir</span></div></div><div class="match-vs">X</div><div class="team-row"><div class="team-info"><span class="name">A definir</span></div></div></div><div class="match-label">'+finalDate+' — Final</div></div>';
-  }
+  h += matchHtml(finalMatch, finalDate+' — Final', true);
   h += '</div>';
 
   // Champion box
@@ -2169,7 +2147,10 @@ function renderBracket(events, standingsData) {
   }
   h += '<div class="bracket-round"><div class="bracket-round-title">🏆 Campeão</div>';
   if (champTeam) {
-    h += '<div class="champion-box"><div class="trophy">🏆</div><div class="champ-label">Campeão (provável)</div><div class="champ-team"><img class="flag" src="'+flagUrl(champTeam.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(champTeam.name||'?')+'</span></div></div>';
+    const s = scoreMap[champTeam.abbr];
+    const confirmed = s && s.status !== 'pre' && s.status !== 'scheduled';
+    const probHtml = !confirmed ? ' (provável)' : '';
+    h += '<div class="champion-box"><div class="trophy">🏆</div><div class="champ-label">Campeão'+probHtml+'</div><div class="champ-team"><img class="flag" src="'+flagUrl(champTeam.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(champTeam.name||'?')+'</span></div></div>';
   } else {
     h += '<div class="champion-box"><div class="trophy">🏆</div><div class="champ-label">Campeão</div><div class="champ-empty">A definir</div></div>';
   }
