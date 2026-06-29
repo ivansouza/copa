@@ -860,65 +860,33 @@ async function fetchDateGames(dateStr) {
   return data.events || [];
 }
 
-// Cache de detalhes dos jogos (gols, etc)
-const gameDetailsCache = {};
-
-async function fetchGameDetails(eventId) {
-  if (gameDetailsCache[eventId]) return gameDetailsCache[eventId];
-  const url = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard/' + eventId + '?_=' + Date.now();
-  try {
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const data = await res.json();
-    gameDetailsCache[eventId] = data;
-    return data;
-  } catch(e) {
-    return null;
-  }
-}
-
 function extractGoals(gameData) {
-  // Extrai gols do summary da ESPN
+  // Extrai gols do scoreboard da ESPN (campo details)
   const goals = [];
   if (!gameData) return goals;
   const comp = gameData.competitions?.[0]||{};
-  // Tenta scoringPlays primeiro
-  const plays = comp.scoringPlays || [];
-  plays.forEach(p => {
-    const period = p.period?.number || 0;
-    const clock = p.clock?.displayValue || '';
-    const participants = p.participants || [];
-    const scorer = participants.find(part => part.type === 'scorer' || part.athlete?.displayName);
-    const assist = participants.find(part => part.type === 'assist' || (part.type !== 'scorer' && part.athlete));
-    const teamAbbr = p.team?.abbreviation || (p.team?.id ? 'team'+p.team.id : '');
+  // Mapa de team.id -> team.abbreviation
+  const teamMap = {};
+  (comp.competitors||[]).forEach(c => {
+    if (c.team?.id && c.team?.abbreviation) teamMap[c.team.id] = c.team.abbreviation;
+  });
+  // Os gols estão em details (array dentro do próprio scoreboard)
+  const details = comp.details || [];
+  details.forEach(d => {
+    if (!d.scoringPlay || d.type?.text === 'Yellow Card' || d.type?.text === 'Red Card' || d.type?.text === 'Card') return;
+    const clock = d.clock?.displayValue || '';
+    const teamId = d.team?.id || '';
+    const teamAbbr = teamMap[teamId] || '';
+    const athletes = d.athletesInvolved || [];
+    const scorer = athletes[0];
     goals.push({
       team: teamAbbr,
-      scorer: scorer?.athlete?.displayName || '?' ,
-      assist: assist?.athlete?.displayName || null,
-      minute: clock || (p.start?.value ? Math.floor(p.start.value/60)+'\'' : ''),
-      period: period
+      scorer: scorer?.displayName || '?',
+      assist: null,
+      minute: clock,
+      period: 0
     });
   });
-  // Se não achou, tenta competitions[0].events
-  if (goals.length === 0) {
-    const events = comp.events || [];
-    events.forEach(e => {
-      if (e.type?.text === 'Goal' || e.type?.text === 'Gol') {
-        const clock = e.clock?.displayValue || '';
-        const teamAbbr = e.team?.abbreviation || '';
-        const athletes = e.athletes || [];
-        const scorer = athletes.find(a => a.type === 'scorer');
-        const assist = athletes.find(a => a.type === 'assist');
-        goals.push({
-          team: teamAbbr,
-          scorer: scorer?.displayName || '?',
-          assist: assist?.displayName || null,
-          minute: clock,
-          period: e.period?.number || 0
-        });
-      }
-    });
-  }
   return goals;
 }
 
@@ -951,7 +919,7 @@ async function loadAll() {
     renderDateNav(dates);
     renderGames();
     renderStats();
-    await renderLiveCards();
+    renderLiveCards();
   } catch(e) {
     document.querySelectorAll('.loading-state').forEach(el=>{
       el.innerHTML='<div class="error-state"><p>❌ Erro: '+e+'</p><button class="retry-btn" onclick="loadAll()">Tentar novamente</button></div>';
@@ -959,7 +927,7 @@ async function loadAll() {
   }
 }
 
-async function renderLiveCards() {
+function renderLiveCards() {
   const c = document.getElementById('livecards-container');
   if (!c) return;
 
@@ -970,15 +938,12 @@ async function renderLiveCards() {
     return;
   }
 
-  // Busca detalhes dos jogos ao vivo (gols)
+  // Extrai gols dos dados que já temos (allGames -> competitions[0].details)
   const goalsByGame = {};
-  await Promise.all(liveGames.map(async (g) => {
-    const eventId = g.id;
-    if (!eventId) return;
-    const details = await fetchGameDetails(eventId);
-    const goals = extractGoals(details);
-    if (goals.length > 0) goalsByGame[eventId] = goals;
-  }));
+  liveGames.forEach(g => {
+    const goals = extractGoals(g);
+    if (goals.length > 0) goalsByGame[g.id] = goals;
+  });
 
   // Coleta abreviações dos times ao vivo
   const liveAbbrs = new Set();
