@@ -2027,17 +2027,17 @@ function renderBracket(events, standingsData) {
   // Renderiza diagrama
   renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events);
 
-  // Renderiza botões de favoritos (só na primeira vez)
+  // Renderiza botões de favoritos (sempre, pra garantir que atualiza)
   const fg = document.getElementById('favGrid');
-  if (fg && !fg.children.length) {
+  if (fg) {
     // Todos os 32 times da Segunda Fase
     const allTeams = [];
     round32.forEach(m => {
       if (m.a && m.a.abbr && !allTeams.find(t => t.abbr === m.a.abbr)) {
-        allTeams.push({abbr:m.a.abbr, name:m.a.name, flag:flagUrl(m.a.abbr)});
+        allTeams.push({abbr:m.a.abbr, name:pt(m.a.name)||m.a.name, flag:flagUrl(m.a.abbr)});
       }
       if (m.b && m.b.abbr && !allTeams.find(t => t.abbr === m.b.abbr)) {
-        allTeams.push({abbr:m.b.abbr, name:m.b.name, flag:flagUrl(m.b.abbr)});
+        allTeams.push({abbr:m.b.abbr, name:pt(m.b.name)||m.b.name, flag:flagUrl(m.b.abbr)});
       }
     });
     // Ordena por nome
