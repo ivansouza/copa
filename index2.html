@@ -187,6 +187,7 @@
     text-align: center;
   }
   .bracket-match .team-row .score.empty { color: #475569; }
+  .bracket-match .team-row .score-display { font-weight:800; font-size:.85rem; color:#f59e0b; min-width:22px; text-align:center; margin-left:4px; }
   .bracket-match .team-row.winner .team-info .name { color: #22c55e; }
   .bracket-match .team-row.winner .score { color: #22c55e; }
   .bracket-match .match-vs {
@@ -294,7 +295,11 @@
   .bd-m .t{display:flex;align-items:center;gap:3px;padding:1.5px 0;font-size:8px;font-weight:600;color:#e2e8f0}
   .bd-m .t .fl{width:14px;height:10px;border-radius:1.5px;flex:none}
   .bd-m .t .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .bd-m .t .sc{font-family:ui-monospace,monospace;font-size:8px;font-weight:700;color:#f0d060;margin-left:2px;flex:none}
   .bd-m .v{text-align:center;font-size:6px;color:#64748b;border-top:1px solid #334155;padding-top:1px;margin-top:1px;line-height:1}
+  .bd-m.confirmed{background:#2a3a1a;border-color:#d4a01766}
+  .bd-m.confirmed .t .nm{color:#f0d060}
+  .bd-m .t .pr{font-size:7px;color:#64748b;font-style:italic;flex:none}
   .bd-tr{text-align:center;padding:4px 0}
   .bd-tr svg{width:28px;height:34px;display:block;margin:0 auto}
   .bd-tr .l{font-size:6px;color:#f0d060;letter-spacing:2px;text-transform:uppercase;margin-top:2px;font-family:ui-monospace,monospace;font-weight:700}
@@ -310,6 +315,8 @@
   .fav-btn .fl{width:14px;height:10px;border-radius:1.5px;flex:none}
   .fav-btn.clear{color:#64748b;font-size:10px}
   .fav-btn.clear:hover{color:#ef4444;border-color:#ef4444}
+  .fav-btn.disabled{opacity:0.4;cursor:not-allowed;border-color:#1e293b;background:#162316;color:#475569}
+  .fav-btn.disabled:hover{border-color:#1e293b;color:#475569}
   .classified-panel {
     background: linear-gradient(145deg, #1e293b, #1a2332);
     border: 1px solid #2d3a4e;
@@ -587,14 +594,14 @@
   </header>
 
   <div class="nav-bar">
-    <button class="nav-btn active" data-section="groups">📊 Grupos</button>
     <button class="nav-btn" data-section="bracket">🏅 Mata-Mata</button>
+    <button class="nav-btn" data-section="groups">📊 Grupos</button>
     <button class="nav-btn" data-section="games">📅 Jogos</button>
     <button class="nav-btn" data-section="stats">📈 Estatísticas</button>
     <button class="nav-btn" data-section="live">📺 Ao Vivo</button>
   </div>
 
-  <div id="section-groups" class="section-content">
+  <div id="section-groups" class="section-content" style="display:none">
     <div class="section-title">📊 Fase de Grupos <span class="bar"></span></div>
     <div style="font-size:.75rem;color:#64748b;margin-bottom:12px;display:flex;flex-wrap:wrap;gap:6px 16px;">
       <span><b>Pts</b>: Pontos</span>
@@ -609,7 +616,7 @@
     <div id="groups-container"><div class="loading-state"><div class="spinner"></div><p>Carregando grupos...</p></div></div>
   </div>
 
-  <div id="section-bracket" class="section-content" style="display:none">
+  <div id="section-bracket" class="section-content">
     <div class="section-title">🏅 Fase Final <span class="bar"></span></div>
     <div style="font-size:.75rem;color:#64748b;margin-bottom:12px;text-align:center;">Horários em BRT (Brasília)</div>
     <div id="classified-panel" style="margin-bottom:1.5rem;"></div>
@@ -676,7 +683,7 @@ const PT_NAMES = {
   'Mexico':'México','South Korea':'Coreia do Sul','Czech Republic':'Tchéquia','South Africa':'África do Sul',
   'Canada':'Canadá','Switzerland':'Suíça','Bosnia and Herzegovina':'Bósnia','Qatar':'Catar',
   'Brazil':'Brasil','Morocco':'Marrocos','Scotland':'Escócia','Haiti':'Haiti',
-  'USA':'Estados Unidos','Australia':'Austrália','Paraguay':'Paraguai','Türkiye':'Turquia',
+  'USA':'Estados Unidos','United States':'Estados Unidos','Australia':'Austrália','Paraguay':'Paraguai','Türkiye':'Turquia',
   'Germany':'Alemanha','Ivory Coast':'Costa do Marfim','Ecuador':'Equador','Curaçao':'Curaçau',
   'Netherlands':'Holanda','Japan':'Japão','Sweden':'Suécia','Tunisia':'Tunísia',
   'New Zealand':'Nova Zelândia','Iran':'Irã','Belgium':'Bélgica','Egypt':'Egito',
@@ -872,10 +879,13 @@ function renderGroups(d) {
   const kids = d.children||[];
   if(!kids.length){c.innerHTML='<div class="error-state">Nenhum grupo encontrado.</div>';return;}
 
-  // Calcula estatísticas a partir dos jogos ENCERRADOS (allGames)
+  // Calcula estatísticas a partir dos jogos da FASE DE GRUPOS (allGames)
   const stats = {}; // { abbreviation: { pts, gp, w, t, l, gf, ga } }
   (allGames||[]).forEach(g => {
-    if (getStatus(g) === 'scheduled') return; // pula só os programados
+    // Só considera jogos da fase de grupos (season.type 1 = group stage)
+    const seasonSlug = (g.season?.slug || '');
+    if (seasonSlug !== 'group-stage') return;
+    if (getStatus(g) === 'scheduled') return;
     const co = g.competitions?.[0]||{};
     const cmp = co.competitors||[];
     if (cmp.length < 2) return;
@@ -1047,9 +1057,11 @@ function buildRound32(standingsData) {
   const children = standingsData.children || [];
   if (!children.length) return null;
 
-  // Calcula stats localmente (só jogos encerrados)
+  // Calcula stats localmente (só jogos da fase de grupos)
   const localStats = {};
   (allGames||[]).forEach(g => {
+    const seasonSlug = (g.season?.slug || '');
+    if (seasonSlug !== 'group-stage') return;
     if (getStatus(g) === 'scheduled') return;
     const co = g.competitions?.[0]||{}, cmp = co.competitors||[];
     if (cmp.length < 2) return;
@@ -1252,22 +1264,35 @@ function buildRound32(standingsData) {
   // Match 86 (1º J vs 2º H) → r32dates[14] (03/07 18h ET → 19h BRT)
   // Match 87 (1º K vs 3º)   → r32dates[15] (03/07 21h30 ET → 22h30 BRT)
   // Match 88 (2º D vs 2º G) → r32dates[13] (03/07 14h ET → 15h BRT)
-  round32.push({ a: g('A',1), b: g('B',1), label: '2º A vs 2º B', date: r32dates[0] });
-  round32.push({ a: g('E',0), b: t3group('1E'), label: '1º E vs '+t3label('1E'), date: r32dates[2] });
-  round32.push({ a: g('F',0), b: g('C',1), label: '1º F vs 2º C', date: r32dates[3] });
-  round32.push({ a: g('C',0), b: g('F',1), label: '1º C vs 2º F', date: r32dates[1] });
-  round32.push({ a: g('I',0), b: t3group('1I'), label: '1º I vs '+t3label('1I'), date: r32dates[5] });
-  round32.push({ a: g('E',1), b: g('I',1), label: '2º E vs 2º I', date: r32dates[4] });
-  round32.push({ a: g('A',0), b: t3group('1A'), label: '1º A vs '+t3label('1A'), date: r32dates[6] });
-  round32.push({ a: g('L',0), b: t3group('1L'), label: '1º L vs '+t3label('1L'), date: r32dates[7] });
-  round32.push({ a: g('D',0), b: t3group('1D'), label: '1º D vs '+t3label('1D'), date: r32dates[9] });
-  round32.push({ a: g('G',0), b: t3group('1G'), label: '1º G vs '+t3label('1G'), date: r32dates[8] });
-  round32.push({ a: g('K',1), b: g('L',1), label: '2º K vs 2º L', date: r32dates[11] });
-  round32.push({ a: g('H',0), b: g('J',1), label: '1º H vs 2º J', date: r32dates[10] });
-  round32.push({ a: g('B',0), b: t3group('1B'), label: '1º B vs '+t3label('1B'), date: r32dates[12] });
-  round32.push({ a: g('J',0), b: g('H',1), label: '1º J vs 2º H', date: r32dates[14] });
-  round32.push({ a: g('K',0), b: t3group('1K'), label: '1º K vs '+t3label('1K'), date: r32dates[15] });
-  round32.push({ a: g('D',1), b: g('G',1), label: '2º D vs 2º G', date: r32dates[13] });
+  // Ordem correta para simulateRound (pares 0-1, 2-3, 4-5...):
+  // Par 0-1: 74+77 → Oitavas 89 (Alemanha/Parag x França/Suécia)
+  // Par 2-3: 73+75 → Oitavas 90 (Áfr.Sul/Canadá x Holanda/Marrocos)
+  // Par 4-5: 76+78 → Oitavas 91 (Brasil/Japão x C.Marfim/Noruega)
+  // Par 6-7: 79+80 → Oitavas 92 (México/Equador x Inglaterra/RD Congo)
+  // Par 8-9: 83+84 → Oitavas 93 (Portugal/Croácia x Espanha/Áustria)
+  // Par 10-11: 81+82 → Oitavas 94 (EUA/Bósnia x Bélgica/Senegal)
+  // Par 12-13: 86+88 → Oitavas 95 (Argentina/C.Verde x Austrália/Egito)
+  // Par 14-15: 85+87 → Oitavas 96 (Suíça/Argélia x Colômbia/Gana)
+  // Ordem correta: lado esquerdo [89,90,93,94] + lado direito [91,92,95,96]
+  // Oitavas: 89(74+77), 90(73+75), 93(83+84), 94(81+82), 91(76+78), 92(79+80), 95(86+88), 96(85+87)
+  // Quartas: QF1(89x90), QF3(93x94), QF2(91x92), QF4(95x96)
+  // Semis: SF1(QF1xQF3), SF2(QF2xQF4)
+  round32.push({ a: g('E',0), b: t3group('1E'), label: '1º E vs '+t3label('1E'), date: r32dates[2] });  // 74
+  round32.push({ a: g('I',0), b: t3group('1I'), label: '1º I vs '+t3label('1I'), date: r32dates[5] });  // 77
+  round32.push({ a: g('A',1), b: g('B',1), label: '2º A vs 2º B', date: r32dates[0] });                // 73
+  round32.push({ a: g('F',0), b: g('C',1), label: '1º F vs 2º C', date: r32dates[3] });                // 75
+  round32.push({ a: g('K',1), b: g('L',1), label: '2º K vs 2º L', date: r32dates[11] });               // 83
+  round32.push({ a: g('H',0), b: g('J',1), label: '1º H vs 2º J', date: r32dates[10] });               // 84
+  round32.push({ a: g('D',0), b: t3group('1D'), label: '1º D vs '+t3label('1D'), date: r32dates[9] });  // 81
+  round32.push({ a: g('G',0), b: t3group('1G'), label: '1º G vs '+t3label('1G'), date: r32dates[8] });  // 82
+  round32.push({ a: g('C',0), b: g('F',1), label: '1º C vs 2º F', date: r32dates[1] });                // 76
+  round32.push({ a: g('E',1), b: g('I',1), label: '2º E vs 2º I', date: r32dates[4] });                // 78
+  round32.push({ a: g('A',0), b: t3group('1A'), label: '1º A vs '+t3label('1A'), date: r32dates[6] });  // 79
+  round32.push({ a: g('L',0), b: t3group('1L'), label: '1º L vs '+t3label('1L'), date: r32dates[7] });  // 80
+  round32.push({ a: g('J',0), b: g('H',1), label: '1º J vs 2º H', date: r32dates[14] });               // 86
+  round32.push({ a: g('D',1), b: g('G',1), label: '2º D vs 2º G', date: r32dates[13] });               // 88
+  round32.push({ a: g('B',0), b: t3group('1B'), label: '1º B vs '+t3label('1B'), date: r32dates[12] }); // 85
+  round32.push({ a: g('K',0), b: t3group('1K'), label: '1º K vs '+t3label('1K'), date: r32dates[15] }); // 87
 
   return round32;
 }
@@ -1416,6 +1441,8 @@ function renderStats() {
   }
   const grupoGols = {};
   (allGames||[]).forEach(g => {
+    const seasonSlug = (g.season?.slug || '');
+    if (seasonSlug !== 'group-stage') return;
     if (getStatus(g) === 'scheduled') return;
     const co = g.competitions?.[0]||{}, cmp = co.competitors||[];
     if (cmp.length < 2) return;
@@ -1432,6 +1459,8 @@ function renderStats() {
   // Maior goleada
   let maiorGoleada = null;
   (allGames||[]).forEach(g => {
+    const seasonSlug = (g.season?.slug || '');
+    if (seasonSlug !== 'group-stage') return;
     if (getStatus(g) === 'scheduled') return;
     const co = g.competitions?.[0]||{}, cmp = co.competitors||[];
     if (cmp.length < 2) return;
@@ -1713,14 +1742,14 @@ function renderClassifiedPanel(standingsData) {
       const finished = isGroupFinished(letter, standingsData);
       const third = teams[2];
       const mathQual = third ? isMathematicallyQualified(teams[0].pts, teams[0].gd, third.pts, third.gd, 3 - third.gp) : false;
-      classified.push({ ...teams[0], status: (finished || mathQual) ? 'confirmed' : 'probable' });
+      classified.push({ ...teams[0], name: pt(teams[0].name), status: (finished || mathQual) ? 'confirmed' : 'probable' });
     }
     // 2º lugar: confirmado se grupo terminou OU se já está matematicamente garantido
     if (teams.length >= 2) {
       const finished = isGroupFinished(letter, standingsData);
       const third = teams[2];
       const mathQual = third ? isMathematicallyQualified(teams[1].pts, teams[1].gd, third.pts, third.gd, 3 - third.gp) : false;
-      classified.push({ ...teams[1], status: (finished || mathQual) ? 'confirmed' : 'probable' });
+      classified.push({ ...teams[1], name: pt(teams[1].name), status: (finished || mathQual) ? 'confirmed' : 'probable' });
     }
   });
 
@@ -1787,7 +1816,7 @@ function renderClassifiedPanel(standingsData) {
   // Adiciona os 8 melhores 3ºs
   bestThird.forEach(t => {
     const status = thirdConfirmed.has(t.abbr) ? 'confirmed' : 'probable';
-    classified.push({ abbr: t.abbr, name: t.name, group: t.group, status });
+    classified.push({ abbr: t.abbr, name: pt(t.name), group: t.group, status });
   });
 
   // Ordena por nome do time (alfabético, ignorando acentos)
@@ -1801,6 +1830,7 @@ function renderClassifiedPanel(standingsData) {
 
   let h = '<div class="classified-panel">';
   h += '<div class="panel-title"><span class="bracket-icon">[</span> CLASSIFICADOS PARA A SEGUNDA FASE <span class="bracket-icon">]</span></div>';
+  h += '<div style="text-align:center;font-size:.65rem;color:#64748b;margin-bottom:.6rem;">Times ordenados alfabeticamente</div>';
   h += '<div class="classified-grid">';
 
   // Mostra até 32 slots
@@ -1827,9 +1857,44 @@ function renderClassifiedPanel(standingsData) {
   c.innerHTML = h;
 }
 
-function renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace) {
+function renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events) {
   const c = document.getElementById('bracket-diagram');
   if (!c) return;
+  // Mapa de placares
+  const scoreMap = {};
+  (events||[]).forEach(e => {
+    const slug = (e.season?.slug || '');
+    if (slug !== 'round-of-32') return;
+    const comp = e.competitions?.[0]||{};
+    const st = comp.status?.type||{};
+    const state = st.state||'';
+    if (state === 'pre' || state === 'scheduled') return;
+    const cmp = comp.competitors||[];
+    cmp.forEach(c => {
+      const ab = c.team?.abbreviation||'';
+      if (!ab) return;
+      const sc = parseInt(c.score);
+      if (isNaN(sc)) return;
+      if (!scoreMap[ab]) scoreMap[ab] = {};
+      scoreMap[ab].score = sc;
+      scoreMap[ab].status = state;
+    });
+    // Marca perdedor
+    if (cmp.length >= 2 && state !== 'pre' && state !== 'scheduled') {
+      const s0 = parseInt(cmp[0].score)||0;
+      const s1 = parseInt(cmp[1].score)||0;
+      if (s0 !== s1) {
+        const loser = s0 < s1 ? cmp[0].team?.abbreviation : cmp[1].team?.abbreviation;
+        if (loser && scoreMap[loser]) scoreMap[loser].lost = true;
+      }
+    }
+  });
+  function getScore(abbr) {
+    const s = scoreMap[abbr];
+    if (!s) return null;
+    if (s.status === 'pre') return null;
+    return s.score;
+  }
   // Pares seguem a ordem do round32 no site (Match 73 a 88)
   // Col1 = lado esquerdo, Col2 = lado direito
   // Cada par = vencedores se enfrentam nas oitavas
@@ -1837,26 +1902,41 @@ function renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace) {
   // Col1 = lado esquerdo, Col2 = lado direito
   // Cada par = vencedores se enfrentam nas oitavas
   const PARES = [
-    // Par 0-1: Match 73 (2ºA vs 2ºB) + Match 74 (1ºE vs 3º)
-    [["África do Sul","Canadá","https://a.espncdn.com/i/teamlogos/countries/500/rsa.png","https://a.espncdn.com/i/teamlogos/countries/500/can.png"],["Alemanha","Paraguai","https://a.espncdn.com/i/teamlogos/countries/500/ger.png","https://a.espncdn.com/i/teamlogos/countries/500/par.png"]],
-    // Par 2-3: Match 75 (1ºF vs 2ºC) + Match 76 (1ºC vs 2ºF)
-    [["Holanda","Marrocos","https://a.espncdn.com/i/teamlogos/countries/500/ned.png","https://a.espncdn.com/i/teamlogos/countries/500/mar.png"],["Brasil","Japão","https://a.espncdn.com/i/teamlogos/countries/500/bra.png","https://a.espncdn.com/i/teamlogos/countries/500/jpn.png"]],
-    // Par 4-5: Match 77 (1ºI vs 3º) + Match 78 (2ºE vs 2ºI)
-    [["França","Suécia","https://a.espncdn.com/i/teamlogos/countries/500/fra.png","https://a.espncdn.com/i/teamlogos/countries/500/swe.png"],["Costa do Marfim","Noruega","https://a.espncdn.com/i/teamlogos/countries/500/civ.png","https://a.espncdn.com/i/teamlogos/countries/500/nor.png"]],
-    // Par 6-7: Match 79 (1ºA vs 3º) + Match 80 (1ºL vs 3º)
-    [["México","Equador","https://a.espncdn.com/i/teamlogos/countries/500/mex.png","https://a.espncdn.com/i/teamlogos/countries/500/ecu.png"],["Inglaterra","RD Congo","https://a.espncdn.com/i/teamlogos/countries/500/eng.png","https://a.espncdn.com/i/teamlogos/countries/500/cod.png"]],
-    // Par 8-9: Match 81 (1ºD vs 3º) + Match 82 (1ºG vs 3º)
-    [["Estados Unidos","Bósnia","https://a.espncdn.com/i/teamlogos/countries/500/usa.png","https://a.espncdn.com/i/teamlogos/countries/500/bih.png"],["Bélgica","Senegal","https://a.espncdn.com/i/teamlogos/countries/500/bel.png","https://a.espncdn.com/i/teamlogos/countries/500/sen.png"]],
-    // Par 10-11: Match 83 (2ºK vs 2ºL) + Match 84 (1ºH vs 2ºJ)
+    // Lado ESQUERDO da chave:
+    // Par 0-1: 74+77 → Oitavas 89 (Alemanha/Parag x França/Suécia)
+    [["Alemanha","Paraguai","https://a.espncdn.com/i/teamlogos/countries/500/ger.png","https://a.espncdn.com/i/teamlogos/countries/500/par.png"],["França","Suécia","https://a.espncdn.com/i/teamlogos/countries/500/fra.png","https://a.espncdn.com/i/teamlogos/countries/500/swe.png"]],
+    // Par 2-3: 73+75 → Oitavas 90 (Áfr.Sul/Canadá x Holanda/Marrocos)
+    [["África do Sul","Canadá","https://a.espncdn.com/i/teamlogos/countries/500/rsa.png","https://a.espncdn.com/i/teamlogos/countries/500/can.png"],["Holanda","Marrocos","https://a.espncdn.com/i/teamlogos/countries/500/ned.png","https://a.espncdn.com/i/teamlogos/countries/500/mar.png"]],
+    // Par 4-5: 83+84 → Oitavas 93 (Portugal/Croácia x Espanha/Áustria)
     [["Portugal","Croácia","https://a.espncdn.com/i/teamlogos/countries/500/por.png","https://a.espncdn.com/i/teamlogos/countries/500/cro.png"],["Espanha","Áustria","https://a.espncdn.com/i/teamlogos/countries/500/esp.png","https://a.espncdn.com/i/teamlogos/countries/500/aut.png"]],
-    // Par 12-13: Match 85 (1ºB vs 3º) + Match 86 (1ºJ vs 2ºH)
-    [["Suíça","Argélia","https://a.espncdn.com/i/teamlogos/countries/500/sui.png","https://a.espncdn.com/i/teamlogos/countries/500/alg.png"],["Argentina","Cabo Verde","https://a.espncdn.com/i/teamlogos/countries/500/arg.png","https://a.espncdn.com/i/teamlogos/countries/500/cpv.png"]],
-    // Par 14-15: Match 87 (1ºK vs 3º) + Match 88 (2ºD vs 2ºG)
-    [["Colômbia","Gana","https://a.espncdn.com/i/teamlogos/countries/500/col.png","https://a.espncdn.com/i/teamlogos/countries/500/gha.png"],["Egito","Austrália","https://a.espncdn.com/i/teamlogos/countries/500/egy.png","https://a.espncdn.com/i/teamlogos/countries/500/aus.png"]],
+    // Par 6-7: 81+82 → Oitavas 94 (EUA/Bósnia x Bélgica/Senegal)
+    [["Estados Unidos","Bósnia","https://a.espncdn.com/i/teamlogos/countries/500/usa.png","https://a.espncdn.com/i/teamlogos/countries/500/bih.png"],["Bélgica","Senegal","https://a.espncdn.com/i/teamlogos/countries/500/bel.png","https://a.espncdn.com/i/teamlogos/countries/500/sen.png"]],
+    // Lado DIREITO da chave:
+    // Par 8-9: 76+78 → Oitavas 91 (Brasil/Japão x C.Marfim/Noruega)
+    [["Brasil","Japão","https://a.espncdn.com/i/teamlogos/countries/500/bra.png","https://a.espncdn.com/i/teamlogos/countries/500/jpn.png"],["Costa do Marfim","Noruega","https://a.espncdn.com/i/teamlogos/countries/500/civ.png","https://a.espncdn.com/i/teamlogos/countries/500/nor.png"]],
+    // Par 10-11: 79+80 → Oitavas 92 (México/Equador x Inglaterra/RD Congo)
+    [["México","Equador","https://a.espncdn.com/i/teamlogos/countries/500/mex.png","https://a.espncdn.com/i/teamlogos/countries/500/ecu.png"],["Inglaterra","RD Congo","https://a.espncdn.com/i/teamlogos/countries/500/eng.png","https://a.espncdn.com/i/teamlogos/countries/500/cod.png"]],
+    // Par 12-13: 86+88 → Oitavas 95 (Argentina/C.Verde x Austrália/Egito)
+    [["Argentina","Cabo Verde","https://a.espncdn.com/i/teamlogos/countries/500/arg.png","https://a.espncdn.com/i/teamlogos/countries/500/cpv.png"],["Egito","Austrália","https://a.espncdn.com/i/teamlogos/countries/500/egy.png","https://a.espncdn.com/i/teamlogos/countries/500/aus.png"]],
+    // Par 14-15: 85+87 → Oitavas 96 (Suíça/Argélia x Colômbia/Gana)
+    [["Suíça","Argélia","https://a.espncdn.com/i/teamlogos/countries/500/sui.png","https://a.espncdn.com/i/teamlogos/countries/500/alg.png"],["Colômbia","Gana","https://a.espncdn.com/i/teamlogos/countries/500/col.png","https://a.espncdn.com/i/teamlogos/countries/500/gha.png"]],
   ];
-  function cd(t1,t2,f1,f2){return '<div class="bd-m"><div class="t"><img class="fl" src="'+f1+'" alt="" loading="lazy"><span class="nm">'+t1+'</span></div><div class="v">✕</div><div class="t"><img class="fl" src="'+f2+'" alt="" loading="lazy"><span class="nm">'+t2+'</span></div></div>'}
+  // Mapa de abreviaturas para os cards fixos (PARES)
+  const abbrMap = {
+    'África do Sul':'RSA','Canadá':'CAN','Alemanha':'GER','Paraguai':'PAR',
+    'Holanda':'NED','Marrocos':'MAR','Brasil':'BRA','Japão':'JPN',
+    'França':'FRA','Suécia':'SWE','Costa do Marfim':'CIV','Noruega':'NOR',
+    'México':'MEX','Equador':'ECU','Inglaterra':'ENG','RD Congo':'COD',
+    'Estados Unidos':'USA','Bósnia':'BIH','Bélgica':'BEL','Senegal':'SEN',
+    'Portugal':'POR','Croácia':'CRO','Espanha':'ESP','Áustria':'AUT',
+    'Suíça':'SUI','Argélia':'ALG','Argentina':'ARG','Cabo Verde':'CPV',
+    'Colômbia':'COL','Gana':'GHA','Egito':'EGY','Austrália':'AUS'
+  };
+  function gs(name){const ab=abbrMap[name];if(!ab)return null;const s=scoreMap[ab];if(!s||s.status==='pre')return null;return s.score;}
+  function cd(t1,t2,f1,f2){const sa=gs(t1),sb=gs(t2);const sha=sa!==null?'<span class="sc">'+sa+'</span>':'',shb=sb!==null?'<span class="sc">'+sb+'</span>':'';return '<div class="bd-m"><div class="t"><img class="fl" src="'+f1+'" alt="" loading="lazy"><span class="nm">'+t1+'</span>'+sha+'</div><div class="v">✕</div><div class="t"><img class="fl" src="'+f2+'" alt="" loading="lazy"><span class="nm">'+t2+'</span>'+shb+'</div></div>'}
   function tm(t){if(!t)return '<div class="bd-m bd-ph"><div class="t"><span class="nm">─</span></div></div>';return '<div class="bd-m"><div class="t"><img class="fl" src="'+flagUrl(t.abbr)+'" alt="" loading="lazy"><span class="nm">'+(t.name||'?')+'</span></div></div>'}
-  function mc(a,b){if(!a||!b)return '<div class="bd-m bd-ph"><div class="t"><span class="nm">─</span></div></div>';return '<div class="bd-m"><div class="t"><img class="fl" src="'+flagUrl(a.abbr)+'" alt="" loading="lazy"><span class="nm">'+(a.name||'?')+'</span></div><div class="v">✕</div><div class="t"><img class="fl" src="'+flagUrl(b.abbr)+'" alt="" loading="lazy"><span class="nm">'+(b.name||'?')+'</span></div></div>'}
+  function isConfirmed(abbr){const s=scoreMap[abbr];return s&&s.status!=='pre'&&s.status!=='scheduled';}
+  function mc(a,b){if(!a||!b)return '<div class="bd-m bd-ph"><div class="t"><span class="nm">─</span></div></div>';const ca=isConfirmed(a.abbr);const cb=isConfirmed(b.abbr);const cls=ca||cb?' confirmed':'';const pa=ca?'':' <span class="pr">(P)</span>';const pb=cb?'':' <span class="pr">(P)</span>';return '<div class="bd-m'+cls+'"><div class="t"><img class="fl" src="'+flagUrl(a.abbr)+'" alt="" loading="lazy"><span class="nm">'+(a.name||'?')+'</span>'+pa+'</div><div class="v">✕</div><div class="t"><img class="fl" src="'+flagUrl(b.abbr)+'" alt="" loading="lazy"><span class="nm">'+(b.name||'?')+'</span>'+pb+'</div></div>'}
   let h='<div class="bd-wrap"><div class="bd">';
   h+='<div class="bd-r"><div class="bd-rt">16 avos</div>';for(let i=0;i<PARES.length;i++){const g=PARES[i][0];h+=cd(g[0],g[1],g[2],g[3])}h+='</div>';
   h+='<div class="bd-r"><div class="bd-rt">16 avos</div>';for(let i=0;i<PARES.length;i++){const g=PARES[i][1];h+=cd(g[0],g[1],g[2],g[3])}h+='</div>';
@@ -1899,6 +1979,36 @@ function renderBracket(events, standingsData) {
     c.innerHTML = '<div class="loading-state"><p>🏅 Aguardando dados dos grupos para projetar o chaveamento...</p></div>';
     return;
   }
+
+  // Mapa de placares: SÓ jogos da segunda fase (round-of-32)
+  const scoreMap = {};
+  (events||[]).forEach(e => {
+    const slug = (e.season?.slug || '');
+    if (slug !== 'round-of-32') return;
+    const comp = e.competitions?.[0]||{};
+    const st = comp.status?.type||{};
+    const state = st.state||'';
+    if (state === 'pre' || state === 'scheduled') return;
+    const cmp = comp.competitors||[];
+    cmp.forEach(c => {
+      const ab = c.team?.abbreviation||'';
+      if (!ab) return;
+      const sc = parseInt(c.score);
+      if (isNaN(sc)) return;
+      if (!scoreMap[ab]) scoreMap[ab] = {};
+      scoreMap[ab].score = sc;
+      scoreMap[ab].status = state;
+    });
+    // Marca perdedor
+    if (cmp.length >= 2) {
+      const s0 = parseInt(cmp[0].score)||0;
+      const s1 = parseInt(cmp[1].score)||0;
+      if (s0 !== s1) {
+        const loser = s0 < s1 ? cmp[0].team?.abbreviation : cmp[1].team?.abbreviation;
+        if (loser && scoreMap[loser]) scoreMap[loser].lost = true;
+      }
+    }
+  });
 
   // Verifica se algum jogo da Segunda Fase já aconteceu (usando scoreboard)
   const existingEvents = {};
@@ -1945,28 +2055,32 @@ function renderBracket(events, standingsData) {
   }
 
   // Renderiza diagrama
-  renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace);
+  renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events);
 
-  // Renderiza botões de favoritos (só na primeira vez)
+  // Renderiza botões de favoritos (sempre, pra garantir que atualiza)
   const fg = document.getElementById('favGrid');
-  if (fg && !fg.children.length) {
-    const topTeams = [
-      {abbr:'BRA',name:'Brasil',flag:'https://a.espncdn.com/i/teamlogos/countries/500/bra.png'},
-      {abbr:'ARG',name:'Argentina',flag:'https://a.espncdn.com/i/teamlogos/countries/500/arg.png'},
-      {abbr:'GER',name:'Alemanha',flag:'https://a.espncdn.com/i/teamlogos/countries/500/ger.png'},
-      {abbr:'FRA',name:'França',flag:'https://a.espncdn.com/i/teamlogos/countries/500/fra.png'},
-      {abbr:'ENG',name:'Inglaterra',flag:'https://a.espncdn.com/i/teamlogos/countries/500/eng.png'},
-      {abbr:'ESP',name:'Espanha',flag:'https://a.espncdn.com/i/teamlogos/countries/500/esp.png'},
-      {abbr:'NED',name:'Holanda',flag:'https://a.espncdn.com/i/teamlogos/countries/500/ned.png'},
-      {abbr:'POR',name:'Portugal',flag:'https://a.espncdn.com/i/teamlogos/countries/500/por.png'},
-      {abbr:'BEL',name:'Bélgica',flag:'https://a.espncdn.com/i/teamlogos/countries/500/bel.png'},
-      {abbr:'COL',name:'Colômbia',flag:'https://a.espncdn.com/i/teamlogos/countries/500/col.png'},
-    ];
+  if (fg) {
+    // Todos os 32 times da Segunda Fase
+    const allTeams = [];
+    round32.forEach(m => {
+      if (m.a && m.a.abbr && !allTeams.find(t => t.abbr === m.a.abbr)) {
+        allTeams.push({abbr:m.a.abbr, name:pt(m.a.name)||m.a.name, flag:flagUrl(m.a.abbr)});
+      }
+      if (m.b && m.b.abbr && !allTeams.find(t => t.abbr === m.b.abbr)) {
+        allTeams.push({abbr:m.b.abbr, name:pt(m.b.name)||m.b.name, flag:flagUrl(m.b.abbr)});
+      }
+    });
+    // Ordena por nome
+    allTeams.sort((a,b) => a.name.localeCompare(b.name));
     const savedFav = localStorage.getItem('bracketFav') || '';
     let hh = '';
-    topTeams.forEach(t => {
+    allTeams.forEach(t => {
       const active = t.abbr === savedFav ? ' active' : '';
-      hh += '<button class="fav-btn'+active+'" data-abbr="'+t.abbr+'" onclick="setFavorite(\''+t.abbr+'\',\''+t.name+'\')"><img class="fl" src="'+t.flag+'" alt="" loading="lazy">'+t.name+'</button>';
+      // Verifica se o time perdeu (tem scoreMap mas perdeu)
+      const s = scoreMap[t.abbr];
+      const lost = s && s.status !== 'pre' && s.status !== 'scheduled' && s.lost;
+      const disabled = lost ? ' disabled' : '';
+      hh += '<button class="fav-btn'+active+disabled+'" data-abbr="'+t.abbr+'" onclick="setFavorite(\''+t.abbr+'\',\''+t.name+'\')"'+(lost?' disabled':'')+'><img class="fl" src="'+t.flag+'" alt="" loading="lazy">'+t.name+'</button>';
     });
     hh += '<button class="fav-btn clear" onclick="setFavorite(\'\',\'\')">✕ Limpar</button>';
     fg.innerHTML = hh;
@@ -1975,9 +2089,21 @@ function renderBracket(events, standingsData) {
   // Renderiza
   let h = '<div class="bracket-section"><div class="bracket">';
 
-  // Segunda Fase
+  // Segunda Fase — ordenada por data crescente
   h += '<div class="bracket-round"><div class="bracket-round-title">Segunda Fase (32)</div>';
-  round32.forEach(m => {
+  const round32Sorted = [...round32].sort((a, b) => {
+    // Converte DD/MM HHh para string comparável MM/DD/HH
+    function sortKey(s) {
+      const parts = (s||'').split(' ');
+      const dp = parts[0] ? parts[0].split('/') : ['',''];
+      return dp[1]+'/'+dp[0]+'/'+(parts[1]||'');
+    }
+    const ka = sortKey(a.date), kb = sortKey(b.date);
+    if (ka < kb) return -1;
+    if (ka > kb) return 1;
+    return 0;
+  });
+  round32Sorted.forEach(m => {
     if (!m.a || !m.b) return;
     const aName = m.a.name || 'A definir';
     const bName = m.b.name || 'A definir';
@@ -1998,9 +2124,13 @@ function renderBracket(events, standingsData) {
     // Confronto é provável se PELO MENOS UM time ainda não está confirmado
     const isProbable = aProbable || bProbable;
     h += '<div class="bracket-match'+(isProbable?' probable':'')+'"><div class="match-teams">';
-    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(aAbbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+aName+'</span>'+(aProbable?'<span class="bracket-probable">(provável)</span>':'')+'</div></div>';
+    const aScore = scoreMap[aAbbr] ? scoreMap[aAbbr].score : null;
+    const bScore = scoreMap[bAbbr] ? scoreMap[bAbbr].score : null;
+    const aScoreHtml = aScore !== null ? '<span class="score-display">'+aScore+'</span>' : '';
+    const bScoreHtml = bScore !== null ? '<span class="score-display">'+bScore+'</span>' : '';
+    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(aAbbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+aName+'</span>'+aScoreHtml+(aProbable?'<span class="bracket-probable">(provável)</span>':'')+'</div></div>';
     h += '<div class="match-vs">X</div>';
-    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(bAbbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+bName+'</span>'+(bProbable?'<span class="bracket-probable">(provável)</span>':'')+'</div></div>';
+    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(bAbbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+bName+'</span>'+bScoreHtml+(bProbable?'<span class="bracket-probable">(provável)</span>':'')+'</div></div>';
     h += '</div><div class="match-label">'+(m.date ? m.date+' — ' : '')+m.label+(isProbable?' — provável':'')+'</div></div>';
   });
   h += '</div>';
@@ -2031,66 +2161,42 @@ function renderBracket(events, standingsData) {
   // Final: 19/07 3pm ET (NY) = 16h BRT
   const finalDate = '19/07 16h';
 
+  // Helper para renderizar time com (P) - sem score (score só na Segunda Fase)
+  function teamHtml(t, showProb) {
+    if (!t) return '<span class="name">A definir</span>';
+    const s = scoreMap[t.abbr];
+    const confirmed = s && s.status !== 'pre' && s.status !== 'scheduled';
+    const probHtml = showProb && !confirmed ? ' <span class="bracket-probable">(P)</span>' : '';
+    return '<img class="flag" src="'+flagUrl(t.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(t.name||'A definir')+'</span>'+probHtml;
+  }
+  function matchHtml(m, label, showProb) {
+    if (!m || !m.a || !m.b) return '<div class="bracket-match probable"><div class="match-teams"><div class="team-row"><div class="team-info"><span class="name">A definir</span></div></div><div class="match-vs">X</div><div class="team-row"><div class="team-info"><span class="name">A definir</span></div></div></div><div class="match-label">'+label+'</div></div>';
+    return '<div class="bracket-match probable"><div class="match-teams"><div class="team-row"><div class="team-info">'+teamHtml(m.a, showProb)+'</div></div><div class="match-vs">X</div><div class="team-row"><div class="team-info">'+teamHtml(m.b, showProb)+'</div></div></div><div class="match-label">'+label+'</div></div>';
+  }
+
   // Oitavas
   h += '<div class="bracket-round"><div class="bracket-round-title">Oitavas (16)</div>';
-  r16.forEach((m,i) => {
-    if (!m.a || !m.b) return;
-    h += '<div class="bracket-match probable"><div class="match-teams">';
-    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(m.a.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(m.a.name||'A definir')+'</span></div></div>';
-    h += '<div class="match-vs">X</div>';
-    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(m.b.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(m.b.name||'A definir')+'</span></div></div>';
-    h += '</div><div class="match-label">'+(r16dates[i]||'')+' — provável</div></div>';
-  });
+  r16.forEach((m,i) => { h += matchHtml(m, (r16dates[i]||'')+' — provável', true); });
   h += '</div>';
 
   // Quartas
   h += '<div class="bracket-round"><div class="bracket-round-title">Quartas (8)</div>';
-  qf.forEach((m,i) => {
-    if (!m.a || !m.b) return;
-    h += '<div class="bracket-match probable"><div class="match-teams">';
-    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(m.a.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(m.a.name||'A definir')+'</span></div></div>';
-    h += '<div class="match-vs">X</div>';
-    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(m.b.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(m.b.name||'A definir')+'</span></div></div>';
-    h += '</div><div class="match-label">'+(qfDates[i]||'')+' — provável</div></div>';
-  });
+  qf.forEach((m,i) => { h += matchHtml(m, (qfDates[i]||'')+' — provável', true); });
   h += '</div>';
 
   // Semifinais
   h += '<div class="bracket-round"><div class="bracket-round-title">Semifinais (4)</div>';
-  sf.forEach((m,i) => {
-    if (!m.a || !m.b) return;
-    h += '<div class="bracket-match probable"><div class="match-teams">';
-    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(m.a.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(m.a.name||'A definir')+'</span></div></div>';
-    h += '<div class="match-vs">X</div>';
-    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(m.b.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(m.b.name||'A definir')+'</span></div></div>';
-    h += '</div><div class="match-label">'+(sfDates[i]||'')+' — provável</div></div>';
-  });
+  sf.forEach((m,i) => { h += matchHtml(m, (sfDates[i]||'')+' — provável', true); });
   h += '</div>';
 
   // 3º Lugar
   h += '<div class="bracket-round"><div class="bracket-round-title">3º Lugar</div>';
-  if (thirdPlace && thirdPlace.a && thirdPlace.b) {
-    h += '<div class="bracket-match probable"><div class="match-teams">';
-    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(thirdPlace.a.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(thirdPlace.a.name||'A definir')+'</span></div></div>';
-    h += '<div class="match-vs">X</div>';
-    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(thirdPlace.b.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(thirdPlace.b.name||'A definir')+'</span></div></div>';
-    h += '</div><div class="match-label">'+thirdDate+' — provável</div></div>';
-  } else {
-    h += '<div class="bracket-match probable"><div class="match-teams"><div class="team-row"><div class="team-info"><span class="name">A definir</span></div></div><div class="match-vs">X</div><div class="team-row"><div class="team-info"><span class="name">A definir</span></div></div></div><div class="match-label">'+thirdDate+' — provável</div></div>';
-  }
+  h += matchHtml(thirdPlace, thirdDate+' — provável', true);
   h += '</div>';
 
   // Final
   h += '<div class="bracket-round"><div class="bracket-round-title">Final</div>';
-  if (finalMatch && finalMatch.a && finalMatch.b) {
-    h += '<div class="bracket-match probable"><div class="match-teams">';
-    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(finalMatch.a.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(finalMatch.a.name||'A definir')+'</span></div></div>';
-    h += '<div class="match-vs">X</div>';
-    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(finalMatch.b.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(finalMatch.b.name||'A definir')+'</span></div></div>';
-    h += '</div><div class="match-label">'+finalDate+' — Final</div></div>';
-  } else {
-    h += '<div class="bracket-match probable"><div class="match-teams"><div class="team-row"><div class="team-info"><span class="name">A definir</span></div></div><div class="match-vs">X</div><div class="team-row"><div class="team-info"><span class="name">A definir</span></div></div></div><div class="match-label">'+finalDate+' — Final</div></div>';
-  }
+  h += matchHtml(finalMatch, finalDate+' — Final', true);
   h += '</div>';
 
   // Champion box
@@ -2100,7 +2206,10 @@ function renderBracket(events, standingsData) {
   }
   h += '<div class="bracket-round"><div class="bracket-round-title">🏆 Campeão</div>';
   if (champTeam) {
-    h += '<div class="champion-box"><div class="trophy">🏆</div><div class="champ-label">Campeão (provável)</div><div class="champ-team"><img class="flag" src="'+flagUrl(champTeam.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(champTeam.name||'?')+'</span></div></div>';
+    const s = scoreMap[champTeam.abbr];
+    const confirmed = s && s.status !== 'pre' && s.status !== 'scheduled';
+    const probHtml = !confirmed ? ' (provável)' : '';
+    h += '<div class="champion-box"><div class="trophy">🏆</div><div class="champ-label">Campeão'+probHtml+'</div><div class="champ-team"><img class="flag" src="'+flagUrl(champTeam.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(champTeam.name||'?')+'</span></div></div>';
   } else {
     h += '<div class="champion-box"><div class="trophy">🏆</div><div class="champ-label">Campeão</div><div class="champ-empty">A definir</div></div>';
   }
