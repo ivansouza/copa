@@ -1271,24 +1271,24 @@ function buildRound32(standingsData) {
   // Par 10-11: 81+82 → Oitavas 94 (EUA/Bósnia x Bélgica/Senegal)
   // Par 12-13: 86+88 → Oitavas 95 (Argentina/C.Verde x Austrália/Egito)
   // Par 14-15: 85+87 → Oitavas 96 (Suíça/Argélia x Colômbia/Gana)
-  // Ordem para simulateRound produzir cruzamentos corretos:
-  // Oitavas: 89(74+77), 93(83+84), 90(73+75), 94(81+82), 91(76+78), 95(86+88), 92(79+80), 96(85+87)
+  // Ordem correta: lado esquerdo [89,90,93,94] + lado direito [91,92,95,96]
+  // Oitavas: 89(74+77), 90(73+75), 93(83+84), 94(81+82), 91(76+78), 92(79+80), 95(86+88), 96(85+87)
   // Quartas: QF1(89x90), QF3(93x94), QF2(91x92), QF4(95x96)
   // Semis: SF1(QF1xQF3), SF2(QF2xQF4)
   round32.push({ a: g('E',0), b: t3group('1E'), label: '1º E vs '+t3label('1E'), date: r32dates[2] });  // 74
   round32.push({ a: g('I',0), b: t3group('1I'), label: '1º I vs '+t3label('1I'), date: r32dates[5] });  // 77
-  round32.push({ a: g('K',1), b: g('L',1), label: '2º K vs 2º L', date: r32dates[11] });               // 83
-  round32.push({ a: g('H',0), b: g('J',1), label: '1º H vs 2º J', date: r32dates[10] });               // 84
   round32.push({ a: g('A',1), b: g('B',1), label: '2º A vs 2º B', date: r32dates[0] });                // 73
   round32.push({ a: g('F',0), b: g('C',1), label: '1º F vs 2º C', date: r32dates[3] });                // 75
+  round32.push({ a: g('K',1), b: g('L',1), label: '2º K vs 2º L', date: r32dates[11] });               // 83
+  round32.push({ a: g('H',0), b: g('J',1), label: '1º H vs 2º J', date: r32dates[10] });               // 84
   round32.push({ a: g('D',0), b: t3group('1D'), label: '1º D vs '+t3label('1D'), date: r32dates[9] });  // 81
   round32.push({ a: g('G',0), b: t3group('1G'), label: '1º G vs '+t3label('1G'), date: r32dates[8] });  // 82
   round32.push({ a: g('C',0), b: g('F',1), label: '1º C vs 2º F', date: r32dates[1] });                // 76
   round32.push({ a: g('E',1), b: g('I',1), label: '2º E vs 2º I', date: r32dates[4] });                // 78
-  round32.push({ a: g('J',0), b: g('H',1), label: '1º J vs 2º H', date: r32dates[14] });               // 86
-  round32.push({ a: g('D',1), b: g('G',1), label: '2º D vs 2º G', date: r32dates[13] });               // 88
   round32.push({ a: g('A',0), b: t3group('1A'), label: '1º A vs '+t3label('1A'), date: r32dates[6] });  // 79
   round32.push({ a: g('L',0), b: t3group('1L'), label: '1º L vs '+t3label('1L'), date: r32dates[7] });  // 80
+  round32.push({ a: g('J',0), b: g('H',1), label: '1º J vs 2º H', date: r32dates[14] });               // 86
+  round32.push({ a: g('D',1), b: g('G',1), label: '2º D vs 2º G', date: r32dates[13] });               // 88
   round32.push({ a: g('B',0), b: t3group('1B'), label: '1º B vs '+t3label('1B'), date: r32dates[12] }); // 85
   round32.push({ a: g('K',0), b: t3group('1K'), label: '1º K vs '+t3label('1K'), date: r32dates[15] }); // 87
 
@@ -1881,20 +1881,22 @@ function renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events) {
   // Col1 = lado esquerdo, Col2 = lado direito
   // Cada par = vencedores se enfrentam nas oitavas
   const PARES = [
+    // Lado ESQUERDO da chave:
     // Par 0-1: 74+77 → Oitavas 89 (Alemanha/Parag x França/Suécia)
     [["Alemanha","Paraguai","https://a.espncdn.com/i/teamlogos/countries/500/ger.png","https://a.espncdn.com/i/teamlogos/countries/500/par.png"],["França","Suécia","https://a.espncdn.com/i/teamlogos/countries/500/fra.png","https://a.espncdn.com/i/teamlogos/countries/500/swe.png"]],
-    // Par 2-3: 83+84 → Oitavas 93 (Portugal/Croácia x Espanha/Áustria)
-    [["Portugal","Croácia","https://a.espncdn.com/i/teamlogos/countries/500/por.png","https://a.espncdn.com/i/teamlogos/countries/500/cro.png"],["Espanha","Áustria","https://a.espncdn.com/i/teamlogos/countries/500/esp.png","https://a.espncdn.com/i/teamlogos/countries/500/aut.png"]],
-    // Par 4-5: 73+75 → Oitavas 90 (Áfr.Sul/Canadá x Holanda/Marrocos)
+    // Par 2-3: 73+75 → Oitavas 90 (Áfr.Sul/Canadá x Holanda/Marrocos)
     [["África do Sul","Canadá","https://a.espncdn.com/i/teamlogos/countries/500/rsa.png","https://a.espncdn.com/i/teamlogos/countries/500/can.png"],["Holanda","Marrocos","https://a.espncdn.com/i/teamlogos/countries/500/ned.png","https://a.espncdn.com/i/teamlogos/countries/500/mar.png"]],
+    // Par 4-5: 83+84 → Oitavas 93 (Portugal/Croácia x Espanha/Áustria)
+    [["Portugal","Croácia","https://a.espncdn.com/i/teamlogos/countries/500/por.png","https://a.espncdn.com/i/teamlogos/countries/500/cro.png"],["Espanha","Áustria","https://a.espncdn.com/i/teamlogos/countries/500/esp.png","https://a.espncdn.com/i/teamlogos/countries/500/aut.png"]],
     // Par 6-7: 81+82 → Oitavas 94 (EUA/Bósnia x Bélgica/Senegal)
     [["Estados Unidos","Bósnia","https://a.espncdn.com/i/teamlogos/countries/500/usa.png","https://a.espncdn.com/i/teamlogos/countries/500/bih.png"],["Bélgica","Senegal","https://a.espncdn.com/i/teamlogos/countries/500/bel.png","https://a.espncdn.com/i/teamlogos/countries/500/sen.png"]],
+    // Lado DIREITO da chave:
     // Par 8-9: 76+78 → Oitavas 91 (Brasil/Japão x C.Marfim/Noruega)
     [["Brasil","Japão","https://a.espncdn.com/i/teamlogos/countries/500/bra.png","https://a.espncdn.com/i/teamlogos/countries/500/jpn.png"],["Costa do Marfim","Noruega","https://a.espncdn.com/i/teamlogos/countries/500/civ.png","https://a.espncdn.com/i/teamlogos/countries/500/nor.png"]],
-    // Par 10-11: 86+88 → Oitavas 95 (Argentina/C.Verde x Austrália/Egito)
-    [["Argentina","Cabo Verde","https://a.espncdn.com/i/teamlogos/countries/500/arg.png","https://a.espncdn.com/i/teamlogos/countries/500/cpv.png"],["Egito","Austrália","https://a.espncdn.com/i/teamlogos/countries/500/egy.png","https://a.espncdn.com/i/teamlogos/countries/500/aus.png"]],
-    // Par 12-13: 79+80 → Oitavas 92 (México/Equador x Inglaterra/RD Congo)
+    // Par 10-11: 79+80 → Oitavas 92 (México/Equador x Inglaterra/RD Congo)
     [["México","Equador","https://a.espncdn.com/i/teamlogos/countries/500/mex.png","https://a.espncdn.com/i/teamlogos/countries/500/ecu.png"],["Inglaterra","RD Congo","https://a.espncdn.com/i/teamlogos/countries/500/eng.png","https://a.espncdn.com/i/teamlogos/countries/500/cod.png"]],
+    // Par 12-13: 86+88 → Oitavas 95 (Argentina/C.Verde x Austrália/Egito)
+    [["Argentina","Cabo Verde","https://a.espncdn.com/i/teamlogos/countries/500/arg.png","https://a.espncdn.com/i/teamlogos/countries/500/cpv.png"],["Egito","Austrália","https://a.espncdn.com/i/teamlogos/countries/500/egy.png","https://a.espncdn.com/i/teamlogos/countries/500/aus.png"]],
     // Par 14-15: 85+87 → Oitavas 96 (Suíça/Argélia x Colômbia/Gana)
     [["Suíça","Argélia","https://a.espncdn.com/i/teamlogos/countries/500/sui.png","https://a.espncdn.com/i/teamlogos/countries/500/alg.png"],["Colômbia","Gana","https://a.espncdn.com/i/teamlogos/countries/500/col.png","https://a.espncdn.com/i/teamlogos/countries/500/gha.png"]],
   ];
