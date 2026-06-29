@@ -1769,8 +1769,8 @@ function renderStats() {
       + '</div>');
   }
 
-  // Desclassificados
-  h += card('🚫 Times desclassificados', '#ef4444',
+  // Desclassificados na Fase de Grupos
+  h += card('🚫 Times desclassificados na Fase de Grupos', '#ef4444',
     eliminated.length === 0
       ? '<div style="padding:1.5rem;text-align:center;color:#64748b;font-size:.85rem;">Nenhum time eliminado ainda.</div>'
       : '<div style="display:flex;flex-direction:column;gap:4px;">'
@@ -1784,6 +1784,38 @@ function renderStats() {
             + '</div>';
         }).join('')
         + '</div>');
+
+  // Times desclassificados nos 32 avos (perderam na Segunda Fase)
+  const eliminated32 = [];
+  if (scoreMap && typeof scoreMap === 'object') {
+    Object.keys(scoreMap).forEach(abbr => {
+      const s = scoreMap[abbr];
+      if (s && s.lost && s.status !== 'pre' && s.status !== 'scheduled') {
+        // Busca o nome do time
+        let name = abbr;
+        if (standingsCache && standingsCache.children) {
+          standingsCache.children.forEach(ch => {
+            (ch.standings?.entries||[]).forEach(e => {
+              const tm = e.team||{};
+              if (tm.abbreviation === abbr) name = pt(tm.displayName||tm.name||abbr);
+            });
+          });
+        }
+        eliminated32.push({ abbr, name });
+      }
+    });
+  }
+  if (eliminated32.length > 0) {
+    h += card('🚫 Times desclassificados nos 32 avos', '#f59e0b',
+      '<div style="display:flex;flex-direction:column;gap:4px;">'
+        + eliminated32.map(t => {
+          return '<div style="display:flex;align-items:center;gap:8px;padding:6px 12px;background:linear-gradient(145deg,#1e293b,#1a2332);border:1px solid #2d3a4e;border-radius:8px;opacity:.65;">'
+            + '<img class="flag" src="'+flagUrl(t.abbr)+'" alt="" style="width:18px;height:12px;border-radius:2px;" loading="lazy" onerror="this.style.display=\'none\'">'
+            + '<span style="flex:1;font-weight:500;font-size:.8rem;">'+t.name+'</span>'
+            + '</div>';
+        }).join('')
+        + '</div>');
+  }
 
   c.innerHTML = h;
 }
