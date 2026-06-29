@@ -2435,7 +2435,16 @@ function renderBracket(events, standingsData) {
     h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(aAbbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+aName+'</span>'+aScoreHtml+(aProbable?'<span class="bracket-probable">(provável)</span>':'')+'</div></div>';
     h += '<div class="match-vs">X</div>';
     h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(bAbbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+bName+'</span>'+bScoreHtml+(bProbable?'<span class="bracket-probable">(provável)</span>':'')+'</div></div>';
-    h += '</div><div class="match-label">'+(m.date ? m.date+' — ' : '')+m.label+(isProbable?' — provável':'')+'</div>';
+    // Verifica se houve pênaltis (placar empatado mas com winner)
+    let penaltiInfo = '';
+    if (aScore !== null && bScore !== null && aScore === bScore) {
+      const sa = scoreMap[aAbbr];
+      const sb = scoreMap[bAbbr];
+      if (sa && sb && (sa.winner || sb.winner)) {
+        penaltiInfo = ' (pênaltis)';
+      }
+    }
+    h += '</div><div class="match-label">'+(m.date ? m.date+' — ' : '')+m.label+(isProbable?' — provável':'')+penaltiInfo+'</div>';
     if (m.venue) h += '<div class="match-venue">📍 '+m.venue+'</div>';
     h += '</div>';
   });
