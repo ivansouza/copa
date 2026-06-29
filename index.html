@@ -830,7 +830,7 @@ function getStatus(e) {
   const t = e.status?.type;
   if (!t) return 'scheduled';
   const desc = (t.description||'').toLowerCase();
-  if (t.id==='2'||desc==='in progress'||desc==='first half'||desc==='second half'||desc==='half time'||desc==='halftime'||desc==='extra time'||desc==='penalty') return 'live';
+  if (t.id==='2'||desc==='in progress'||desc==='first half'||desc==='second half'||desc==='half time'||desc==='halftime'||desc==='extra time'||desc==='overtime'||desc==='penalty') return 'live';
   if (t.id==='3'||t.completed||desc==='full time'||desc==='final'||desc==='finished') return 'final';
   return 'scheduled';
 }
