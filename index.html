@@ -1816,7 +1816,7 @@ function renderClassifiedPanel(standingsData) {
   // Adiciona os 8 melhores 3ºs
   bestThird.forEach(t => {
     const status = thirdConfirmed.has(t.abbr) ? 'confirmed' : 'probable';
-    classified.push({ abbr: t.abbr, name: t.name, group: t.group, status });
+    classified.push({ abbr: t.abbr, name: pt(t.name), group: t.group, status });
   });
 
   // Ordena por nome do time (alfabético, ignorando acentos)
