@@ -2184,7 +2184,13 @@ function renderBracket(events, standingsData) {
   // Ordem oficial: 89(0), 90(1), 93(4), 94(5), 91(2), 92(3), 95(6), 96(7)
   const r16Order = [0,1,4,5,2,3,6,7];
   const r16 = r16Order.map(i => r16raw[i]).filter(Boolean);
-  const qf = simulateRound(r16, savedFav);
+  const qfRaw = simulateRound(r16, savedFav);
+  // Reordena qf para ordem oficial: QF1(89x90), QF2(91x92), QF3(93x94), QF4(95x96)
+  // r16 ordem: [89,90,93,94,91,92,95,96]
+  // Pares do simulateRound: 0-1=89x90→QF1, 2-3=93x94→QF3, 4-5=91x92→QF2, 6-7=95x96→QF4
+  // Ordem oficial: QF1(0), QF2(2), QF3(1), QF4(3)
+  const qfOrder = [0,2,1,3];
+  const qf = qfOrder.map(i => qfRaw[i]).filter(Boolean);
   const sf = simulateRound(qf, savedFav);
 
   // Final e 3º lugar
