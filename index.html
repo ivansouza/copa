@@ -2324,20 +2324,25 @@ function renderBracket(events, standingsData) {
   // Match 95: 07/07 12pm ET (Atlanta) = 13h BRT
   // Match 96: 07/07 4pm ET (Vancouver) = 17h BRT
   const r16dates = ['04/07 14h','04/07 18h','05/07 17h','05/07 21h','06/07 16h','06/07 21h','07/07 13h','07/07 17h'];
+  const r16venues = ['Houston','Filadélfia','Nova York','Cidade do México','Dallas','Seattle','Atlanta','Vancouver'];
   // Quartas (fontes: NBC Sports)
   // Match 97: 09/07 4pm ET (Boston) = 17h BRT
   // Match 98: 10/07 3pm ET (LA) = 16h BRT
   // Match 99: 11/07 5pm ET (Miami) = 18h BRT
   // Match 100: 11/07 9pm ET (KC) = 22h BRT
   const qfDates  = ['09/07 17h','10/07 16h','11/07 18h','11/07 22h'];
+  const qfVenues = ['Boston','Los Angeles','Miami','Kansas City'];
   // Semifinais (fontes: NBC Sports)
   // Match 101: 14/07 3pm ET (Dallas) = 16h BRT
   // Match 102: 15/07 3pm ET (Atlanta) = 16h BRT
   const sfDates  = ['14/07 16h','15/07 16h'];
+  const sfVenues = ['Dallas','Atlanta'];
   // 3º lugar: 18/07 5pm ET (Miami) = 18h BRT
   const thirdDate = '18/07 18h';
+  const thirdVenue = 'Miami';
   // Final: 19/07 3pm ET (NY) = 16h BRT
   const finalDate = '19/07 16h';
+  const finalVenue = 'Nova York';
 
   // Helper para renderizar time com (P) - sem score (score só na Segunda Fase)
   function teamHtml(t, showProb) {
@@ -2347,34 +2352,34 @@ function renderBracket(events, standingsData) {
     const probHtml = showProb && !confirmed ? ' <span class="bracket-probable">(P)</span>' : '';
     return '<img class="flag" src="'+flagUrl(t.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(t.name||'A definir')+'</span>'+probHtml;
   }
-  function matchHtml(m, label, showProb) {
-    if (!m || !m.a || !m.b) return '<div class="bracket-match probable"><div class="match-teams"><div class="team-row"><div class="team-info"><span class="name">A definir</span></div></div><div class="match-vs">X</div><div class="team-row"><div class="team-info"><span class="name">A definir</span></div></div></div><div class="match-label">'+label+'</div></div>';
-    return '<div class="bracket-match probable"><div class="match-teams"><div class="team-row"><div class="team-info">'+teamHtml(m.a, showProb)+'</div></div><div class="match-vs">X</div><div class="team-row"><div class="team-info">'+teamHtml(m.b, showProb)+'</div></div></div><div class="match-label">'+label+'</div></div>';
+  function matchHtml(m, label, showProb, venue) {
+    if (!m || !m.a || !m.b) return '<div class="bracket-match probable"><div class="match-teams"><div class="team-row"><div class="team-info"><span class="name">A definir</span></div></div><div class="match-vs">X</div><div class="team-row"><div class="team-info"><span class="name">A definir</span></div></div></div><div class="match-label">'+label+'</div>'+(venue?'<div class="match-venue">📍 '+venue+'</div>':'')+'</div>';
+    return '<div class="bracket-match probable"><div class="match-teams"><div class="team-row"><div class="team-info">'+teamHtml(m.a, showProb)+'</div></div><div class="match-vs">X</div><div class="team-row"><div class="team-info">'+teamHtml(m.b, showProb)+'</div></div></div><div class="match-label">'+label+'</div>'+(venue?'<div class="match-venue">📍 '+venue+'</div>':'')+'</div>';
   }
 
   // Oitavas
   h += '<div class="bracket-round"><div class="bracket-round-title">Oitavas (16)</div>';
-  r16.forEach((m,i) => { h += matchHtml(m, (r16dates[i]||'')+' — provável', true); });
+  r16.forEach((m,i) => { h += matchHtml(m, (r16dates[i]||'')+' — provável', true, r16venues[i]); });
   h += '</div>';
 
   // Quartas
   h += '<div class="bracket-round"><div class="bracket-round-title">Quartas (8)</div>';
-  qf.forEach((m,i) => { h += matchHtml(m, (qfDates[i]||'')+' — provável', true); });
+  qf.forEach((m,i) => { h += matchHtml(m, (qfDates[i]||'')+' — provável', true, qfVenues[i]); });
   h += '</div>';
 
   // Semifinais
   h += '<div class="bracket-round"><div class="bracket-round-title">Semifinais (4)</div>';
-  sf.forEach((m,i) => { h += matchHtml(m, (sfDates[i]||'')+' — provável', true); });
+  sf.forEach((m,i) => { h += matchHtml(m, (sfDates[i]||'')+' — provável', true, sfVenues[i]); });
   h += '</div>';
 
   // 3º Lugar
   h += '<div class="bracket-round"><div class="bracket-round-title">3º Lugar</div>';
-  h += matchHtml(thirdPlace, thirdDate+' — provável', true);
+  h += matchHtml(thirdPlace, thirdDate+' — provável', true, thirdVenue);
   h += '</div>';
 
   // Final
   h += '<div class="bracket-round"><div class="bracket-round-title">Final</div>';
-  h += matchHtml(finalMatch, finalDate+' — Final', true);
+  h += matchHtml(finalMatch, finalDate+' — Final', true, finalVenue);
   h += '</div>';
 
   // Champion box
