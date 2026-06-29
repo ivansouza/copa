@@ -2030,21 +2030,21 @@ function renderBracket(events, standingsData) {
   // Renderiza botões de favoritos (só na primeira vez)
   const fg = document.getElementById('favGrid');
   if (fg && !fg.children.length) {
-    const topTeams = [
-      {abbr:'BRA',name:'Brasil',flag:'https://a.espncdn.com/i/teamlogos/countries/500/bra.png'},
-      {abbr:'ARG',name:'Argentina',flag:'https://a.espncdn.com/i/teamlogos/countries/500/arg.png'},
-      {abbr:'GER',name:'Alemanha',flag:'https://a.espncdn.com/i/teamlogos/countries/500/ger.png'},
-      {abbr:'FRA',name:'França',flag:'https://a.espncdn.com/i/teamlogos/countries/500/fra.png'},
-      {abbr:'ENG',name:'Inglaterra',flag:'https://a.espncdn.com/i/teamlogos/countries/500/eng.png'},
-      {abbr:'ESP',name:'Espanha',flag:'https://a.espncdn.com/i/teamlogos/countries/500/esp.png'},
-      {abbr:'NED',name:'Holanda',flag:'https://a.espncdn.com/i/teamlogos/countries/500/ned.png'},
-      {abbr:'POR',name:'Portugal',flag:'https://a.espncdn.com/i/teamlogos/countries/500/por.png'},
-      {abbr:'BEL',name:'Bélgica',flag:'https://a.espncdn.com/i/teamlogos/countries/500/bel.png'},
-      {abbr:'COL',name:'Colômbia',flag:'https://a.espncdn.com/i/teamlogos/countries/500/col.png'},
-    ];
+    // Todos os 32 times da Segunda Fase
+    const allTeams = [];
+    round32.forEach(m => {
+      if (m.a && m.a.abbr && !allTeams.find(t => t.abbr === m.a.abbr)) {
+        allTeams.push({abbr:m.a.abbr, name:m.a.name, flag:flagUrl(m.a.abbr)});
+      }
+      if (m.b && m.b.abbr && !allTeams.find(t => t.abbr === m.b.abbr)) {
+        allTeams.push({abbr:m.b.abbr, name:m.b.name, flag:flagUrl(m.b.abbr)});
+      }
+    });
+    // Ordena por nome
+    allTeams.sort((a,b) => a.name.localeCompare(b.name));
     const savedFav = localStorage.getItem('bracketFav') || '';
     let hh = '';
-    topTeams.forEach(t => {
+    allTeams.forEach(t => {
       const active = t.abbr === savedFav ? ' active' : '';
       hh += '<button class="fav-btn'+active+'" data-abbr="'+t.abbr+'" onclick="setFavorite(\''+t.abbr+'\',\''+t.name+'\')"><img class="fl" src="'+t.flag+'" alt="" loading="lazy">'+t.name+'</button>';
     });
