@@ -1414,12 +1414,12 @@ function buildRound32(standingsData) {
   return round32;
 }
 
-function simulateWinner(match) {
+function simulateWinner(match, sm) {
   // Se o jogo já aconteceu, usa o placar real do scoreMap
   if (!match.a || !match.b) return match.a || match.b;
-  if (typeof scoreMap !== 'undefined' && scoreMap) {
-    const sa = scoreMap[match.a.abbr];
-    const sb = scoreMap[match.b.abbr];
+  if (sm) {
+    const sa = sm[match.a.abbr];
+    const sb = sm[match.b.abbr];
     if (sa && sb && sa.status !== 'pre' && sa.status !== 'scheduled' &&
         sb.status !== 'pre' && sb.status !== 'scheduled') {
       const scA = sa.score, scB = sb.score;
@@ -2154,8 +2154,8 @@ function renderBracket(events, standingsData) {
       const m1 = matches[i];
       const m2 = matches[i+1];
       if (!m1 || !m2) break;
-      const w1 = fav ? simulateWinnerFav(m1, fav) : simulateWinner(m1);
-      const w2 = fav ? simulateWinnerFav(m2, fav) : simulateWinner(m2);
+      const w1 = fav ? simulateWinnerFav(m1, fav) : simulateWinner(m1, scoreMap);
+      const w2 = fav ? simulateWinnerFav(m2, fav) : simulateWinner(m2, scoreMap);
       if (w1 && w2) {
         winners.push({ a: w1, b: w2 });
       }
@@ -2175,8 +2175,8 @@ function renderBracket(events, standingsData) {
   let thirdPlace = null;
   let finalMatch = null;
   if (sf.length >= 2) {
-    const sf0Winner = savedFav ? simulateWinnerFav(sf[0], savedFav) : simulateWinner(sf[0]);
-    const sf1Winner = savedFav ? simulateWinnerFav(sf[1], savedFav) : simulateWinner(sf[1]);
+    const sf0Winner = savedFav ? simulateWinnerFav(sf[0], savedFav) : simulateWinner(sf[0], scoreMap);
+    const sf1Winner = savedFav ? simulateWinnerFav(sf[1], savedFav) : simulateWinner(sf[1], scoreMap);
     const sf0Loser = sf0Winner === sf[0].a ? sf[0].b : sf[0].a;
     const sf1Loser = sf1Winner === sf[1].a ? sf[1].b : sf[1].a;
     thirdPlace = { a: sf0Loser, b: sf1Loser };
@@ -2331,7 +2331,7 @@ function renderBracket(events, standingsData) {
   // Champion box
   let champTeam = null;
   if (finalMatch && finalMatch.a && finalMatch.b) {
-    champTeam = simulateWinner(finalMatch);
+    champTeam = simulateWinner(finalMatch, scoreMap);
   }
   h += '<div class="bracket-round"><div class="bracket-round-title">🏆 Campeão</div>';
   if (champTeam) {
