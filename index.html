@@ -1787,24 +1787,32 @@ function renderStats() {
 
   // Times desclassificados nos 32 avos (perderam na Segunda Fase)
   const eliminated32 = [];
-  if (scoreMap && typeof scoreMap === 'object') {
-    Object.keys(scoreMap).forEach(abbr => {
-      const s = scoreMap[abbr];
-      if (s && s.lost && s.status !== 'pre' && s.status !== 'scheduled') {
-        // Busca o nome do time
-        let name = abbr;
-        if (standingsCache && standingsCache.children) {
-          standingsCache.children.forEach(ch => {
-            (ch.standings?.entries||[]).forEach(e => {
-              const tm = e.team||{};
-              if (tm.abbreviation === abbr) name = pt(tm.displayName||tm.name||abbr);
-            });
+  const lostTeams = new Set();
+  (allGames||[]).forEach(g => {
+    const slug = (g.season?.slug || '');
+    if (slug !== 'round-of-32') return;
+    const st = g.competitions?.[0]?.status?.type||{};
+    if (!st.completed && st.id !== '3' && !(st.description||'').toLowerCase().includes('final')) return;
+    const cmp = g.competitions?.[0]?.competitors||[];
+    if (cmp.length < 2) return;
+    const s0 = parseInt(cmp[0].score)||0;
+    const s1 = parseInt(cmp[1].score)||0;
+    if (s0 === s1) return;
+    const loserAbbr = s0 < s1 ? cmp[0].team?.abbreviation : cmp[1].team?.abbreviation;
+    if (loserAbbr && !lostTeams.has(loserAbbr)) {
+      lostTeams.add(loserAbbr);
+      let name = loserAbbr;
+      if (standingsCache && standingsCache.children) {
+        standingsCache.children.forEach(ch => {
+          (ch.standings?.entries||[]).forEach(e => {
+            const tm = e.team||{};
+            if (tm.abbreviation === loserAbbr) name = pt(tm.displayName||tm.name||loserAbbr);
           });
-        }
-        eliminated32.push({ abbr, name });
+        });
       }
-    });
-  }
+      eliminated32.push({ abbr: loserAbbr, name });
+    }
+  });
   if (eliminated32.length > 0) {
     h += card('🚫 Times desclassificados nos 32 avos', '#f59e0b',
       '<div style="display:flex;flex-direction:column;gap:4px;">'
