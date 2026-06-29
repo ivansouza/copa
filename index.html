@@ -2088,11 +2088,11 @@ function renderBracket(events, standingsData) {
   // Renderiza
   let h = '<div class="bracket-section"><div class="bracket">';
 
-  // Segunda Fase — ordenada por data crescente
+  // Segunda Fase — ordenada por data decrescente
   h += '<div class="bracket-round"><div class="bracket-round-title">Segunda Fase (32)</div>';
   const round32Sorted = [...round32].sort((a, b) => {
-    if (a.date < b.date) return -1;
-    if (a.date > b.date) return 1;
+    if (a.date < b.date) return 1;
+    if (a.date > b.date) return -1;
     return 0;
   });
   round32Sorted.forEach(m => {
