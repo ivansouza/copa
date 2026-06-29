@@ -315,6 +315,8 @@
   .fav-btn .fl{width:14px;height:10px;border-radius:1.5px;flex:none}
   .fav-btn.clear{color:#64748b;font-size:10px}
   .fav-btn.clear:hover{color:#ef4444;border-color:#ef4444}
+  .fav-btn.disabled{opacity:0.4;cursor:not-allowed;border-color:#1e293b;background:#162316;color:#475569}
+  .fav-btn.disabled:hover{border-color:#1e293b;color:#475569}
   .classified-panel {
     background: linear-gradient(145deg, #1e293b, #1a2332);
     border: 1px solid #2d3a4e;
@@ -1867,6 +1869,15 @@ function renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events) {
       scoreMap[ab].score = sc;
       scoreMap[ab].status = state;
     });
+    // Marca perdedor
+    if (cmp.length >= 2 && state !== 'pre' && state !== 'scheduled') {
+      const s0 = parseInt(cmp[0].score)||0;
+      const s1 = parseInt(cmp[1].score)||0;
+      if (s0 !== s1) {
+        const loser = s0 < s1 ? cmp[0].team?.abbreviation : cmp[1].team?.abbreviation;
+        if (loser && scoreMap[loser]) scoreMap[loser].lost = true;
+      }
+    }
   });
   function getScore(abbr) {
     const s = scoreMap[abbr];
@@ -1978,6 +1989,15 @@ function renderBracket(events, standingsData) {
       scoreMap[ab].score = sc;
       scoreMap[ab].status = state;
     });
+    // Marca perdedor
+    if (cmp.length >= 2) {
+      const s0 = parseInt(cmp[0].score)||0;
+      const s1 = parseInt(cmp[1].score)||0;
+      if (s0 !== s1) {
+        const loser = s0 < s1 ? cmp[0].team?.abbreviation : cmp[1].team?.abbreviation;
+        if (loser && scoreMap[loser]) scoreMap[loser].lost = true;
+      }
+    }
   });
 
   // Verifica se algum jogo da Segunda Fase já aconteceu (usando scoreboard)
@@ -2046,7 +2066,11 @@ function renderBracket(events, standingsData) {
     let hh = '';
     allTeams.forEach(t => {
       const active = t.abbr === savedFav ? ' active' : '';
-      hh += '<button class="fav-btn'+active+'" data-abbr="'+t.abbr+'" onclick="setFavorite(\''+t.abbr+'\',\''+t.name+'\')"><img class="fl" src="'+t.flag+'" alt="" loading="lazy">'+t.name+'</button>';
+      // Verifica se o time perdeu (tem scoreMap mas perdeu)
+      const s = scoreMap[t.abbr];
+      const lost = s && s.status !== 'pre' && s.status !== 'scheduled' && s.lost;
+      const disabled = lost ? ' disabled' : '';
+      hh += '<button class="fav-btn'+active+disabled+'" data-abbr="'+t.abbr+'" onclick="setFavorite(\''+t.abbr+'\',\''+t.name+'\')"'+(lost?' disabled':'')+'><img class="fl" src="'+t.flag+'" alt="" loading="lazy">'+t.name+'</button>';
     });
     hh += '<button class="fav-btn clear" onclick="setFavorite(\'\',\'\')">✕ Limpar</button>';
     fg.innerHTML = hh;
