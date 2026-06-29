@@ -1790,6 +1790,15 @@ function renderClassifiedPanel(standingsData) {
     classified.push({ abbr: t.abbr, name: t.name, group: t.group, status });
   });
 
+  // Ordena por nome do time (alfabético, ignorando acentos)
+  classified.sort((a, b) => {
+    const na = a.name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+    const nb = b.name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+    if (na < nb) return -1;
+    if (na > nb) return 1;
+    return 0;
+  });
+
   let h = '<div class="classified-panel">';
   h += '<div class="panel-title"><span class="bracket-icon">[</span> CLASSIFICADOS PARA A SEGUNDA FASE <span class="bracket-icon">]</span></div>';
   h += '<div class="classified-grid">';
