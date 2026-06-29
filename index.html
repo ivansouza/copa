@@ -932,29 +932,26 @@ function renderLiveCards() {
   if (!c) return;
 
   // Pega os jogos ao vivo
-  const liveGames = (allGames||[]).filter(g => getStatus(g) === 'live');
-  // Também mostra jogos encerrados de hoje
-  const today = new Date(); today.setHours(0,0,0,0);
-  const todayFinished = (allGames||[]).filter(g => {
-    if (getStatus(g) !== 'final') return false;
-    const gd = new Date(g.date); gd.setHours(0,0,0,0);
-    return gd.getTime() === today.getTime();
-  });
-  if (!liveGames.length && !todayFinished.length) {
-    c.innerHTML = '<div class="error-state" style="text-align:center;padding:2rem;"><p>🔴 Nenhum jogo ao vivo no momento.</p><p style="font-size:.8rem;color:#64748b;margin-top:.5rem;">Os cards aparecerão automaticamente quando um jogo começar.</p></div>';
+  // Pega TODOS os jogos da Segunda Fase (round-of-32), ordenados por data decrescente
+  const r32Games = (allGames||[]).filter(g => {
+    const slug = (g.season?.slug || '');
+    return slug === 'round-of-32';
+  }).sort((a, b) => new Date(b.date) - new Date(a.date));
+  if (!r32Games.length) {
+    c.innerHTML = '<div class="error-state" style="text-align:center;padding:2rem;"><p>🔴 Nenhum jogo da Segunda Fase encontrado.</p></div>';
     return;
   }
 
   // Extrai gols dos dados que já temos (allGames -> competitions[0].details)
   const goalsByGame = {};
-  [...liveGames, ...todayFinished].forEach(g => {
+  r32Games.forEach(g => {
     const goals = extractGoals(g);
     if (goals.length > 0) goalsByGame[g.id] = goals;
   });
 
-  // Coleta abreviações dos times ao vivo
+  // Coleta abreviações dos times
   const liveAbbrs = new Set();
-  liveGames.forEach(g => {
+  r32Games.forEach(g => {
     const cmp = g.competitions?.[0]?.competitors||[];
     cmp.forEach(c => { if (c.team?.abbreviation) liveAbbrs.add(c.team.abbreviation); });
   });
@@ -996,9 +993,7 @@ function renderLiveCards() {
 
     let h = '';
 
-  // Combina jogos ao vivo + encerrados de hoje
-  const allDisplayGames = [...liveGames, ...todayFinished];
-  allDisplayGames.forEach(g => {
+  r32Games.forEach(g => {
     const cmp = g.competitions?.[0]?.competitors||[];
     const home = cmp.find(c=>c.homeAway==='home')||cmp[0]||{};
     const away = cmp.find(c=>c.homeAway==='away')||cmp[1]||{};
