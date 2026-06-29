@@ -1512,6 +1512,10 @@ function simulateWinner(match, sm) {
     if (sa && sb && sa.status !== 'pre' && sa.status !== 'scheduled' &&
         sb.status !== 'pre' && sb.status !== 'scheduled') {
       const scA = sa.score, scB = sb.score;
+      // Se tem winner explícito (pênaltis), usa ele
+      if (sa.winner) return match.a;
+      if (sb.winner) return match.b;
+      // Se não, usa o placar
       if (scA !== undefined && scB !== undefined && scA !== scB) {
         return scA > scB ? match.a : match.b;
       }
@@ -2270,6 +2274,7 @@ function renderBracket(events, standingsData) {
       if (!scoreMap[ab]) scoreMap[ab] = {};
       scoreMap[ab].score = sc;
       scoreMap[ab].status = state;
+      if (c.winner) scoreMap[ab].winner = true;
     });
     // Marca perdedor SÓ se o jogo já terminou (final/encerrado)
     if (cmp.length >= 2 && (st.completed || st.id === '3' || (st.description||'').toLowerCase().includes('final'))) {
@@ -2278,6 +2283,12 @@ function renderBracket(events, standingsData) {
       if (s0 !== s1) {
         const loser = s0 < s1 ? cmp[0].team?.abbreviation : cmp[1].team?.abbreviation;
         if (loser && scoreMap[loser]) scoreMap[loser].lost = true;
+      } else {
+        const winner = cmp.find(c => c.winner)?.team?.abbreviation;
+        if (winner) {
+          const loser = cmp.find(c => !c.winner)?.team?.abbreviation;
+          if (loser && scoreMap[loser]) scoreMap[loser].lost = true;
+        }
       }
     }
   });
