@@ -2441,7 +2441,27 @@ function renderBracket(events, standingsData) {
       const sa = scoreMap[aAbbr];
       const sb = scoreMap[bAbbr];
       if (sa && sb && (sa.winner || sb.winner)) {
-        penaltiInfo = ' (pênaltis)';
+        // Conta pênaltis convertidos de cada time nos details
+        let penA = 0, penB = 0;
+        (allGames||[]).forEach(g => {
+          const slug = (g.season?.slug || '');
+          if (slug !== 'round-of-32') return;
+          const cmp = g.competitions?.[0]?.competitors||[];
+          const abs = cmp.map(c => c.team?.abbreviation);
+          if (!abs.includes(aAbbr) || !abs.includes(bAbbr)) return;
+          const details = g.competitions?.[0]?.details || [];
+          details.forEach(d => {
+            if (!d.shootout || !d.scoringPlay) return;
+            const teamId = d.team?.id || '';
+            const teamMap = {};
+            cmp.forEach(c => { if (c.team?.id) teamMap[c.team.id] = c.team?.abbreviation; });
+            const tAbbr = teamMap[teamId] || '';
+            if (tAbbr === aAbbr) penA++;
+            else if (tAbbr === bAbbr) penB++;
+          });
+        });
+        const total = penA + penB;
+        penaltiInfo = ' ' + penA + '-' + penB + ' (pênaltis)';
       }
     }
     h += '</div><div class="match-label">'+(m.date ? m.date+' — ' : '')+m.label+(isProbable?' — provável':'')+penaltiInfo+'</div>';
