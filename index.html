@@ -860,6 +860,68 @@ async function fetchDateGames(dateStr) {
   return data.events || [];
 }
 
+// Cache de detalhes dos jogos (gols, etc)
+const gameDetailsCache = {};
+
+async function fetchGameDetails(eventId) {
+  if (gameDetailsCache[eventId]) return gameDetailsCache[eventId];
+  const url = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard/' + eventId + '?_=' + Date.now();
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const data = await res.json();
+    gameDetailsCache[eventId] = data;
+    return data;
+  } catch(e) {
+    return null;
+  }
+}
+
+function extractGoals(gameData) {
+  // Extrai gols do summary da ESPN
+  const goals = [];
+  if (!gameData) return goals;
+  const comp = gameData.competitions?.[0]||{};
+  // Tenta scoringPlays primeiro
+  const plays = comp.scoringPlays || [];
+  plays.forEach(p => {
+    const period = p.period?.number || 0;
+    const clock = p.clock?.displayValue || '';
+    const participants = p.participants || [];
+    const scorer = participants.find(part => part.type === 'scorer' || part.athlete?.displayName);
+    const assist = participants.find(part => part.type === 'assist' || (part.type !== 'scorer' && part.athlete));
+    const teamAbbr = p.team?.abbreviation || (p.team?.id ? 'team'+p.team.id : '');
+    goals.push({
+      team: teamAbbr,
+      scorer: scorer?.athlete?.displayName || '?' ,
+      assist: assist?.athlete?.displayName || null,
+      minute: clock || (p.start?.value ? Math.floor(p.start.value/60)+'\'' : ''),
+      period: period
+    });
+  });
+  // Se não achou, tenta competitions[0].events
+  if (goals.length === 0) {
+    const events = comp.events || [];
+    events.forEach(e => {
+      if (e.type?.text === 'Goal' || e.type?.text === 'Gol') {
+        const clock = e.clock?.displayValue || '';
+        const teamAbbr = e.team?.abbreviation || '';
+        const athletes = e.athletes || [];
+        const scorer = athletes.find(a => a.type === 'scorer');
+        const assist = athletes.find(a => a.type === 'assist');
+        goals.push({
+          team: teamAbbr,
+          scorer: scorer?.displayName || '?',
+          assist: assist?.displayName || null,
+          minute: clock,
+          period: e.period?.number || 0
+        });
+      }
+    });
+  }
+  return goals;
+}
+
 let standingsCache = null;
 
 async function loadAll() {
@@ -889,7 +951,7 @@ async function loadAll() {
     renderDateNav(dates);
     renderGames();
     renderStats();
-    renderLiveCards();
+    await renderLiveCards();
   } catch(e) {
     document.querySelectorAll('.loading-state').forEach(el=>{
       el.innerHTML='<div class="error-state"><p>❌ Erro: '+e+'</p><button class="retry-btn" onclick="loadAll()">Tentar novamente</button></div>';
@@ -897,7 +959,7 @@ async function loadAll() {
   }
 }
 
-function renderLiveCards() {
+async function renderLiveCards() {
   const c = document.getElementById('livecards-container');
   if (!c) return;
 
@@ -907,6 +969,16 @@ function renderLiveCards() {
     c.innerHTML = '<div class="error-state" style="text-align:center;padding:2rem;"><p>🔴 Nenhum jogo ao vivo no momento.</p><p style="font-size:.8rem;color:#64748b;margin-top:.5rem;">Os cards aparecerão automaticamente quando um jogo começar.</p></div>';
     return;
   }
+
+  // Busca detalhes dos jogos ao vivo (gols)
+  const goalsByGame = {};
+  await Promise.all(liveGames.map(async (g) => {
+    const eventId = g.id;
+    if (!eventId) return;
+    const details = await fetchGameDetails(eventId);
+    const goals = extractGoals(details);
+    if (goals.length > 0) goalsByGame[eventId] = goals;
+  }));
 
   // Coleta abreviações dos times ao vivo
   const liveAbbrs = new Set();
@@ -1001,6 +1073,25 @@ function renderLiveCards() {
       h += '<div style="color:#64748b;">Saldo Gols</div><div style="font-weight:700;text-align:right;'+(gd>0?'color:#22c55e':gd<0?'color:#ef4444':'')+'">'+gdStr+'</div>';
       h += '</div></div>';
     });
+    // Gols do jogo
+    const eventId = g.id;
+    const gameGoals = goalsByGame[eventId] || [];
+    if (gameGoals.length > 0) {
+      h += '<div style="margin-top:.6rem;padding-top:.6rem;border-top:1px solid #2d3a4e;">';
+      h += '<div style="font-size:.7rem;font-weight:600;color:#f59e0b;margin-bottom:.4rem;">⚽ Gols</div>';
+      gameGoals.forEach(goal => {
+        const isHome = goal.team === ha;
+        const teamName = isHome ? hn : an;
+        const teamFlag = isHome ? flagUrl(ha) : flagUrl(aa);
+        h += '<div style="display:flex;align-items:center;gap:6px;padding:3px 0;font-size:.72rem;">';
+        h += '<span style="color:#64748b;min-width:30px;">'+goal.minute+'</span>';
+        h += '<img class="flag" src="'+teamFlag+'" alt="" style="width:14px;height:10px;border-radius:1.5px;" loading="lazy" onerror="this.style.display=\'none\'">';
+        h += '<span style="font-weight:600;">'+goal.scorer+'</span>';
+        if (goal.assist) h += '<span style="color:#64748b;font-size:.65rem;">('+goal.assist+')</span>';
+        h += '</div>';
+      });
+      h += '</div>';
+    }
     h += '</div></div>';
   });
 
