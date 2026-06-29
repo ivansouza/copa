@@ -599,6 +599,7 @@
     <button class="nav-btn" data-section="games">📅 Jogos</button>
     <button class="nav-btn" data-section="stats">📈 Estatísticas</button>
     <button class="nav-btn" data-section="live">📺 Ao Vivo</button>
+    <button class="nav-btn" data-section="livecards">🃏 Cards do Ao Vivo</button>
   </div>
 
   <div id="section-groups" class="section-content" style="display:none">
@@ -671,6 +672,11 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <div id="section-livecards" class="section-content" style="display:none">
+    <div class="section-title">🃏 Cards do Ao Vivo <span class="bar"></span></div>
+    <div id="livecards-container"><div class="loading-state"><div class="spinner"></div><p>Carregando estatísticas dos times ao vivo...</p></div></div>
   </div>
 </div>
 
@@ -867,11 +873,113 @@ async function loadAll() {
     renderDateNav(dates);
     renderGames();
     renderStats();
+    renderLiveCards();
   } catch(e) {
     document.querySelectorAll('.loading-state').forEach(el=>{
       el.innerHTML='<div class="error-state"><p>❌ Erro: '+e+'</p><button class="retry-btn" onclick="loadAll()">Tentar novamente</button></div>';
     });
   }
+}
+
+function renderLiveCards() {
+  const c = document.getElementById('livecards-container');
+  if (!c) return;
+
+  // Pega os jogos ao vivo
+  const liveGames = (allGames||[]).filter(g => getStatus(g) === 'live');
+  if (!liveGames.length) {
+    c.innerHTML = '<div class="error-state" style="text-align:center;padding:2rem;"><p>🔴 Nenhum jogo ao vivo no momento.</p><p style="font-size:.8rem;color:#64748b;margin-top:.5rem;">Os cards aparecerão automaticamente quando um jogo começar.</p></div>';
+    return;
+  }
+
+  // Coleta abreviações dos times ao vivo
+  const liveAbbrs = new Set();
+  liveGames.forEach(g => {
+    const cmp = g.competitions?.[0]?.competitors||[];
+    cmp.forEach(c => { if (c.team?.abbreviation) liveAbbrs.add(c.team.abbreviation); });
+  });
+
+  // Calcula stats da fase de grupos (mesma lógica do renderGroups)
+  const stats = {};
+  (allGames||[]).forEach(g => {
+    const seasonSlug = (g.season?.slug || '');
+    if (seasonSlug !== 'group-stage') return;
+    if (getStatus(g) === 'scheduled') return;
+    const co = g.competitions?.[0]||{};
+    const cmp = co.competitors||[];
+    if (cmp.length < 2) return;
+    const home = cmp[0], away = cmp[1];
+    const ha = home.team?.abbreviation || '', aa = away.team?.abbreviation || '';
+    if (!ha || !aa) return;
+    const hg = parseInt(home.score)||0, ag = parseInt(away.score)||0;
+    if (!stats[ha]) stats[ha] = { pts:0, gp:0, w:0, t:0, l:0, gf:0, ga:0 };
+    if (!stats[aa]) stats[aa] = { pts:0, gp:0, w:0, t:0, l:0, gf:0, ga:0 };
+    stats[ha].gp++; stats[aa].gp++;
+    stats[ha].gf += hg; stats[ha].ga += ag;
+    stats[aa].gf += ag; stats[aa].ga += hg;
+    if (hg > ag) { stats[ha].w++; stats[ha].pts += 3; stats[aa].l++; }
+    else if (ag > hg) { stats[aa].w++; stats[aa].pts += 3; stats[ha].l++; }
+    else { stats[ha].t++; stats[ha].pts++; stats[aa].t++; stats[aa].pts++; }
+  });
+
+  // Busca dados dos grupos para saber grupo de cada time
+  const teamGroup = {};
+  if (standingsCache && standingsCache.children) {
+    standingsCache.children.forEach((ch, idx) => {
+      const letter = gL(idx);
+      (ch.standings?.entries||[]).forEach(e => {
+        const ab = (e.team||{}).abbreviation || '';
+        if (ab) teamGroup[ab] = letter;
+      });
+    });
+  }
+
+  let h = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;">';
+
+  liveGames.forEach(g => {
+    const cmp = g.competitions?.[0]?.competitors||[];
+    const home = cmp.find(c=>c.homeAway==='home')||cmp[0]||{};
+    const away = cmp.find(c=>c.homeAway==='away')||cmp[1]||{};
+    const ht = home.team||{}, at = away.team||{};
+    const ha = ht.abbreviation||'', aa = at.abbreviation||'';
+    const hn = pt(ht.displayName||ht.name||'?'), an = pt(at.displayName||at.name||'?');
+    const hs = home.score??'', as = away.score??'';
+    const clock = g.competitions?.[0]?.status?.displayClock||'';
+    const ven = g.competitions?.[0]?.venue?.fullName||'';
+
+    [
+      { abbr: ha, name: hn, score: hs, side: 'home' },
+      { abbr: aa, name: an, score: as, side: 'away' }
+    ].forEach(t => {
+      const s = stats[t.abbr] || { pts:0, gp:0, w:0, t:0, l:0, gf:0, ga:0 };
+      const gd = s.gf - s.ga;
+      const gdStr = gd > 0 ? '+'+gd : String(gd);
+      const group = teamGroup[t.abbr] || '?';
+      h += '<div style="background:linear-gradient(145deg,#1e293b,#1a2332);border:1px solid #22c55e44;border-radius:12px;padding:1rem;">';
+      h += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:.8rem;">';
+      h += '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#22c55e;animation:pulse-dot 2s infinite;"></span>';
+      h += '<img class="flag" src="'+flagUrl(t.abbr)+'" alt="" style="width:28px;height:19px;border-radius:3px;" loading="lazy" onerror="this.style.display=\'none\'">';
+      h += '<span style="font-weight:700;font-size:1rem;">'+t.name+'</span>';
+      h += '<span style="margin-left:auto;font-weight:800;font-size:1.2rem;color:#f59e0b;">'+(t.score!==''&&t.score!==null?t.score:'-')+'</span>';
+      h += '</div>';
+      h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:.78rem;">';
+      h += '<div style="color:#64748b;">Grupo</div><div style="font-weight:600;text-align:right;">'+group+'</div>';
+      h += '<div style="color:#64748b;">Pontos</div><div style="font-weight:700;text-align:right;color:#f59e0b;">'+s.pts+'</div>';
+      h += '<div style="color:#64748b;">Jogos</div><div style="font-weight:600;text-align:right;">'+s.gp+'</div>';
+      h += '<div style="color:#64748b;">Vitórias</div><div style="font-weight:600;text-align:right;color:#22c55e;">'+s.w+'</div>';
+      h += '<div style="color:#64748b;">Empates</div><div style="font-weight:600;text-align:right;">'+s.t+'</div>';
+      h += '<div style="color:#64748b;">Derrotas</div><div style="font-weight:600;text-align:right;color:#ef4444;">'+s.l+'</div>';
+      h += '<div style="color:#64748b;">Gols Pró</div><div style="font-weight:600;text-align:right;">'+s.gf+'</div>';
+      h += '<div style="color:#64748b;">Gols Contra</div><div style="font-weight:600;text-align:right;">'+s.ga+'</div>';
+      h += '<div style="color:#64748b;">Saldo</div><div style="font-weight:700;text-align:right;'+(gd>0?'color:#22c55e':gd<0?'color:#ef4444':'')+'">'+gdStr+'</div>';
+      h += '</div>';
+      if (ven) h += '<div style="margin-top:.6rem;font-size:.65rem;color:#475569;text-align:center;border-top:1px solid #1e293b;padding-top:.5rem;">📍 '+ven+(clock?' • ⏱ '+clock:'')+'</div>';
+      h += '</div>';
+    });
+  });
+
+  h += '</div>';
+  c.innerHTML = h;
 }
 
 function renderGroups(d) {
@@ -2235,6 +2343,10 @@ document.querySelectorAll('.nav-btn').forEach(btn=>{
     // Se clicou em Estatísticas, renderiza
     if (btn.dataset.section === 'stats') {
       renderStats();
+    }
+    // Se clicou em Cards do Ao Vivo, renderiza
+    if (btn.dataset.section === 'livecards') {
+      renderLiveCards();
     }
   });
 });
