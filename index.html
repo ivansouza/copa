@@ -935,7 +935,10 @@ function renderLiveCards() {
   // Pega TODOS os jogos da Segunda Fase (round-of-32), ordenados por data decrescente
   const r32Games = (allGames||[]).filter(g => {
     const slug = (g.season?.slug || '');
-    return slug === 'round-of-32';
+    if (slug !== 'round-of-32') return false;
+    // Só jogos que já aconteceram (ao vivo ou encerrados)
+    const st = getStatus(g);
+    return st === 'live' || st === 'final';
   }).sort((a, b) => new Date(b.date) - new Date(a.date));
   if (!r32Games.length) {
     c.innerHTML = '<div class="error-state" style="text-align:center;padding:2rem;"><p>🔴 Nenhum jogo da Segunda Fase encontrado.</p></div>';
