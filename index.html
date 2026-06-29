@@ -1415,8 +1415,20 @@ function buildRound32(standingsData) {
 }
 
 function simulateWinner(match) {
-  // Simula o vencedor baseado em pontos (mais pontos = mais provável)
+  // Se o jogo já aconteceu, usa o placar real do scoreMap
   if (!match.a || !match.b) return match.a || match.b;
+  if (typeof scoreMap !== 'undefined' && scoreMap) {
+    const sa = scoreMap[match.a.abbr];
+    const sb = scoreMap[match.b.abbr];
+    if (sa && sb && sa.status !== 'pre' && sa.status !== 'scheduled' &&
+        sb.status !== 'pre' && sb.status !== 'scheduled') {
+      const scA = sa.score, scB = sb.score;
+      if (scA !== undefined && scB !== undefined && scA !== scB) {
+        return scA > scB ? match.a : match.b;
+      }
+    }
+  }
+  // Simula o vencedor baseado em pontos (mais pontos = mais provável)
   if (match.a.pts > match.b.pts) return match.a;
   if (match.b.pts > match.a.pts) return match.b;
   if (match.a.gd > match.b.gd) return match.a;
