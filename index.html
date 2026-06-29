@@ -1742,14 +1742,14 @@ function renderClassifiedPanel(standingsData) {
       const finished = isGroupFinished(letter, standingsData);
       const third = teams[2];
       const mathQual = third ? isMathematicallyQualified(teams[0].pts, teams[0].gd, third.pts, third.gd, 3 - third.gp) : false;
-      classified.push({ ...teams[0], status: (finished || mathQual) ? 'confirmed' : 'probable' });
+      classified.push({ ...teams[0], name: pt(teams[0].name), status: (finished || mathQual) ? 'confirmed' : 'probable' });
     }
     // 2º lugar: confirmado se grupo terminou OU se já está matematicamente garantido
     if (teams.length >= 2) {
       const finished = isGroupFinished(letter, standingsData);
       const third = teams[2];
       const mathQual = third ? isMathematicallyQualified(teams[1].pts, teams[1].gd, third.pts, third.gd, 3 - third.gp) : false;
-      classified.push({ ...teams[1], status: (finished || mathQual) ? 'confirmed' : 'probable' });
+      classified.push({ ...teams[1], name: pt(teams[1].name), status: (finished || mathQual) ? 'confirmed' : 'probable' });
     }
   });
 
