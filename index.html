@@ -2008,8 +2008,8 @@ function renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events) {
       scoreMap[ab].score = sc;
       scoreMap[ab].status = state;
     });
-    // Marca perdedor
-    if (cmp.length >= 2 && state !== 'pre' && state !== 'scheduled') {
+    // Marca perdedor SÓ se o jogo já terminou (final/encerrado)
+    if (cmp.length >= 2 && (st.completed || st.id === '3' || (st.description||'').toLowerCase().includes('final'))) {
       const s0 = parseInt(cmp[0].score)||0;
       const s1 = parseInt(cmp[1].score)||0;
       if (s0 !== s1) {
@@ -2128,8 +2128,8 @@ function renderBracket(events, standingsData) {
       scoreMap[ab].score = sc;
       scoreMap[ab].status = state;
     });
-    // Marca perdedor
-    if (cmp.length >= 2) {
+    // Marca perdedor SÓ se o jogo já terminou (final/encerrado)
+    if (cmp.length >= 2 && (st.completed || st.id === '3' || (st.description||'').toLowerCase().includes('final'))) {
       const s0 = parseInt(cmp[0].score)||0;
       const s1 = parseInt(cmp[1].score)||0;
       if (s0 !== s1) {
