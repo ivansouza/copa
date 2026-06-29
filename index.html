@@ -933,14 +933,21 @@ function renderLiveCards() {
 
   // Pega os jogos ao vivo
   const liveGames = (allGames||[]).filter(g => getStatus(g) === 'live');
-  if (!liveGames.length) {
+  // Também mostra jogos encerrados de hoje
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayFinished = (allGames||[]).filter(g => {
+    if (getStatus(g) !== 'final') return false;
+    const gd = new Date(g.date); gd.setHours(0,0,0,0);
+    return gd.getTime() === today.getTime();
+  });
+  if (!liveGames.length && !todayFinished.length) {
     c.innerHTML = '<div class="error-state" style="text-align:center;padding:2rem;"><p>🔴 Nenhum jogo ao vivo no momento.</p><p style="font-size:.8rem;color:#64748b;margin-top:.5rem;">Os cards aparecerão automaticamente quando um jogo começar.</p></div>';
     return;
   }
 
   // Extrai gols dos dados que já temos (allGames -> competitions[0].details)
   const goalsByGame = {};
-  liveGames.forEach(g => {
+  [...liveGames, ...todayFinished].forEach(g => {
     const goals = extractGoals(g);
     if (goals.length > 0) goalsByGame[g.id] = goals;
   });
@@ -989,7 +996,9 @@ function renderLiveCards() {
 
     let h = '';
 
-  liveGames.forEach(g => {
+  // Combina jogos ao vivo + encerrados de hoje
+  const allDisplayGames = [...liveGames, ...todayFinished];
+  allDisplayGames.forEach(g => {
     const cmp = g.competitions?.[0]?.competitors||[];
     const home = cmp.find(c=>c.homeAway==='home')||cmp[0]||{};
     const away = cmp.find(c=>c.homeAway==='away')||cmp[1]||{};
@@ -997,7 +1006,8 @@ function renderLiveCards() {
     const ha = ht.abbreviation||'', aa = at.abbreviation||'';
     const hn = pt(ht.displayName||ht.name||'?'), an = pt(at.displayName||at.name||'?');
     const hs = home.score??'', as = away.score??'';
-    const clock = g.competitions?.[0]?.status?.displayClock||'';
+    const st = getStatus(g);
+    const clock = st === 'live' ? (g.competitions?.[0]?.status?.displayClock||'') : '✅ Encerrado';
     const ven = g.competitions?.[0]?.venue?.fullName||'';
 
     // Header do jogo: Time A X Time B, placar e tempo
