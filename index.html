@@ -404,6 +404,17 @@
     0%, 100% { box-shadow: 0 0 10px rgba(245,158,11,0.4), 0 0 20px rgba(245,158,11,0.15); }
     50% { box-shadow: 0 0 18px rgba(245,158,11,0.7), 0 0 36px rgba(245,158,11,0.3); }
   }
+  .bracket-match .team-row.winner-pen {
+    animation: pulse-glow-red 1.5s infinite;
+  }
+  .bracket-match .team-row.winner-pen .team-info .name {
+    color: #ef4444;
+    font-weight: 800;
+  }
+  @keyframes pulse-glow-red {
+    0%, 100% { text-shadow: 0 0 8px rgba(239,68,68,0.6); }
+    50% { text-shadow: 0 0 20px rgba(239,68,68,1), 0 0 40px rgba(239,68,68,0.4); }
+  }
   @media (max-width: 600px) {
     .classified-grid { grid-template-columns: repeat(2, 1fr); }
   }
@@ -2432,15 +2443,15 @@ function renderBracket(events, standingsData) {
     const bScore = scoreMap[bAbbr] ? scoreMap[bAbbr].score : null;
     const aScoreHtml = aScore !== null ? '<span class="score-display">'+aScore+'</span>' : '';
     const bScoreHtml = bScore !== null ? '<span class="score-display">'+bScore+'</span>' : '';
-    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(aAbbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+aName+'</span>'+aScoreHtml+(aProbable?'<span class="bracket-probable">(provável)</span>':'')+'</div></div>';
-    h += '<div class="match-vs">X</div>';
-    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(bAbbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+bName+'</span>'+bScoreHtml+(bProbable?'<span class="bracket-probable">(provável)</span>':'')+'</div></div>';
     // Verifica se houve pênaltis (placar empatado mas com winner)
     let penaltiInfo = '';
+    let winnerClassA = '', winnerClassB = '';
     if (aScore !== null && bScore !== null && aScore === bScore) {
       const sa = scoreMap[aAbbr];
       const sb = scoreMap[bAbbr];
       if (sa && sb && (sa.winner || sb.winner)) {
+        if (sa.winner) winnerClassA = ' winner-pen';
+        if (sb.winner) winnerClassB = ' winner-pen';
         // Conta pênaltis convertidos de cada time nos details
         let penA = 0, penB = 0;
         (allGames||[]).forEach(g => {
