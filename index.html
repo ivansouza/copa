@@ -227,6 +227,14 @@
   .bracket-match.probable .match-label {
     color: #f59e0b;
   }
+  .bracket-match.live {
+    border-color: #f59e0b88;
+    background: linear-gradient(145deg, #2a2520, #2a2018);
+    box-shadow: 0 0 12px rgba(245,158,11,0.15);
+  }
+  .bracket-match.live .match-label {
+    color: #f59e0b;
+  }
   .bracket-probable {
     font-size: .6rem;
     color: #f59e0b;
@@ -2238,6 +2246,12 @@ function renderBracket(events, standingsData) {
     const bName = m.b.name || 'A definir';
     const aAbbr = m.a.abbr || '';
     const bAbbr = m.b.abbr || '';
+    // Verifica se o jogo está ao vivo
+    const isLive = (allGames||[]).some(g => {
+      if (getStatus(g) !== 'live') return false;
+      const cmp = g.competitions?.[0]?.competitors||[];
+      return cmp.some(c => c.team?.abbreviation === aAbbr) && cmp.some(c => c.team?.abbreviation === bAbbr);
+    });
     // Extrai grupos do label pra verificar cada time individualmente
     const labelGroups = (m.label||'').match(/[1-3]º ([A-L])/g) || [];
     const groupLetters = labelGroups.map(lg => lg.slice(-1));
@@ -2252,7 +2266,10 @@ function renderBracket(events, standingsData) {
     const bProbable = !bGroupFinished;
     // Confronto é provável se PELO MENOS UM time ainda não está confirmado
     const isProbable = aProbable || bProbable;
-    h += '<div class="bracket-match'+(isProbable?' probable':'')+'"><div class="match-teams">';
+    let matchClass = '';
+    if (isLive) matchClass = ' live';
+    else if (isProbable) matchClass = ' probable';
+    h += '<div class="bracket-match'+matchClass+'"><div class="match-teams">';
     const aScore = scoreMap[aAbbr] ? scoreMap[aAbbr].score : null;
     const bScore = scoreMap[bAbbr] ? scoreMap[bAbbr].score : null;
     const aScoreHtml = aScore !== null ? '<span class="score-display">'+aScore+'</span>' : '';
