@@ -934,7 +934,7 @@ function renderLiveCards() {
     });
   }
 
-  let h = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;">';
+    let h = '';
 
   liveGames.forEach(g => {
     const cmp = g.competitions?.[0]?.competitors||[];
@@ -947,38 +947,47 @@ function renderLiveCards() {
     const clock = g.competitions?.[0]?.status?.displayClock||'';
     const ven = g.competitions?.[0]?.venue?.fullName||'';
 
+    // Header do jogo: Time A X Time B, placar e tempo
+    h += '<div style="background:linear-gradient(145deg,#1e293b,#1a2332);border:1px solid #22c55e44;border-radius:12px;padding:1rem;margin-bottom:1rem;">';
+    h += '<div style="display:flex;align-items:center;justify-content:center;gap:12px;padding:.6rem 0;border-bottom:1px solid #2d3a4e;margin-bottom:1rem;">';
+    h += '<div style="display:flex;align-items:center;gap:6px;"><img class="flag" src="'+flagUrl(ha)+'" alt="" style="width:24px;height:16px;border-radius:2px;" loading="lazy" onerror="this.style.display='none'"><span style="font-weight:700;font-size:.9rem;">'+hn+'</span></div>';
+    h += '<span style="font-weight:800;font-size:1.3rem;color:#f59e0b;">'+(hs!==''&&hs!==null?hs:'-')+'</span>';
+    h += '<span style="color:#475569;font-weight:500;">X</span>';
+    h += '<span style="font-weight:800;font-size:1.3rem;color:#f59e0b;">'+(as!==''&&as!==null?as:'-')+'</span>';
+    h += '<div style="display:flex;align-items:center;gap:6px;"><span style="font-weight:700;font-size:.9rem;">'+an+'</span><img class="flag" src="'+flagUrl(aa)+'" alt="" style="width:24px;height:16px;border-radius:2px;" loading="lazy" onerror="this.style.display='none'"></div>';
+    h += '</div>';
+    h += '<div style="text-align:center;font-size:.8rem;color:#22c55e;font-weight:600;margin-bottom:1rem;">🔴 '+(clock||'Ao vivo')+(ven?' • 📍 '+ven:'')+'</div>';
+
+    // Cards dos dois times lado a lado
+    h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">';
     [
-      { abbr: ha, name: hn, score: hs, side: 'home' },
-      { abbr: aa, name: an, score: as, side: 'away' }
+      { abbr: ha, name: hn, score: hs },
+      { abbr: aa, name: an, score: as }
     ].forEach(t => {
       const s = stats[t.abbr] || { pts:0, gp:0, w:0, t:0, l:0, gf:0, ga:0 };
       const gd = s.gf - s.ga;
       const gdStr = gd > 0 ? '+'+gd : String(gd);
       const group = teamGroup[t.abbr] || '?';
-      h += '<div style="background:linear-gradient(145deg,#1e293b,#1a2332);border:1px solid #22c55e44;border-radius:12px;padding:1rem;">';
-      h += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:.8rem;">';
-      h += '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#22c55e;animation:pulse-dot 2s infinite;"></span>';
-      h += '<img class="flag" src="'+flagUrl(t.abbr)+'" alt="" style="width:28px;height:19px;border-radius:3px;" loading="lazy" onerror="this.style.display=\'none\'">';
-      h += '<span style="font-weight:700;font-size:1rem;">'+t.name+'</span>';
-      h += '<span style="margin-left:auto;font-weight:800;font-size:1.2rem;color:#f59e0b;">'+(t.score!==''&&t.score!==null?t.score:'-')+'</span>';
+      h += '<div style="background:#1a2332;border:1px solid #2d3a4e;border-radius:10px;padding:.8rem;">';
+      h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:.6rem;">';
+      h += '<img class="flag" src="'+flagUrl(t.abbr)+'" alt="" style="width:22px;height:15px;border-radius:2px;" loading="lazy" onerror="this.style.display='none'">';
+      h += '<span style="font-weight:700;font-size:.85rem;">'+t.name+'</span>';
       h += '</div>';
-      h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:.78rem;">';
+      h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:.72rem;">';
       h += '<div style="color:#64748b;">Grupo</div><div style="font-weight:600;text-align:right;">'+group+'</div>';
-      h += '<div style="color:#64748b;">Pontos</div><div style="font-weight:700;text-align:right;color:#f59e0b;">'+s.pts+'</div>';
-      h += '<div style="color:#64748b;">Jogos</div><div style="font-weight:600;text-align:right;">'+s.gp+'</div>';
-      h += '<div style="color:#64748b;">Vitórias</div><div style="font-weight:600;text-align:right;color:#22c55e;">'+s.w+'</div>';
-      h += '<div style="color:#64748b;">Empates</div><div style="font-weight:600;text-align:right;">'+s.t+'</div>';
-      h += '<div style="color:#64748b;">Derrotas</div><div style="font-weight:600;text-align:right;color:#ef4444;">'+s.l+'</div>';
-      h += '<div style="color:#64748b;">Gols Pró</div><div style="font-weight:600;text-align:right;">'+s.gf+'</div>';
-      h += '<div style="color:#64748b;">Gols Contra</div><div style="font-weight:600;text-align:right;">'+s.ga+'</div>';
-      h += '<div style="color:#64748b;">Saldo</div><div style="font-weight:700;text-align:right;'+(gd>0?'color:#22c55e':gd<0?'color:#ef4444':'')+'">'+gdStr+'</div>';
-      h += '</div>';
-      if (ven) h += '<div style="margin-top:.6rem;font-size:.65rem;color:#475569;text-align:center;border-top:1px solid #1e293b;padding-top:.5rem;">📍 '+ven+(clock?' • ⏱ '+clock:'')+'</div>';
-      h += '</div>';
+      h += '<div style="color:#64748b;">Pts</div><div style="font-weight:700;text-align:right;color:#f59e0b;">'+s.pts+'</div>';
+      h += '<div style="color:#64748b;">J</div><div style="font-weight:600;text-align:right;">'+s.gp+'</div>';
+      h += '<div style="color:#64748b;">V</div><div style="font-weight:600;text-align:right;color:#22c55e;">'+s.w+'</div>';
+      h += '<div style="color:#64748b;">E</div><div style="font-weight:600;text-align:right;">'+s.t+'</div>';
+      h += '<div style="color:#64748b;">D</div><div style="font-weight:600;text-align:right;color:#ef4444;">'+s.l+'</div>';
+      h += '<div style="color:#64748b;">GP</div><div style="font-weight:600;text-align:right;">'+s.gf+'</div>';
+      h += '<div style="color:#64748b;">GC</div><div style="font-weight:600;text-align:right;">'+s.ga+'</div>';
+      h += '<div style="color:#64748b;">SG</div><div style="font-weight:700;text-align:right;'+(gd>0?'color:#22c55e':gd<0?'color:#ef4444':'')+'">'+gdStr+'</div>';
+      h += '</div></div>';
     });
+    h += '</div></div>';
   });
 
-  h += '</div>';
   c.innerHTML = h;
 }
 
