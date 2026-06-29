@@ -1983,7 +1983,10 @@ function renderClassifiedPanel(standingsData) {
   });
 
   let h = '<div class="classified-panel">';
-  h += '<div class="panel-title"><span class="bracket-icon">[</span> CLASSIFICADOS PARA A SEGUNDA FASE <span class="bracket-icon">]</span></div>';
+  h += '<div class="panel-title" onclick="toggleClassified()" style="cursor:pointer;user-select:none;">';
+  h += '<span id="classified-toggle" style="display:inline-block;transition:transform .2s;margin-right:6px;">▶</span>';
+  h += '<span class="bracket-icon">[</span> CLASSIFICADOS PARA A SEGUNDA FASE <span class="bracket-icon">]</span></div>';
+  h += '<div id="classified-body" style="display:none;">';
   h += '<div style="text-align:center;font-size:.65rem;color:#64748b;margin-bottom:.6rem;">Times ordenados alfabeticamente</div>';
   h += '<div class="classified-grid">';
 
@@ -2008,7 +2011,17 @@ function renderClassifiedPanel(standingsData) {
   h += '<span style="color:#2d3a4e;">⏳ A definir</span>';
   h += '</div>';
   h += '</div>';
+  h += '</div>';
   c.innerHTML = h;
+}
+
+function toggleClassified() {
+  const body = document.getElementById('classified-body');
+  const toggle = document.getElementById('classified-toggle');
+  if (!body || !toggle) return;
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  toggle.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(90deg)';
 }
 
 function renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events) {
