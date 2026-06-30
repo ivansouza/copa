@@ -1738,59 +1738,49 @@ function setFavorite(abbr, name) {
 }
 
 function highlightPossibleRivals(chosenAbbr) {
-  // Pega o bracket cacheado
-  var bd = window.__bracketCache || null;
-  if (!bd || !bd.round32) return;
-  
-  // Simula o bracket para descobrir quem pode enfrentar o time escolhido na final
+  // Pega todos os times NÃO eliminados que não são o escolhido
   var sm = window.__scoreMap || {};
-  
-  // Encontra em qual match da Segunda Fase o time está
-  var chosenMatch = null;
-  var chosenSide = null; // 'left' or 'right' (lado do bracket)
-  
-  // O bracket tem dois lados: left (matches 89,90,93,94) e right (91,92,95,96)
-  // Precisamos descobrir de que lado o time escolhido está
-  function findTeamSide(abbr, matches) {
-    for (var i = 0; i < matches.length; i++) {
-      var m = matches[i];
-      if (!m || !m.a || !m.b) continue;
-      if (m.a.abbr === abbr || m.b.abbr === abbr) {
-        // Lado esquerdo: índices 0,1,4,5 (r16Order)
-        // Lado direito: índices 2,3,6,7
-        if (i < 4) return 'left';
-        else return 'right';
-      }
-    }
-    return null;
-  }
-  
-  var side = findTeamSide(chosenAbbr, bd.r16);
-  if (!side) return;
-  
-  // O adversário na final vem do lado oposto
-  var rivalSide = side === 'left' ? 'right' : 'left';
-  
-  // Pega os times do lado oposto que podem chegar à final
   var possibleRivals = [];
-  var rivalIndices = rivalSide === 'left' ? [0,1,4,5] : [2,3,6,7];
   
-  rivalIndices.forEach(function(idx) {
-    var m = bd.r16[idx];
-    if (m && m.a && m.a.abbr) {
-      // Verifica se o time não está eliminado
-      var sa = sm[m.a.abbr];
-      if (!sa || !sa.lost) {
-        possibleRivals.push(m.a.abbr);
-      }
-    }
-    if (m && m.b && m.b.abbr) {
-      var sb = sm[m.b.abbr];
-      if (!sb || !sb.lost) {
-        possibleRivals.push(m.b.abbr);
-      }
-    }
+  document.querySelectorAll('.fav-btn').forEach(function(b) {
+    var ab = b.dataset.abbr;
+    if (!ab || ab === chosenAbbr) return;
+    if (b.disabled) return;
+    // Verifica se não está eliminado
+    var s = sm[ab];
+    if (s && s.lost) return;
+    possibleRivals.push(ab);
   });
+  
+  // Se não tem bracket cacheado, todos os não-eliminados são rivais possíveis
+  // Se tem bracket, tenta filtrar apenas os do lado oposto
+  var bd = window.__bracketCache || null;
+  if (bd && bd.r16 && bd.r16.length > 0) {
+    // Tenta descobrir de que lado o time escolhido está
+    var chosenSide = null;
+    for (var i = 0; i < bd.r16.length; i++) {
+      var m = bd.r16[i];
+      if (m && m.a && m.a.abbr === chosenAbbr || (m && m.b && m.b.abbr === chosenAbbr)) {
+        chosenSide = (i < 4) ? 'left' : 'right';
+        break;
+      }
+    }
+    
+    if (chosenSide) {
+      var rivalSide = chosenSide === 'left' ? 'right' : 'left';
+      var rivalIndices = rivalSide === 'left' ? [0,1,4,5] : [2,3,6,7];
+      var sideRivals = [];
+      rivalIndices.forEach(function(idx) {
+        var m = bd.r16[idx];
+        if (m && m.a && m.a.abbr) sideRivals.push(m.a.abbr);
+        if (m && m.b && m.b.abbr) sideRivals.push(m.b.abbr);
+      });
+      // Filtra apenas os que estão no lado oposto
+      possibleRivals = possibleRivals.filter(function(ab) {
+        return sideRivals.includes(ab);
+      });
+    }
+  }
   
   // Faz os botões dos possíveis rivais piscarem
   document.querySelectorAll('.fav-btn').forEach(function(b) {
@@ -1806,7 +1796,8 @@ function highlightPossibleRivals(chosenAbbr) {
     instrucao = document.createElement('div');
     instrucao.id = 'favInstruction';
     instrucao.style.cssText = 'text-align:center;font-size:.75rem;color:#f59e0b;margin-top:8px;font-weight:600;';
-    document.getElementById('favSection')?.appendChild(instrucao);
+    var favSection = document.getElementById('favSection');
+    if (favSection) favSection.appendChild(instrucao);
   }
   instrucao.textContent = 'Agora escolha o adversário na final (times piscando)';
 }
