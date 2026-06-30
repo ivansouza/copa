@@ -5,18 +5,16 @@
  * linhas de chaveamento animadas e dados reais do mata-mata.
  * 
  * Integra-se com os dados existentes do index.html.
+ * Usa importmap para carregar Three.js via ES modules.
  */
 
 (function() {
   'use strict';
 
-  // ─── Configuração ───────────────────────────────────────────────
   const CFG = {
     radius: 5,
     flagSize: 0.8,
-    flagSegments: 32,
-    ringCount: 5,
-    autoRotateSpeed: 0.002,
+    autoRotateSpeed: 0.5,
   };
 
   let scene, camera, renderer, controls;
@@ -24,400 +22,304 @@
   let lineMeshes = [];
   let animationId = null;
   let containerEl = null;
-  let state = { classified: [], bracketData: null, selectedTeam: null };
+  let state = { classified: [], selectedTeam: null };
+  let threeLoaded = false;
 
-  // ─── Carrega Three.js via CDN ───────────────────────────────────
+  // ─── Carrega Three.js via importmap ─────────────────────────────
   function loadThreeJS(callback) {
-    if (window.THREE) { callback(); return; }
+    if (threeLoaded) { callback(); return; }
 
+    // Adiciona importmap
+    if (!document.querySelector('script[type="importmap"]')) {
+      const im = document.createElement('script');
+      im.type = 'importmap';
+      im.textContent = JSON.stringify({
+        imports: {
+          'three': 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js',
+          'three/addons/': 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/',
+        }
+      });
+      document.head.appendChild(im);
+    }
+
+    // Cria um módulo inline que carrega Three e chama callback
     const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
-    script.onload = () => {
-      // Carrega OrbitControls
-      const orbit = document.createElement('script');
-      orbit.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js';
-      orbit.onload = callback;
-      document.head.appendChild(orbit);
-    };
+    script.type = 'module';
+    script.textContent = `
+      import * as THREE from 'three';
+      import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+      window.__THREE = { THREE, OrbitControls };
+      document.dispatchEvent(new CustomEvent('three-loaded'));
+    `;
     document.head.appendChild(script);
+
+    document.addEventListener('three-loaded', () => {
+      threeLoaded = true;
+      callback();
+    }, { once: true });
+
+    // Timeout de segurança
+    setTimeout(() => {
+      if (!threeLoaded) {
+        const c = document.getElementById('arte-visual-container');
+        if (c) c.innerHTML = '<div style="text-align:center;padding:3rem;color:#ef4444;"><p>❌ Erro ao carregar Three.js. Verifique sua conexão.</p></div>';
+      }
+    }, 10000);
   }
 
   // ─── Cria textura da bandeira ───────────────────────────────────
   function createFlagTexture(flagUrl, abbr) {
-    const canvas = document.createElement('canvas');
-    canvas.width = 64;
-    canvas.height = 64;
-    const ctx = canvas.getContext('2d');
-
-    // Fundo
-    ctx.fillStyle = '#1e293b';
-    ctx.fillRect(0, 0, 64, 64);
-
-    // Tenta carregar a bandeira
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.src = flagUrl;
-
     return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 128;
+      canvas.height = 128;
+      const ctx = canvas.getContext('2d');
+
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(0, 0, 128, 128);
+
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.src = flagUrl;
+
       img.onload = () => {
-        ctx.drawImage(img, 4, 4, 56, 56);
-        const texture = new THREE.CanvasTexture(canvas);
-        resolve(texture);
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(64, 64, 56, 0, Math.PI * 2);
+        ctx.clip();
+        ctx.drawImage(img, 8, 8, 112, 112);
+        ctx.restore();
+        // Borda
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(64, 64, 56, 0, Math.PI * 2);
+        ctx.stroke();
+        const tex = new window.__THREE.THREE.CanvasTexture(canvas);
+        resolve(tex);
       };
+
       img.onerror = () => {
-        // Fallback: abreviatura
         ctx.fillStyle = '#2d3a4e';
         ctx.beginPath();
-        ctx.arc(32, 32, 28, 0, Math.PI * 2);
+        ctx.arc(64, 64, 56, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = '#f59e0b';
-        ctx.font = 'bold 20px Inter, sans-serif';
+        ctx.font = 'bold 36px Inter, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(abbr || '?', 32, 32);
-        const texture = new THREE.CanvasTexture(canvas);
-        resolve(texture);
+        ctx.fillText(abbr || '?', 64, 64);
+        const tex = new window.__THREE.THREE.CanvasTexture(canvas);
+        resolve(tex);
       };
     });
   }
 
   // ─── Inicializa a cena ──────────────────────────────────────────
   function initScene(container) {
+    const THREE = window.__THREE.THREE;
     containerEl = container;
     container.innerHTML = '';
 
-    const width = container.clientWidth || 700;
-    const height = container.clientHeight || 700;
+    const width = container.clientWidth || Math.min(window.innerWidth - 32, 700);
+    const height = container.clientHeight || 500;
 
-    // Cena
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x0f172a);
 
-    // Câmera
-    camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-    camera.position.set(0, 2, 14);
+    camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 100);
+    camera.position.set(0, 3, 12);
     camera.lookAt(0, 0, 0);
 
-    // Renderer
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.shadowMap.enabled = true;
     container.appendChild(renderer.domElement);
 
-    // Controles
-    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls = new window.__THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
+    controls.dampingFactor = 0.08;
     controls.autoRotate = true;
     controls.autoRotateSpeed = CFG.autoRotateSpeed;
-    controls.minDistance = 6;
-    controls.maxDistance = 25;
+    controls.minDistance = 5;
+    controls.maxDistance = 20;
     controls.target.set(0, 0, 0);
 
     // Luzes
-    const ambient = new THREE.AmbientLight(0x404060, 0.6);
+    const ambient = new THREE.AmbientLight(0x404060, 0.8);
     scene.add(ambient);
+    const dir = new THREE.DirectionalLight(0xffffff, 1.2);
+    dir.position.set(5, 10, 7);
+    scene.add(dir);
+    const dir2 = new THREE.DirectionalLight(0xf59e0b, 0.4);
+    dir2.position.set(-5, -3, -5);
+    scene.add(dir2);
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1);
-    dirLight.position.set(5, 10, 7);
-    scene.add(dirLight);
+    // Estrelas
+    const starGeo = new THREE.BufferGeometry();
+    const starPos = new Float32Array(600 * 3);
+    for (let i = 0; i < 600 * 3; i++) starPos[i] = (Math.random() - 0.5) * 80;
+    starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+    const starMat = new THREE.PointsMaterial({ color: 0x64748b, size: 0.06, transparent: true, opacity: 0.5 });
+    scene.add(new THREE.Points(starGeo, starMat));
 
-    const dirLight2 = new THREE.DirectionalLight(0xf59e0b, 0.3);
-    dirLight2.position.set(-5, -3, -5);
-    scene.add(dirLight2);
-
-    const pointLight = new THREE.PointLight(0xf59e0b, 0.5, 20);
-    pointLight.position.set(0, 0, 0);
-    scene.add(pointLight);
-
-    // Partículas de fundo (estrelas)
-    createStars();
-
-    // Anéis decorativos
-    createRings();
-
-    // Evento de resize
-    window.addEventListener('resize', onResize);
-  }
-
-  // ─── Estrelas de fundo ──────────────────────────────────────────
-  function createStars() {
-    const geometry = new THREE.BufferGeometry();
-    const count = 500;
-    const positions = new Float32Array(count * 3);
-    for (let i = 0; i < count * 3; i++) {
-      positions[i] = (Math.random() - 0.5) * 100;
-    }
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    const material = new THREE.PointsMaterial({
-      color: 0x64748b,
-      size: 0.05,
-      transparent: true,
-      opacity: 0.6,
-    });
-    const stars = new THREE.Points(geometry, material);
-    scene.add(stars);
-  }
-
-  // ─── Anéis decorativos ──────────────────────────────────────────
-  function createRings() {
-    const ringColors = [0x2d3a4e, 0x1e293b, 0x2d3a4e];
-    const ringRadii = [5.8, 4.5, 3.2];
-
-    ringRadii.forEach((r, i) => {
-      const geometry = new THREE.RingGeometry(r - 0.02, r, 64);
-      const material = new THREE.MeshBasicMaterial({
-        color: ringColors[i],
+    // Anéis
+    [5.5, 4.2, 2.8].forEach((r, i) => {
+      const geo = new THREE.RingGeometry(r - 0.03, r, 64);
+      const mat = new THREE.MeshBasicMaterial({
+        color: [0x2d3a4e, 0x1e293b, 0x2d3a4e][i],
         side: THREE.DoubleSide,
         transparent: true,
-        opacity: 0.3,
+        opacity: 0.25,
         depthWrite: false,
       });
-      const ring = new THREE.Mesh(geometry, material);
+      const ring = new THREE.Mesh(geo, mat);
       ring.rotation.x = -Math.PI / 2;
       ring.position.y = -0.1;
       scene.add(ring);
     });
+
+    window.addEventListener('resize', onResize);
   }
 
-  // ─── Cria as bandeiras dos times ─────────────────────────────────
+  // ─── Cria os times ──────────────────────────────────────────────
   async function createTeams(classified) {
-    // Remove times anteriores
+    const THREE = window.__THREE.THREE;
     teamMeshes.forEach(m => scene.remove(m));
     teamMeshes = [];
 
-    const numTeams = Math.min(classified.length, 32);
-    if (numTeams === 0) return;
+    const num = Math.min(classified.length, 32);
+    if (num === 0) return;
 
-    const flagPromises = [];
-
-    for (let i = 0; i < numTeams; i++) {
+    const tasks = [];
+    for (let i = 0; i < num; i++) {
       const team = classified[i];
-      const angle = (i / numTeams) * Math.PI * 2;
+      const angle = (i / num) * Math.PI * 2;
       const x = CFG.radius * Math.sin(angle);
       const z = CFG.radius * Math.cos(angle);
       const flagSrc = window.flagUrl ? window.flagUrl(team.abbr) : '';
 
-      flagPromises.push(
-        createFlagTexture(flagSrc, team.abbr).then(texture => {
-          // Plano da bandeira (sempre virada pro centro)
-          const geometry = new THREE.PlaneGeometry(CFG.flagSize, CFG.flagSize);
-          const material = new THREE.MeshBasicMaterial({
-            map: texture,
-            side: THREE.DoubleSide,
-            transparent: true,
-          });
-          const mesh = new THREE.Mesh(geometry, material);
+      tasks.push(
+        createFlagTexture(flagSrc, team.abbr).then(tex => {
+          const geo = new THREE.PlaneGeometry(CFG.flagSize, CFG.flagSize);
+          const mat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide, transparent: true });
+          const mesh = new THREE.Mesh(geo, mat);
           mesh.position.set(x, 0, z);
-          // Aponta pro centro
           mesh.lookAt(0, 0, 0);
-          mesh.userData = { team, angle, index: i };
 
-          // Glow ao redor
-          const glowGeo = new THREE.RingGeometry(
-            CFG.flagSize * 0.5,
-            CFG.flagSize * 0.55,
-            32
-          );
-          const glowMat = new THREE.MeshBasicMaterial({
-            color: team.status === 'confirmed' ? 0x22c55e : 0xf59e0b,
-            side: THREE.DoubleSide,
-            transparent: true,
-            opacity: 0.4,
-            depthWrite: false,
-          });
-          const glow = new THREE.Mesh(glowGeo, glowMat);
-          glow.position.copy(mesh.position);
-          glow.lookAt(0, 0, 0);
-
-          // Label do nome (Sprite)
-          const labelCanvas = document.createElement('canvas');
-          labelCanvas.width = 256;
-          labelCanvas.height = 64;
-          const ctx = labelCanvas.getContext('2d');
-          ctx.fillStyle = 'rgba(15, 23, 42, 0.7)';
-          ctx.roundRect(0, 0, 256, 64, 8);
+          // Label
+          const c2 = document.createElement('canvas');
+          c2.width = 256; c2.height = 48;
+          const ctx = c2.getContext('2d');
+          ctx.fillStyle = 'rgba(15,23,42,0.6)';
+          ctx.roundRect ? ctx.roundRect(0, 0, 256, 48, 8) : ctx.fillRect(0, 0, 256, 48);
           ctx.fill();
           ctx.fillStyle = '#e2e8f0';
-          ctx.font = 'bold 18px Inter, sans-serif';
+          ctx.font = 'bold 16px Inter, sans-serif';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.fillText(team.name, 128, 32);
+          ctx.fillText(team.name, 128, 24);
+          const lTex = new THREE.CanvasTexture(c2);
+          const lMat = new THREE.SpriteMaterial({ map: lTex, transparent: true, depthTest: false });
+          const label = new THREE.Sprite(lMat);
+          const off = 0.8;
+          label.position.set(x + (x / CFG.radius) * off, -0.5, z + (z / CFG.radius) * off);
+          label.scale.set(1.4, 0.26, 1);
 
-          const labelTexture = new THREE.CanvasTexture(labelCanvas);
-          const labelMat = new THREE.SpriteMaterial({
-            map: labelTexture,
-            transparent: true,
-            depthTest: false,
-          });
-          const label = new THREE.Sprite(labelMat);
-          const labelOffset = 0.7;
-          const lx = x + (x / CFG.radius) * labelOffset;
-          const lz = z + (z / CFG.radius) * labelOffset;
-          label.position.set(lx, -0.6, lz);
-          label.scale.set(1.2, 0.3, 1);
+          // Linha
+          const pts = new Float32Array([x * 0.8, 0, z * 0.8, x * 0.25, 0, z * 0.25]);
+          const lg = new THREE.BufferGeometry();
+          lg.setAttribute('position', new THREE.BufferAttribute(pts, 3));
+          const lm = new THREE.LineBasicMaterial({ color: 0x2d3a4e, transparent: true, opacity: 0.15 });
+          const line = new THREE.Line(lg, lm);
 
-          // Linha do time até o centro (primeiro anel)
-          const lineGeo = new THREE.BufferGeometry();
-          const linePoints = new Float32Array([
-            x * 0.85, 0, z * 0.85,
-            x * 0.3, 0, z * 0.3,
-          ]);
-          lineGeo.setAttribute('position', new THREE.BufferAttribute(linePoints, 3));
-          const lineMat = new THREE.LineBasicMaterial({
-            color: 0x2d3a4e,
-            transparent: true,
-            opacity: 0.2,
-          });
-          const line = new THREE.Line(lineGeo, lineMat);
-
-          const group = new THREE.Group();
-          group.add(mesh);
-          group.add(glow);
-          group.add(label);
-          group.add(line);
-          group.userData = { team, angle, index: i, abbr: team.abbr };
-
-          teamMeshes.push(group);
-          return group;
+          const grp = new THREE.Group();
+          grp.add(mesh); grp.add(label); grp.add(line);
+          grp.userData = { team, angle, index: i, abbr: team.abbr };
+          teamMeshes.push(grp);
+          return grp;
         })
       );
     }
 
-    const groups = await Promise.all(flagPromises);
+    const groups = await Promise.all(tasks);
     groups.forEach(g => scene.add(g));
   }
 
-  // ─── Cria as linhas do chaveamento ──────────────────────────────
+  // ─── Linhas do chaveamento ──────────────────────────────────────
   function createBracketLines(classified) {
+    const THREE = window.__THREE.THREE;
     lineMeshes.forEach(m => scene.remove(m));
     lineMeshes = [];
 
-    const numTeams = Math.min(classified.length, 32);
-    if (numTeams < 2) return;
+    const num = Math.min(classified.length, 32);
+    if (num < 2) return;
 
-    // Conecta pares (1º vs 2º de cada grupo)
-    for (let i = 0; i < numTeams; i += 2) {
-      if (i + 1 >= numTeams) break;
-
-      const a1 = (i / numTeams) * Math.PI * 2;
-      const a2 = ((i + 1) / numTeams) * Math.PI * 2;
+    for (let i = 0; i < num; i += 2) {
+      if (i + 1 >= num) break;
+      const a1 = (i / num) * Math.PI * 2;
+      const a2 = ((i + 1) / num) * Math.PI * 2;
       const midA = (a1 + a2) / 2;
+      const r1 = CFG.radius, r2 = CFG.radius * 0.6;
 
-      const x1 = CFG.radius * Math.sin(a1);
-      const z1 = CFG.radius * Math.cos(a1);
-      const x2 = CFG.radius * Math.sin(a2);
-      const z2 = CFG.radius * Math.cos(a2);
-      const mx = CFG.radius * 0.6 * Math.sin(midA);
-      const mz = CFG.radius * 0.6 * Math.cos(midA);
-
-      // Curva bezier aproximada
-      const points = [
-        new THREE.Vector3(x1 * 0.85, 0, z1 * 0.85),
-        new THREE.Vector3(x1 * 0.5 + mx * 0.3, 0.3, z1 * 0.5 + mz * 0.3),
-        new THREE.Vector3(mx, 0, mz),
-        new THREE.Vector3(x2 * 0.5 + mx * 0.3, 0.3, z2 * 0.5 + mz * 0.3),
-        new THREE.Vector3(x2 * 0.85, 0, z2 * 0.85),
+      const pts = [
+        new THREE.Vector3(r1 * Math.sin(a1) * 0.8, 0, r1 * Math.cos(a1) * 0.8),
+        new THREE.Vector3(r1 * 0.4 * Math.sin(a1) + r2 * 0.3 * Math.sin(midA), 0.2, r1 * 0.4 * Math.cos(a1) + r2 * 0.3 * Math.cos(midA)),
+        new THREE.Vector3(r2 * Math.sin(midA), 0, r2 * Math.cos(midA)),
+        new THREE.Vector3(r1 * 0.4 * Math.sin(a2) + r2 * 0.3 * Math.sin(midA), 0.2, r1 * 0.4 * Math.cos(a2) + r2 * 0.3 * Math.cos(midA)),
+        new THREE.Vector3(r1 * Math.sin(a2) * 0.8, 0, r1 * Math.cos(a2) * 0.8),
       ];
 
-      const curve = new THREE.CatmullRomCurve3(points);
-      const curvePoints = curve.getPoints(20);
-      const geo = new THREE.BufferGeometry().setFromPoints(curvePoints);
-      const mat = new THREE.LineBasicMaterial({
-        color: 0x2d3a4e,
-        transparent: true,
-        opacity: 0.15,
-      });
+      const curve = new THREE.CatmullRomCurve3(pts);
+      const cpts = curve.getPoints(16);
+      const geo = new THREE.BufferGeometry().setFromPoints(cpts);
+      const mat = new THREE.LineBasicMaterial({ color: 0x2d3a4e, transparent: true, opacity: 0.12 });
       const line = new THREE.Line(geo, mat);
       lineMeshes.push(line);
       scene.add(line);
     }
 
-    // Anéis internos (oitavas → quartas → semi → final)
-    const ringRadii = [CFG.radius * 0.6, CFG.radius * 0.4, CFG.radius * 0.25, CFG.radius * 0.12];
-    ringRadii.forEach((r, ri) => {
-      const points = [];
-      const segments = Math.max(4, 16 - ri * 3);
-      for (let i = 0; i <= segments; i++) {
-        const a = (i / segments) * Math.PI * 2;
-        points.push(new THREE.Vector3(r * Math.sin(a), 0, r * Math.cos(a)));
+    // Anéis internos
+    [CFG.radius * 0.6, CFG.radius * 0.4, CFG.radius * 0.25, CFG.radius * 0.12].forEach((r, ri) => {
+      const pts = [];
+      const segs = Math.max(4, 16 - ri * 3);
+      for (let i = 0; i <= segs; i++) {
+        const a = (i / segs) * Math.PI * 2;
+        pts.push(new THREE.Vector3(r * Math.sin(a), 0, r * Math.cos(a)));
       }
-      const geo = new THREE.BufferGeometry().setFromPoints(points);
-      const mat = new THREE.LineBasicMaterial({
-        color: 0x2d3a4e,
-        transparent: true,
-        opacity: 0.2 + ri * 0.05,
-        depthWrite: false,
-      });
-      const ring = new THREE.Line(geo, mat);
-      lineMeshes.push(ring);
-      scene.add(ring);
+      const geo = new THREE.BufferGeometry().setFromPoints(pts);
+      const mat = new THREE.LineBasicMaterial({ color: 0x2d3a4e, transparent: true, opacity: 0.15 + ri * 0.04 });
+      lineMeshes.push(new THREE.Line(geo, mat));
+      scene.add(lineMeshes[lineMeshes.length - 1]);
     });
 
-    // Centro: esfera dourada (troféu)
-    const sphereGeo = new THREE.SphereGeometry(0.3, 16, 16);
-    const sphereMat = new THREE.MeshStandardMaterial({
-      color: 0xf59e0b,
-      emissive: 0xf59e0b,
-      emissiveIntensity: 0.3,
-      metalness: 0.8,
-      roughness: 0.2,
-    });
-    const sphere = new THREE.Mesh(sphereGeo, sphereMat);
-    sphere.position.set(0, 0, 0);
+    // Esfera central
+    const sg = new THREE.SphereGeometry(0.25, 16, 16);
+    const sm = new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0xf59e0b, emissiveIntensity: 0.3, metalness: 0.8, roughness: 0.2 });
+    const sphere = new THREE.Mesh(sg, sm);
     lineMeshes.push(sphere);
     scene.add(sphere);
-
-    // Anel pulsante no centro
-    const pulseGeo = new THREE.RingGeometry(0.35, 0.4, 32);
-    const pulseMat = new THREE.MeshBasicMaterial({
-      color: 0xf59e0b,
-      side: THREE.DoubleSide,
-      transparent: true,
-      opacity: 0.3,
-      depthWrite: false,
-    });
-    const pulse = new THREE.Mesh(pulseGeo, pulseMat);
-    pulse.rotation.x = -Math.PI / 2;
-    pulse.position.y = 0;
-    pulse.userData.isPulse = true;
-    lineMeshes.push(pulse);
-    scene.add(pulse);
   }
 
   // ─── Animação ────────────────────────────────────────────────────
   function animate() {
     animationId = requestAnimationFrame(animate);
-
-    // Pulsa o anel central
-    lineMeshes.forEach(m => {
-      if (m.userData?.isPulse) {
-        const scale = 1 + 0.1 * Math.sin(Date.now() * 0.002);
-        m.scale.set(scale, scale, 1);
-        m.material.opacity = 0.2 + 0.15 * Math.sin(Date.now() * 0.002);
-      }
-    });
-
     controls.update();
     renderer.render(scene, camera);
   }
 
-  // ─── Resize ──────────────────────────────────────────────────────
   function onResize() {
     if (!containerEl || !camera || !renderer) return;
-    const width = containerEl.clientWidth || 700;
-    const height = containerEl.clientHeight || 700;
-    camera.aspect = width / height;
+    const w = containerEl.clientWidth || 700;
+    const h = containerEl.clientHeight || 500;
+    camera.aspect = w / h;
     camera.updateProjectionMatrix();
-    renderer.setSize(width, height);
+    renderer.setSize(w, h);
   }
 
-  // ─── Renderiza tudo ──────────────────────────────────────────────
-  async function render(container, classified, bracketData) {
+  // ─── Render ──────────────────────────────────────────────────────
+  async function render(container, classified) {
     state.classified = classified || [];
-    state.bracketData = bracketData;
-
     if (!container) return;
 
     loadThreeJS(async () => {
@@ -428,22 +330,16 @@
     });
   }
 
-  // ─── API pública ────────────────────────────────────────────────
+  // ─── API ─────────────────────────────────────────────────────────
   window.ArteVisual = {
     render,
     refresh: () => {
       const c = document.getElementById('arte-visual-container');
-      if (c && state.classified.length > 0) render(c, state.classified, state.bracketData);
+      if (c && state.classified.length > 0) render(c, state.classified);
     },
     stop: () => {
-      if (animationId) {
-        cancelAnimationFrame(animationId);
-        animationId = null;
-      }
-      if (renderer) {
-        renderer.dispose();
-        renderer = null;
-      }
+      if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
+      if (renderer) { renderer.dispose(); renderer = null; }
     },
   };
 })();
