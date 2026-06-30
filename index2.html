@@ -2665,12 +2665,13 @@ function renderBracket(events, standingsData) {
   const savedFav2 = localStorage.getItem('bracketFav2') || '';
 
     // Simula os resultados
-  var r16raw, qf, sf;
+  var r16raw, r16, qf, sf;
+  var r16Order = [0,1,4,5,2,3,6,7];
+  var qfOrder = [0,2,1,3];
   
   if (savedFav && savedFav2) {
     r16raw = simulateRound(round32, savedFav);
-    const r16Order = [0,1,4,5,2,3,6,7];
-    const r16 = r16Order.map(i => r16raw[i]).filter(Boolean);
+    r16 = r16Order.map(i => r16raw[i]).filter(Boolean);
     
     var qfMatches = [];
     if (r16[0] && r16[1]) qfMatches.push({ a: simulateWinnerFav(r16[0], savedFav, scoreMap), b: simulateWinnerFav(r16[1], savedFav, scoreMap) });
@@ -2678,7 +2679,6 @@ function renderBracket(events, standingsData) {
     if (r16[4] && r16[5]) qfMatches.push({ a: simulateWinnerFav(r16[4], savedFav, scoreMap), b: simulateWinnerFav(r16[5], savedFav, scoreMap) });
     if (r16[6] && r16[7]) qfMatches.push({ a: simulateWinnerFav(r16[6], savedFav2, scoreMap), b: simulateWinnerFav(r16[7], savedFav2, scoreMap) });
     
-    const qfOrder = [0,2,1,3];
     qf = qfOrder.map(i => qfMatches[i]).filter(Boolean);
     
     var sfMatches = [];
@@ -2687,10 +2687,8 @@ function renderBracket(events, standingsData) {
     sf = sfMatches;
   } else {
     r16raw = simulateRound(round32, savedFav);
-    const r16Order = [0,1,4,5,2,3,6,7];
-    const r16 = r16Order.map(i => r16raw[i]).filter(Boolean);
-    const qfRaw = simulateRound(r16, savedFav);
-    const qfOrder = [0,2,1,3];
+    r16 = r16Order.map(i => r16raw[i]).filter(Boolean);
+    var qfRaw = simulateRound(r16, savedFav);
     qf = qfOrder.map(i => qfRaw[i]).filter(Boolean);
     sf = simulateRound(qf, savedFav);
   }
