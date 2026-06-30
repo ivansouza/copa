@@ -1,4 +1,4 @@
-const CACHE = 'copa2026-v4';
+const CACHE = 'copa2026-v5';
 const ASSETS = [
   '/copa/',
   '/copa/index.html',
@@ -33,8 +33,8 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // Arte Visual, index3 e indexbkp: sempre da rede (evita cache problemático)
-  if (e.request.url.includes('arte-visual') || e.request.url.includes('index3') || e.request.url.includes('indexbkp')) {
+  // Caminho da Copa, indexbkp: sempre da rede (evita cache problemático)
+  if (e.request.url.includes('indexbkp')) {
     e.respondWith(fetch(e.request));
     return;
   }
