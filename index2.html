@@ -1740,7 +1740,6 @@ function setFavorite(abbr, name) {
 function highlightPossibleRivals(chosenAbbr) {
   // Pega todos os times NÃO eliminados que não são o escolhido
   var sm = window.__scoreMap || {};
-  var possibleRivals = [];
   
   document.querySelectorAll('.fav-btn').forEach(function(b) {
     var ab = b.dataset.abbr;
@@ -1749,45 +1748,7 @@ function highlightPossibleRivals(chosenAbbr) {
     // Verifica se não está eliminado
     var s = sm[ab];
     if (s && s.lost) return;
-    possibleRivals.push(ab);
-  });
-  
-  // Se não tem bracket cacheado, todos os não-eliminados são rivais possíveis
-  // Se tem bracket, tenta filtrar apenas os do lado oposto
-  var bd = window.__bracketCache || null;
-  if (bd && bd.r16 && bd.r16.length > 0) {
-    // Tenta descobrir de que lado o time escolhido está
-    var chosenSide = null;
-    for (var i = 0; i < bd.r16.length; i++) {
-      var m = bd.r16[i];
-      if (m && m.a && m.a.abbr === chosenAbbr || (m && m.b && m.b.abbr === chosenAbbr)) {
-        chosenSide = (i < 4) ? 'left' : 'right';
-        break;
-      }
-    }
-    
-    if (chosenSide) {
-      var rivalSide = chosenSide === 'left' ? 'right' : 'left';
-      var rivalIndices = rivalSide === 'left' ? [0,1,4,5] : [2,3,6,7];
-      var sideRivals = [];
-      rivalIndices.forEach(function(idx) {
-        var m = bd.r16[idx];
-        if (m && m.a && m.a.abbr) sideRivals.push(m.a.abbr);
-        if (m && m.b && m.b.abbr) sideRivals.push(m.b.abbr);
-      });
-      // Filtra apenas os que estão no lado oposto
-      possibleRivals = possibleRivals.filter(function(ab) {
-        return sideRivals.includes(ab);
-      });
-    }
-  }
-  
-  // Faz os botões dos possíveis rivais piscarem
-  document.querySelectorAll('.fav-btn').forEach(function(b) {
-    var ab = b.dataset.abbr;
-    if (ab && possibleRivals.includes(ab)) {
-      b.classList.add('blink');
-    }
+    b.classList.add('blink');
   });
   
   // Mostra instrução
