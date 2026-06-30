@@ -2661,14 +2661,19 @@ function renderBracket(events, standingsData) {
   var r16Order = [0,1,4,5,2,3,6,7];
   var qfOrder = [0,2,1,3];
   
-  // Função que simula um match dando vantagem para QUALQUER um dos favoritos
+  // Função que simula um match garantindo que os favoritos avancem
   function simulateWithFavs(match, fav1, fav2) {
     if (!match || !match.a || !match.b) return null;
-    // Tenta o primeiro favorito
-    var w = simulateWinnerFav(match, fav1, scoreMap);
-    // Se o primeiro não está no match, tenta o segundo
-    if (w === match.a || w === match.b) return w;
-    return simulateWinnerFav(match, fav2, scoreMap);
+    // Se o favorito 1 está no match, ele vence
+    if (match.a.abbr === fav1 || match.b.abbr === fav1) {
+      return simulateWinnerFav(match, fav1, scoreMap);
+    }
+    // Se o favorito 2 está no match, ele vence
+    if (match.a.abbr === fav2 || match.b.abbr === fav2) {
+      return simulateWinnerFav(match, fav2, scoreMap);
+    }
+    // Nenhum favorito no match: simula normal
+    return simulateWinner(match, scoreMap);
   }
   
   if (savedFav && savedFav2) {
