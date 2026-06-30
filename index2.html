@@ -1731,8 +1731,9 @@ function setFavorite(abbr, name) {
     document.querySelectorAll('.fav-btn[data-abbr="'+abbr+'"]').forEach(b => b.classList.add('active'));
     
     // Re-renderiza o bracket com os dois finalistas
-    const btn = document.querySelector('[data-section="bracket"]');
-    if (btn) btn.click();
+    if (window.standingsCache) {
+      renderBracket(allGames || [], standingsCache);
+    }
   }
 }
 
