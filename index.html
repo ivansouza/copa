@@ -1052,6 +1052,9 @@ function renderLiveCards() {
     const clock = st === 'live' ? (g.competitions?.[0]?.status?.displayClock||'') : '✅ Encerrado';
     const ven = g.competitions?.[0]?.venue?.fullName||'';
 
+    // Verifica penaltis
+    const penInfo = penaltisByGame[g.id];
+    const hasPenaltis = penInfo && (penInfo.home > 0 || penInfo.away > 0);
     // Header do jogo: Time A X Time B, placar e tempo
     h += '<div style="background:linear-gradient(145deg,#1e293b,#1a2332);border:1px solid #22c55e44;border-radius:12px;padding:1rem;margin-bottom:1rem;">';
     h += '<div style="display:flex;align-items:center;justify-content:center;gap:12px;padding:.6rem 0;border-bottom:1px solid #2d3a4e;margin-bottom:1rem;">';
@@ -1064,9 +1067,6 @@ function renderLiveCards() {
     h += '<span class="'+(aw?'s':'')+'" style="font-weight:800;font-size:1.3rem;color:#f59e0b;">'+(as!==''&&as!==null?as:'-')+'</span>';
     h += '<div class="'+(aw?'lwp':'')+'" style="display:flex;align-items:center;gap:6px;"><span class="n" style="font-weight:700;font-size:.9rem;">'+an+'</span><img class="flag" src="'+flagUrl(aa)+'" alt="" style="width:24px;height:16px;border-radius:2px;" loading="lazy" onerror="this.style.display=\'none\'"></div>';
     h += '</div>';
-        // Verifica penaltis
-    const penInfo = penaltisByGame[g.id];
-    const hasPenaltis = penInfo && (penInfo.home > 0 || penInfo.away > 0);
     h += '<div style="text-align:center;font-size:.8rem;color:'+(hasPenaltis?'#ef4444':'#22c55e')+';font-weight:600;margin-bottom:1rem;">🔴 '+(clock||'Ao vivo')+(ven?' • 📍 '+ven:'')+(hasPenaltis?' • ⚠️ Penaltis: '+penInfo.home+'×'+penInfo.away:'')+'</div>';
     if (hasPenaltis) {
       h += '<div style="text-align:center;padding:.4rem;margin-bottom:.8rem;background:#2a1a1a;border:1px solid #ef444444;border-radius:8px;">';
