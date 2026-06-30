@@ -2616,9 +2616,9 @@ function renderBracket(events, standingsData) {
     return winners;
   }
 
-  // Pega os finalistas escolhidos
-  const savedFav = (window.selectedFinalists && window.selectedFinalists.a) ? window.selectedFinalists.a.abbr : '';
-  const savedFav2 = (window.selectedFinalists && window.selectedFinalists.b) ? window.selectedFinalists.b.abbr : '';
+  // Pega os finalistas do localStorage
+  const savedFav = localStorage.getItem('bracketFav') || '';
+  const savedFav2 = localStorage.getItem('bracketFav2') || '';
 
     // Simula os resultados
   var r16raw, r16, qf, sf;
