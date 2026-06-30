@@ -70,4 +70,21 @@ Acesse **[https://ivansouza.github.io/copa/](https://ivansouza.github.io/copa/)*
 
 ---
 
+## 📜 Changelog
+
+### 30/06/2026
+- 🐛 **Correção**: Times eliminados não avançam mais no bracket com favorito
+- 📝 **Texto**: Cazé TV e BMC revisados para maior precisão
+- 📲 **PWA**: Botão de instalação e cache do SW incrementado (v3)
+- 🔍 **SEO**: Meta tags Open Graph e Twitter Card
+- ⏱️ **UX**: Última atualização com data e hora completas
+- 📖 **Docs**: README convertido para Markdown puro
+- 🧹 **SW**: Filtro de API atualizado de worldcup26.ir para espn.com
+- 💬 **UX**: Mensagens de carregamento mais descritivas
+
+### Anteriores
+- Versão inicial com grupos, fase final, jogos e estatísticas via ESPN API
+
+---
+
 Feito com 🐶 por [Ivan Souza](https://github.com/ivansouza) e **ZePequeno**
