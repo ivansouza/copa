@@ -1,6 +1,6 @@
 <div align="center">
   <h1>🏆 Copa do Mundo 2026</h1>
-  <p><strong>Tabela de grupos, fase final e jogos ao vivo</strong></p>
+  <p><strong>Tabela de grupos, fase final, estatísticas e jogos ao vivo</strong></p>
   <p>
     <a href="https://ivansouza.github.io/copa/">📱 Acessar o App</a>
   </p>
@@ -14,18 +14,23 @@
 
 Aplicativo web progressivo (PWA) com a tabela completa da **Copa do Mundo FIFA 2026** — Estados Unidos, México e Canadá.
 
-Dados em tempo real via [worldcup26.ir](https://worldcup26.ir), sem necessidade de cadastro ou chave de API.
+Dados em tempo real via **ESPN API**, sem necessidade de cadastro ou chave de API.
 
 ## ✨ Funcionalidades
 
 | | |
 |---|---|
 | 📊 **Fase de Grupos** | 12 grupos (A-L) com classificação, pontos, saldo de gols |
-| 🏅 **Fase Final** | Bracket visual com Segunda Fase, Oitavas, Quartas, Semi e Final |
-| 📅 **Jogos** | Todos os jogos futuros com data, horário de Brasília e local |
-| ✅ **Encerrados** | Jogos já realizados com placar final |
-| 🔍 **Filtro** | Busque por qualquer time para ver apenas seus jogos |
+| 🏅 **Fase Final** | Bracket visual completo: Segunda Fase (32) → Oitavas → Quartas → Semi → Final |
+| 🌟 **Simulação de Favorito** | Escolha um time e veja o caminho simulado até a final |
+| 🚫 **Times Eliminados** | Times já eliminados ficam desabilitados e não avançam na simulação |
+| 📅 **Jogos** | Todos os jogos com data, horário de Brasília e local |
+| ✅ **Encerrados** | Jogos realizados com placar final, gols e autores |
 | 🔴 **Ao vivo** | Placar pulsante em verde para jogos em andamento |
+| 🔍 **Filtro** | Busque por qualquer time para ver apenas seus jogos |
+| 🎯 **Filtro por status** | Encerrados, ao vivo ou programados |
+| 📈 **Estatísticas** | Ataque, defesa, artilheiros e ranking de times |
+| 📺 **Cazé TV** | Jogos ao vivo que estão passando na Cazé TV |
 | 🔄 **Auto-atualização** | Dados atualizados a cada 3 minutos |
 | 📲 **PWA** | Instalável na tela inicial do celular |
 | 🌙 **Dark mode** | Tema escuro para não cansar a vista |
@@ -52,7 +57,7 @@ Acesse **[https://ivansouza.github.io/copa/](https://ivansouza.github.io/copa/)*
 - CSS Grid + Flexbox
 - Service Worker (cache offline de assets)
 - Web App Manifest (PWA)
-- API: [worldcup26.ir](https://worldcup26.ir)
+- API: [ESPN](https://www.espn.com/soccer/scoreboard)
 
 ## 📁 Estrutura
 
@@ -64,10 +69,6 @@ Acesse **[https://ivansouza.github.io/copa/](https://ivansouza.github.io/copa/)*
 ├── icon-512.png     # Ícone 512px
 └── icon.svg         # Ícone vetorial
 ```
-
-## 📦 Repositórios Relacionados
-
-- [Psico](https://github.com/ivansouza/Psico) — Versão original no repositório pessoal
 
 ---
 
