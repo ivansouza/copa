@@ -1946,7 +1946,27 @@ function renderStats() {
     if (cmp.length < 2) return;
     const s0 = parseInt(cmp[0].score)||0;
     const s1 = parseInt(cmp[1].score)||0;
-    if (s0 === s1) return;
+    // Se empatou, verifica se teve vencedor nos penaltis
+    if (s0 === s1) {
+      const w0 = cmp[0].winner === true;
+      const w1 = cmp[1].winner === true;
+      if (!w0 && !w1) return; // empate sem penaltis (fase de grupos)
+      const loserAbbr = w0 ? cmp[1].team?.abbreviation : cmp[0].team?.abbreviation;
+      if (loserAbbr && !lostTeams.has(loserAbbr)) {
+        lostTeams.add(loserAbbr);
+        let name = loserAbbr;
+        if (standingsCache && standingsCache.children) {
+          standingsCache.children.forEach(ch => {
+            (ch.standings?.entries||[]).forEach(e => {
+              const tm = e.team||{};
+              if (tm.abbreviation === loserAbbr) name = pt(tm.displayName||tm.name||loserAbbr);
+            });
+          });
+        }
+        eliminated32.push({ abbr: loserAbbr, name });
+      }
+      return;
+    }
     const loserAbbr = s0 < s1 ? cmp[0].team?.abbreviation : cmp[1].team?.abbreviation;
     if (loserAbbr && !lostTeams.has(loserAbbr)) {
       lostTeams.add(loserAbbr);
