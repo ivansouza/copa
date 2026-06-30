@@ -2361,8 +2361,8 @@ function renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events) {
   function isConfirmed(abbr){const s=scoreMap[abbr];return s&&(s.status==='final'||s.status==='completed'||s.status==='3'||s.status==='post');}
   function mc(a,b){if(!a||!b)return '<div class="bd-m bd-ph"><div class="t"><span class="nm">─</span></div></div>';const ca=isConfirmed(a.abbr);const cb=isConfirmed(b.abbr);const pa=ca?'':' <span class="pr">(P)</span>';const pb=cb?'':' <span class="pr">(P)</span>';return '<div class="bd-m"><div class="t"><img class="fl" src="'+flagUrl(a.abbr)+'" alt="" loading="lazy"><span class="nm">'+(a.name||'?')+'</span>'+pa+'</div><div class="v">✕</div><div class="t"><img class="fl" src="'+flagUrl(b.abbr)+'" alt="" loading="lazy"><span class="nm">'+(b.name||'?')+'</span>'+pb+'</div></div>'}
   let h='<div class="bd-wrap"><div class="bd">';
-  h+='<div class="bd-r"><div class="bd-rt">16 avos</div>';for(let i=0;i<PARES.length;i++){const g=PARES[i][0];h+=cd(g[0],g[1],g[2],g[3])}h+='</div>';
-  h+='<div class="bd-r"><div class="bd-rt">16 avos</div>';for(let i=0;i<PARES.length;i++){const g=PARES[i][1];h+=cd(g[0],g[1],g[2],g[3])}h+='</div>';
+  h+='<div class="bd-r"><div class="bd-rt">Segunda Fase (32)</div>';for(let i=0;i<PARES.length;i++){const g=PARES[i][0];h+=cd(g[0],g[1],g[2],g[3])}h+='</div>';
+  h+='<div class="bd-r"><div class="bd-rt">Segunda Fase (32)</div>';for(let i=0;i<PARES.length;i++){const g=PARES[i][1];h+=cd(g[0],g[1],g[2],g[3])}h+='</div>';
   h+='<div class="bd-r"><div class="bd-rt">Oitavas</div>';
   if(r16&&r16.length){for(let i=0;i<4;i++){const m=r16[i];h+=m?mc(m.a,m.b):tm()} }else{for(let i=0;i<4;i++)h+=tm()}
   h+='</div>';
