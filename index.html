@@ -542,6 +542,25 @@
   background: #c1121f;
   box-shadow: 0 0 12px rgba(230,57,70,0.4);
 }
+.install-btn {
+  background: #1e293b;
+  color: #4ade80;
+  border: 1px solid #22c55e;
+  border-radius: 8px;
+  padding: 6px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+.install-btn:hover {
+  background: #22c55e22;
+  box-shadow: 0 0 10px rgba(34,197,94,0.3);
+}
+.install-btn.hidden {
+  display: none;
+}
 .bmc-overlay {
   display: none;
   position: fixed;
@@ -620,6 +639,7 @@
       <p>Dados via ESPN API • Grupos & Mata-Mata</p>
       <div class="last-update"><span class="live-dot"></span>Atualizando a cada 3 min • <span id="updateTime">—</span></div>
     </div>
+    <button class="install-btn hidden" id="installBtn" onclick="installPWA()">📲 Instalar</button>
     <a href="#" class="bmc-btn" onclick="event.preventDefault(); openBMC();" style="flex-shrink:0">BMC</a>
   </div>
   </header>
@@ -2789,6 +2809,28 @@ setInterval(loadAll, REFRESH_MS);
 // Service Worker
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/copa/sw.js');
+}
+
+let deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('installBtn').classList.remove('hidden');
+});
+
+window.addEventListener('appinstalled', () => {
+  deferredPrompt = null;
+  document.getElementById('installBtn').classList.add('hidden');
+});
+
+function installPWA() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(() => {
+    deferredPrompt = null;
+    document.getElementById('installBtn').classList.add('hidden');
+  });
 }
 
 function openBMC() {
