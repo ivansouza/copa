@@ -342,6 +342,8 @@
   .fav-btn:hover{border-color:#d4a017;color:#f0d060}
   .fav-btn.active{background:#d4a017;border-color:#d4a017;color:#0f1a0f;font-weight:700}
   .fav-btn .fl{width:14px;height:10px;border-radius:1.5px;flex:none}
+  .fav-btn.blink { animation: blink-fav 0.8s ease-in-out infinite; }
+  @keyframes blink-fav { 0%,100% { background: #f59e0b44; border-color: #f59e0b; } 50% { background: #f59e0b22; border-color: #f59e0b66; } }
   .fav-btn.clear{color:#64748b;font-size:10px}
   .fav-btn.clear:hover{color:#ef4444;border-color:#ef4444}
   .fav-btn.disabled{opacity:0.4;cursor:not-allowed;border-color:#1e293b;background:#162316;color:#475569}
@@ -1679,17 +1681,133 @@ function simulateWinnerFav(match, favAbbr, sm) {
   return simulateWinner(match, sm);
 }
 
+// Estado dos finalistas escolhidos
+var selectedFinalists = { a: null, b: null };
+
 function setFavorite(abbr, name) {
-  localStorage.setItem('bracketFav', abbr);
-  // Atualiza o texto do botão ativo
-  document.querySelectorAll('.fav-btn').forEach(b => b.classList.remove('active'));
-  if (abbr) {
+  if (!abbr) {
+    // Limpar: reseta tudo
+    selectedFinalists = { a: null, b: null };
+    localStorage.removeItem('bracketFav');
+    localStorage.removeItem('bracketFav2');
+    document.querySelectorAll('.fav-btn').forEach(b => b.classList.remove('active', 'blink'));
+    document.querySelectorAll('.fav-btn').forEach(b => b.classList.remove('active'));
+    const btn = document.querySelector('[data-section="bracket"]');
+    if (btn) btn.click();
+    return;
+  }
+  
+  // Se já tem dois finalistas escolhidos, reseta
+  if (selectedFinalists.a && selectedFinalists.b) {
+    selectedFinalists = { a: null, b: null };
+    localStorage.removeItem('bracketFav2');
+  }
+  
+  // Se não tem primeiro finalista, escolhe este
+  if (!selectedFinalists.a) {
+    selectedFinalists.a = { abbr: abbr, name: name };
+    localStorage.setItem('bracketFav', abbr);
+    
+    // Destaca o botão escolhido
+    document.querySelectorAll('.fav-btn').forEach(b => b.classList.remove('active', 'blink'));
     const btn = document.querySelector('.fav-btn[data-abbr="'+abbr+'"]');
     if (btn) btn.classList.add('active');
+    
+    // Calcula possíveis adversários na final
+    // Usa o bracket atual para determinar quem pode chegar à final
+    highlightPossibleRivals(abbr);
+    return;
   }
-  // Re-renderiza o bracket
-  const btn = document.querySelector('[data-section="bracket"]');
-  if (btn) btn.click();
+  
+  // Se já tem primeiro finalista, este é o segundo
+  if (!selectedFinalists.b) {
+    selectedFinalists.b = { abbr: abbr, name: name };
+    localStorage.setItem('bracketFav2', abbr);
+    
+    // Para de piscar
+    document.querySelectorAll('.fav-btn').forEach(b => b.classList.remove('blink'));
+    document.querySelectorAll('.fav-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.fav-btn[data-abbr="'+selectedFinalists.a.abbr+'"]').forEach(b => b.classList.add('active'));
+    document.querySelectorAll('.fav-btn[data-abbr="'+abbr+'"]').forEach(b => b.classList.add('active'));
+    
+    // Re-renderiza o bracket com os dois finalistas
+    const btn = document.querySelector('[data-section="bracket"]');
+    if (btn) btn.click();
+  }
+}
+
+function highlightPossibleRivals(chosenAbbr) {
+  // Pega o bracket cacheado
+  var bd = window.__bracketCache || null;
+  if (!bd || !bd.round32) return;
+  
+  // Simula o bracket para descobrir quem pode enfrentar o time escolhido na final
+  var sm = window.__scoreMap || {};
+  
+  // Encontra em qual match da Segunda Fase o time está
+  var chosenMatch = null;
+  var chosenSide = null; // 'left' or 'right' (lado do bracket)
+  
+  // O bracket tem dois lados: left (matches 89,90,93,94) e right (91,92,95,96)
+  // Precisamos descobrir de que lado o time escolhido está
+  function findTeamSide(abbr, matches) {
+    for (var i = 0; i < matches.length; i++) {
+      var m = matches[i];
+      if (!m || !m.a || !m.b) continue;
+      if (m.a.abbr === abbr || m.b.abbr === abbr) {
+        // Lado esquerdo: índices 0,1,4,5 (r16Order)
+        // Lado direito: índices 2,3,6,7
+        if (i < 4) return 'left';
+        else return 'right';
+      }
+    }
+    return null;
+  }
+  
+  var side = findTeamSide(chosenAbbr, bd.r16);
+  if (!side) return;
+  
+  // O adversário na final vem do lado oposto
+  var rivalSide = side === 'left' ? 'right' : 'left';
+  
+  // Pega os times do lado oposto que podem chegar à final
+  var possibleRivals = [];
+  var rivalIndices = rivalSide === 'left' ? [0,1,4,5] : [2,3,6,7];
+  
+  rivalIndices.forEach(function(idx) {
+    var m = bd.r16[idx];
+    if (m && m.a && m.a.abbr) {
+      // Verifica se o time não está eliminado
+      var sa = sm[m.a.abbr];
+      if (!sa || !sa.lost) {
+        possibleRivals.push(m.a.abbr);
+      }
+    }
+    if (m && m.b && m.b.abbr) {
+      var sb = sm[m.b.abbr];
+      if (!sb || !sb.lost) {
+        possibleRivals.push(m.b.abbr);
+      }
+    }
+  });
+  
+  // Faz os botões dos possíveis rivais piscarem
+  document.querySelectorAll('.fav-btn').forEach(function(b) {
+    var ab = b.dataset.abbr;
+    if (ab && possibleRivals.includes(ab)) {
+      b.classList.add('blink');
+    }
+  });
+  
+  // Mostra instrução
+  var instrucao = document.getElementById('favInstruction');
+  if (!instrucao) {
+    instrucao = document.createElement('div');
+    instrucao.id = 'favInstruction';
+    instrucao.style.cssText = 'text-align:center;font-size:.75rem;color:#f59e0b;margin-top:8px;font-weight:600;';
+    document.getElementById('favSection')?.appendChild(instrucao);
+  }
+  instrucao.textContent = 'Agora escolha o adversário na final (times piscando)';
 }
 
 function isMathematicallyEliminated(t, teamPosition, allThird, standingsData) {
@@ -2510,7 +2628,7 @@ function renderBracket(events, standingsData) {
     existingEvents[st].push(e);
   });
 
-  // Função para simular uma rodada (com favorito opcional)
+  // Função para simular uma rodada (com favoritos opcionais)
   function simulateRound(matches, fav) {
     const winners = [];
     for (let i = 0; i < matches.length; i += 2) {
@@ -2525,9 +2643,26 @@ function renderBracket(events, standingsData) {
     }
     return winners;
   }
+  
+  // Função para simular com dois finalistas específicos
+  function simulateRoundWithFinalists(matches, fav1, fav2) {
+    const winners = [];
+    for (let i = 0; i < matches.length; i += 2) {
+      const m1 = matches[i];
+      const m2 = matches[i+1];
+      if (!m1 || !m2) break;
+      const w1 = fav1 ? simulateWinnerFav(m1, fav1, scoreMap) : simulateWinner(m1, scoreMap);
+      const w2 = fav2 ? simulateWinnerFav(m2, fav2, scoreMap) : simulateWinner(m2, scoreMap);
+      if (w1 && w2) {
+        winners.push({ a: w1, b: w2 });
+      }
+    }
+    return winners;
+  }
 
-  // Pega o favorito salvo
+  // Pega os finalistas salvos
   const savedFav = localStorage.getItem('bracketFav') || '';
+  const savedFav2 = localStorage.getItem('bracketFav2') || '';
 
   // Simula os resultados
   const r16raw = simulateRound(round32, savedFav);
