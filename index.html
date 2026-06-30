@@ -928,7 +928,10 @@ function extractGoals(gameData) {
 let standingsCache = null;
 
 async function loadAll() {
-  document.getElementById('updateTime').textContent = new Date().toLocaleTimeString('pt-BR',{timeZone:'America/Sao_Paulo'});
+  const now = new Date();
+  const dia = now.toLocaleDateString('pt-BR', {timeZone:'America/Sao_Paulo'});
+  const hora = now.toLocaleTimeString('pt-BR', {timeZone:'America/Sao_Paulo'});
+  document.getElementById('updateTime').textContent = dia + ' às ' + hora;
   try {
     // Standings
     const stRes = await fetch(ESPN_ST + '?_=' + Date.now());

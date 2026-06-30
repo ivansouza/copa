@@ -1,12 +1,10 @@
-<div align="center">
-  <h1>🏆 Copa do Mundo 2026</h1>
-  <p><strong>Tabela de grupos, fase final, estatísticas e jogos ao vivo</strong></p>
-  <p>
-    <a href="https://ivansouza.github.io/copa/">📱 Acessar o App</a>
-  </p>
-  <br>
-  <img src="icon-512.png" width="120" alt="Ícone Copa 2026">
-</div>
+# 🏆 Copa do Mundo 2026
+
+**Tabela de grupos, fase final, estatísticas e jogos ao vivo**
+
+[📱 Acessar o App](https://ivansouza.github.io/copa/)
+
+![Ícone Copa 2026](icon-512.png)
 
 ---
 
@@ -72,6 +70,4 @@ Acesse **[https://ivansouza.github.io/copa/](https://ivansouza.github.io/copa/)*
 
 ---
 
-<div align="center">
-  <p>Feito com 🐶 por <a href="https://github.com/ivansouza">Ivan Souza</a> e <strong>ZePequeno</strong></p>
-</div>
+Feito com 🐶 por [Ivan Souza](https://github.com/ivansouza) e **ZePequeno**
