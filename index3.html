@@ -7,16 +7,6 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Copa 2026">
-<meta name="description" content="Acompanhe a Copa do Mundo 2026 ao vivo: grupos, fase final, jogos, estatísticas e simulação de chaveamento. Dados via ESPN API.">
-<meta property="og:title" content="Copa do Mundo 2026">
-<meta property="og:description" content="Grupos, fase final, jogos ao vivo e estatísticas da Copa 2026. Simule o caminho do seu time até a final!">
-<meta property="og:image" content="https://ivansouza.github.io/copa/icon-512.png">
-<meta property="og:url" content="https://ivansouza.github.io/copa/">
-<meta property="og:type" content="website">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Copa do Mundo 2026">
-<meta name="twitter:description" content="Grupos, fase final, jogos ao vivo e estatísticas da Copa 2026.">
-<meta name="twitter:image" content="https://ivansouza.github.io/copa/icon-512.png">
 <link rel="manifest" href="/copa/manifest.json">
 <link rel="apple-touch-icon" href="/copa/icon-192.png">
 <title>Copa do Mundo 2026 — ESPN API</title>
@@ -36,6 +26,7 @@
   }
 }
 </script>
+
 
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
@@ -226,13 +217,6 @@
     padding-top: 4px;
     border-top: 1px solid #1e293b;
   }
-  .bracket-match .match-venue {
-    font-size: .6rem;
-    color: #475569;
-    text-align: center;
-    padding-top: 2px;
-  }
-  }
   .bracket-match.pending {
     opacity: .5;
   }
@@ -251,14 +235,6 @@
     border-style: dashed;
   }
   .bracket-match.probable .match-label {
-    color: #f59e0b;
-  }
-  .bracket-match.live {
-    border-color: #f59e0b88;
-    background: linear-gradient(145deg, #2a2520, #2a2018);
-    box-shadow: 0 0 12px rgba(245,158,11,0.15);
-  }
-  .bracket-match.live .match-label {
     color: #f59e0b;
   }
   .bracket-probable {
@@ -310,13 +286,10 @@
 
   .loading-state, .error-state { grid-column: 1 / -1; text-align: center; padding: 4rem 2rem; }
   .loading-state .spinner { width: 40px; height: 40px; border: 3px solid #2d3a4e; border-top-color: #f59e0b; border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 1rem; }
-  .loading-state p { color: #94a3b8; font-size: .85rem; }
   @keyframes spin { to { transform: rotate(360deg); } }
   .error-state { color: #f87171; }
   .error-state .retry-btn { margin-top: 1rem; padding: .6rem 1.5rem; background: #3b82f6; color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background .2s; }
   .error-state .retry-btn:hover { background: #2563eb; }
-  .skeleton { background: linear-gradient(90deg, #1e293b 25%, #2d3a4e 50%, #1e293b 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
-  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
   .games-section { margin-top: 1rem; }
   .live-section { margin-top: 1rem; }
   /* ── bracket diagram ── */
@@ -334,7 +307,6 @@
   .bd-m .t .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .bd-m .t .sc{font-family:ui-monospace,monospace;font-size:8px;font-weight:700;color:#f0d060;margin-left:2px;flex:none}
   .bd-m .v{text-align:center;font-size:6px;color:#64748b;border-top:1px solid #334155;padding-top:1px;margin-top:1px;line-height:1}
-  .bd-m.live{background:#2a2520;border-color:#f59e0b88;box-shadow:0 0 8px rgba(245,158,11,0.12)}
   .bd-m.confirmed{background:#2a3a1a;border-color:#d4a01766}
   .bd-m.confirmed .t .nm{color:#f0d060}
   .bd-m .t .pr{font-size:7px;color:#64748b;font-style:italic;flex:none}
@@ -426,21 +398,6 @@
     0%, 100% { box-shadow: 0 0 10px rgba(245,158,11,0.4), 0 0 20px rgba(245,158,11,0.15); }
     50% { box-shadow: 0 0 18px rgba(245,158,11,0.7), 0 0 36px rgba(245,158,11,0.3); }
   }
-  .bracket-match .team-row.winner-pen {
-    animation: pulse-glow-red 1.5s infinite;
-  }
-  .bracket-match .team-row.winner-pen .team-info .name {
-    color: #ef4444;
-    font-weight: 800;
-  }
-  @keyframes pulse-glow-red {
-    0%, 100% { text-shadow: 0 0 8px rgba(239,68,68,0.6); }
-    50% { text-shadow: 0 0 20px rgba(239,68,68,1), 0 0 40px rgba(239,68,68,0.4); }
-  }
-  .lwp { animation: lpr 1.5s infinite; }
-  .lwp .n { color:#ef4444!important; font-weight:800!important; }
-  .lwp .s { color:#ef4444!important; font-weight:800!important; }
-  @keyframes lpr { 0%,100%{text-shadow:0 0 8px rgba(239,68,68,0.6)} 50%{text-shadow:0 0 20px rgba(239,68,68,1),0 0 40px rgba(239,68,68,0.4)} }
   @media (max-width: 600px) {
     .classified-grid { grid-template-columns: repeat(2, 1fr); }
   }
@@ -564,25 +521,6 @@
   background: #c1121f;
   box-shadow: 0 0 12px rgba(230,57,70,0.4);
 }
-.install-btn {
-  background: #1e293b;
-  color: #4ade80;
-  border: 1px solid #22c55e;
-  border-radius: 8px;
-  padding: 6px 16px;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.2s;
-}
-.install-btn:hover {
-  background: #22c55e22;
-  box-shadow: 0 0 10px rgba(34,197,94,0.3);
-}
-.install-btn.hidden {
-  display: none;
-}
 .bmc-overlay {
   display: none;
   position: fixed;
@@ -661,20 +599,16 @@
       <p>Dados via ESPN API • Grupos & Mata-Mata</p>
       <div class="last-update"><span class="live-dot"></span>Atualizando a cada 3 min • <span id="updateTime">—</span></div>
     </div>
-    <button class="install-btn hidden" id="installBtn" onclick="installPWA()">📲 Instalar</button>
     <a href="#" class="bmc-btn" onclick="event.preventDefault(); openBMC();" style="flex-shrink:0">BMC</a>
   </div>
   </header>
 
   <div class="nav-bar">
     <button class="nav-btn" data-section="bracket">🏅 Mata-Mata</button>
-    <button class="nav-btn" data-section="livecards">🃏 Ao Vivo e Encerrados</button>
     <button class="nav-btn" data-section="groups">📊 Grupos</button>
     <button class="nav-btn" data-section="games">📅 Jogos</button>
     <button class="nav-btn" data-section="stats">📈 Estatísticas</button>
-    <button class="nav-btn" data-section="live">📺 Ao Vivo na Cazé TV</button>
-    <button class="nav-btn" data-section="artevisual">🎨 Arte Visual</button>
-    <button class="nav-btn" data-section="artevisual">🎨 Arte Visual</button>
+    <button class="nav-btn" data-section="live">📺 Ao Vivo</button>
   </div>
 
   <div id="section-groups" class="section-content" style="display:none">
@@ -689,7 +623,7 @@
       <span><b>GC</b>: Gols Contra</span>
       <span><b>SG</b>: Saldo de Gols</span>
     </div>
-    <div id="groups-container"><div class="loading-state"><div class="spinner"></div><p>📊 Buscando classificação dos grupos...</p></div></div>
+    <div id="groups-container"><div class="loading-state"><div class="spinner"></div><p>Carregando grupos...</p></div></div>
   </div>
 
   <div id="section-bracket" class="section-content">
@@ -702,7 +636,7 @@
       <div class="fav-title">🌟 Qual time você quer na final?</div>
       <div class="fav-grid" id="favGrid"></div>
     </div>
-    <div id="bracket-container"><div class="loading-state"><div class="spinner"></div><p>🏅 Montando chaveamento da fase final...</p></div></div>
+    <div id="bracket-container"><div class="loading-state"><div class="spinner"></div><p>Carregando bracket...</p></div></div>
   </div>
 
   <div id="section-games" class="section-content" style="display:none">
@@ -715,12 +649,12 @@
     </div>
     <div id="dateNav" class="date-nav"></div>
     <div id="gameCount" class="game-count"></div>
-    <div id="games-container"><div class="loading-state"><div class="spinner"></div><p>📅 Carregando agenda de jogos...</p></div></div>
+    <div id="games-container"><div class="loading-state"><div class="spinner"></div><p>Carregando jogos...</p></div></div>
   </div>
 
   <div id="section-stats" class="section-content" style="display:none">
     <div class="section-title">📈 Estatísticas <span class="bar"></span></div>
-    <div id="stats-container"><div class="loading-state"><div class="spinner"></div><p>📈 Calculando estatísticas dos times...</p></div></div>
+    <div id="stats-container"><div class="loading-state"><div class="spinner"></div><p>Carregando estatísticas...</p></div></div>
   </div>
 
   <div id="section-live" class="section-content" style="display:none">
@@ -743,27 +677,10 @@
           </div>
         </a>
         <div style="padding:.8rem 0 0;font-size:.78rem;color:#64748b;text-align:center;">
-          📡 Acompanhe transmissões, reacts e conteúdos ao vivo da Cazé TV no YouTube
+          📡 Transmissão ao vivo da Cazé TV — todos os jogos da Copa 2026 gratuitamente
         </div>
       </div>
     </div>
-  </div>
-
-  <div id="section-artevisual" class="section-content" style="display:none">
-    <div class="section-title">🎨 Arte Visual <span class="bar"></span></div>
-    <div style="font-size:.75rem;color:#64748b;margin-bottom:12px;text-align:center;">Visualização 3D dos classificados — arraste para girar</div>
-    <div id="arte-visual-container" style="width:100%;height:calc(100vh - 200px);min-height:500px;position:relative;"><div class="loading-state" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)"><div class="spinner"></div><p>🎨 Carregando visualização 3D...</p></div></div>
-  </div>
-
-  <div id="section-livecards" class="section-content" style="display:none">
-    <div class="section-title">🃏 Ao Vivo e Encerrados <span class="bar"></span></div>
-    <div id="livecards-container"><div class="loading-state"><div class="spinner"></div><p>🃏 Buscando jogos ao vivo e encerrados...</p></div></div>
-  </div>
-
-  <div id="section-artevisual" class="section-content" style="display:none">
-    <div class="section-title">🎨 Arte Visual <span class="bar"></span></div>
-    <div style="font-size:.75rem;color:#64748b;margin-bottom:12px;text-align:center;">Visualização circular dos 32 classificados — clique em uma bandeira para destacar o caminho</div>
-    <div id="arte-visual-container"><div class="loading-state"><div class="spinner"></div><p>🎨 Preparando visualização circular...</p></div></div>
   </div>
 </div>
 
@@ -776,7 +693,7 @@ const PT_NAMES = {
   'Mexico':'México','South Korea':'Coreia do Sul','Czech Republic':'Tchéquia','South Africa':'África do Sul',
   'Canada':'Canadá','Switzerland':'Suíça','Bosnia and Herzegovina':'Bósnia','Qatar':'Catar',
   'Brazil':'Brasil','Morocco':'Marrocos','Scotland':'Escócia','Haiti':'Haiti',
-  'USA':'Estados Unidos','United States':'Estados Unidos','Australia':'Austrália','Paraguay':'Paraguai','Türkiye':'Turquia',
+  'USA':'Estados Unidos','Australia':'Austrália','Paraguay':'Paraguai','Türkiye':'Turquia',
   'Germany':'Alemanha','Ivory Coast':'Costa do Marfim','Ecuador':'Equador','Curaçao':'Curaçau',
   'Netherlands':'Holanda','Japan':'Japão','Sweden':'Suécia','Tunisia':'Tunísia',
   'New Zealand':'Nova Zelândia','Iran':'Irã','Belgium':'Bélgica','Egypt':'Egito',
@@ -901,7 +818,7 @@ function getStatus(e) {
   const t = e.status?.type;
   if (!t) return 'scheduled';
   const desc = (t.description||'').toLowerCase();
-  if (t.id==='2'||desc==='in progress'||desc==='first half'||desc==='second half'||desc==='half time'||desc==='halftime'||desc==='extra time'||desc==='overtime'||desc==='end of extra time'||desc==='penalty'||desc==='penalty shootout'||desc==='shootout') return 'live';
+  if (t.id==='2'||desc==='in progress'||desc==='first half'||desc==='second half'||desc==='half time'||desc==='halftime'||desc==='extra time'||desc==='penalty') return 'live';
   if (t.id==='3'||t.completed||desc==='full time'||desc==='final'||desc==='finished') return 'final';
   return 'scheduled';
 }
@@ -931,43 +848,10 @@ async function fetchDateGames(dateStr) {
   return data.events || [];
 }
 
-function extractGoals(gameData) {
-  // Extrai gols do scoreboard da ESPN (campo details)
-  const goals = [];
-  if (!gameData) return goals;
-  const comp = gameData.competitions?.[0]||{};
-  // Mapa de team.id -> team.abbreviation
-  const teamMap = {};
-  (comp.competitors||[]).forEach(c => {
-    if (c.team?.id && c.team?.abbreviation) teamMap[c.team.id] = c.team.abbreviation;
-  });
-  // Os gols estão em details (array dentro do próprio scoreboard)
-  const details = comp.details || [];
-  details.forEach(d => {
-    if (!d.scoringPlay || d.type?.text === 'Yellow Card' || d.type?.text === 'Red Card' || d.type?.text === 'Card') return;
-    const clock = d.clock?.displayValue || '';
-    const teamId = d.team?.id || '';
-    const teamAbbr = teamMap[teamId] || '';
-    const athletes = d.athletesInvolved || [];
-    const scorer = athletes[0];
-    goals.push({
-      team: teamAbbr,
-      scorer: scorer?.displayName || '?',
-      assist: null,
-      minute: clock,
-      period: 0
-    });
-  });
-  return goals;
-}
-
 let standingsCache = null;
 
 async function loadAll() {
-  const now = new Date();
-  const dia = now.toLocaleDateString('pt-BR', {timeZone:'America/Sao_Paulo'});
-  const hora = now.toLocaleTimeString('pt-BR', {timeZone:'America/Sao_Paulo'});
-  document.getElementById('updateTime').textContent = dia + ' às ' + hora;
+  document.getElementById('updateTime').textContent = new Date().toLocaleTimeString('pt-BR',{timeZone:'America/Sao_Paulo'});
   try {
     // Standings
     const stRes = await fetch(ESPN_ST + '?_=' + Date.now());
@@ -993,196 +877,11 @@ async function loadAll() {
     renderDateNav(dates);
     renderGames();
     renderStats();
-    renderLiveCards();
   } catch(e) {
     document.querySelectorAll('.loading-state').forEach(el=>{
       el.innerHTML='<div class="error-state"><p>❌ Erro: '+e+'</p><button class="retry-btn" onclick="loadAll()">Tentar novamente</button></div>';
     });
   }
-}
-
-function renderLiveCards() {
-  const c = document.getElementById('livecards-container');
-  if (!c) return;
-
-  // Pega os jogos ao vivo
-  // Pega TODOS os jogos da Segunda Fase (round-of-32), ordenados por data decrescente
-  const r32Games = (allGames||[]).filter(g => {
-    const slug = (g.season?.slug || '');
-    if (slug !== 'round-of-32') return false;
-    // Só jogos que já aconteceram (ao vivo ou encerrados)
-    const st = getStatus(g);
-    return st === 'live' || st === 'final';
-  }).sort((a, b) => new Date(b.date) - new Date(a.date));
-  if (!r32Games.length) {
-    c.innerHTML = '<div class="error-state" style="text-align:center;padding:2rem;"><p>🔴 Nenhum jogo da Segunda Fase encontrado.</p></div>';
-    return;
-  }
-
-  // Extrai gols dos dados que já temos (allGames -> competitions[0].details)
-  const goalsByGame = {};
-  r32Games.forEach(g => {
-    const goals = extractGoals(g);
-    if (goals.length > 0) goalsByGame[g.id] = goals;
-  });
-
-  // Extrai penaltis dos detalhes de cada jogo
-  const penaltisByGame = {};
-  r32Games.forEach(g => {
-    const cmp = g.competitions?.[0]?.competitors||[];
-    const home = cmp.find(c=>c.homeAway==='home')||cmp[0]||{};
-    const away = cmp.find(c=>c.homeAway==='away')||cmp[1]||{};
-    const ha = (home.team||{}).abbreviation||'', aa = (away.team||{}).abbreviation||'';
-    if (!ha || !aa) return;
-    const hs = parseInt(home.score)||0, as = parseInt(away.score)||0;
-    if (hs !== as) return;
-    const homeWinner = home.winner === true;
-    const awayWinner = away.winner === true;
-    if (!homeWinner && !awayWinner) return;
-    let penA = 0, penB = 0;
-    const details = g.competitions?.[0]?.details || [];
-    const teamMap = {};
-    cmp.forEach(c => { if (c.team?.id) teamMap[c.team.id] = (c.team||{}).abbreviation||''; });
-    details.forEach(d => {
-      if (!d.shootout || !d.scoringPlay) return;
-      const teamId = d.team?.id || '';
-      const tAbbr = teamMap[teamId] || '';
-      if (tAbbr === ha) penA++;
-      else if (tAbbr === aa) penB++;
-    });
-    if (penA > 0 || penB > 0) {
-      penaltisByGame[g.id] = { home: penA, away: penB, homeAbbr: ha, awayAbbr: aa };
-    }
-  });
-
-  // Coleta abreviacoes dos times
-  const liveAbbrs = new Set();
-  r32Games.forEach(g => {
-    const cmp = g.competitions?.[0]?.competitors||[];
-    cmp.forEach(c => { if (c.team?.abbreviation) liveAbbrs.add(c.team.abbreviation); });
-  });
-
-  // Calcula stats da fase de grupos (mesma lógica do renderGroups)
-  const stats = {};
-  (allGames||[]).forEach(g => {
-    const seasonSlug = (g.season?.slug || '');
-    if (seasonSlug !== 'group-stage') return;
-    if (getStatus(g) === 'scheduled') return;
-    const co = g.competitions?.[0]||{};
-    const cmp = co.competitors||[];
-    if (cmp.length < 2) return;
-    const home = cmp[0], away = cmp[1];
-    const ha = home.team?.abbreviation || '', aa = away.team?.abbreviation || '';
-    if (!ha || !aa) return;
-    const hg = parseInt(home.score)||0, ag = parseInt(away.score)||0;
-    if (!stats[ha]) stats[ha] = { pts:0, gp:0, w:0, t:0, l:0, gf:0, ga:0 };
-    if (!stats[aa]) stats[aa] = { pts:0, gp:0, w:0, t:0, l:0, gf:0, ga:0 };
-    stats[ha].gp++; stats[aa].gp++;
-    stats[ha].gf += hg; stats[ha].ga += ag;
-    stats[aa].gf += ag; stats[aa].ga += hg;
-    if (hg > ag) { stats[ha].w++; stats[ha].pts += 3; stats[aa].l++; }
-    else if (ag > hg) { stats[aa].w++; stats[aa].pts += 3; stats[ha].l++; }
-    else { stats[ha].t++; stats[ha].pts++; stats[aa].t++; stats[aa].pts++; }
-  });
-
-  // Busca dados dos grupos para saber grupo de cada time
-  const teamGroup = {};
-  if (standingsCache && standingsCache.children) {
-    standingsCache.children.forEach((ch, idx) => {
-      const letter = gL(idx);
-      (ch.standings?.entries||[]).forEach(e => {
-        const ab = (e.team||{}).abbreviation || '';
-        if (ab) teamGroup[ab] = letter;
-      });
-    });
-  }
-
-    let h = '';
-
-  r32Games.forEach(g => {
-    const cmp = g.competitions?.[0]?.competitors||[];
-    const home = cmp.find(c=>c.homeAway==='home')||cmp[0]||{};
-    const away = cmp.find(c=>c.homeAway==='away')||cmp[1]||{};
-    const ht = home.team||{}, at = away.team||{};
-    const ha = ht.abbreviation||'', aa = at.abbreviation||'';
-    const hn = pt(ht.displayName||ht.name||'?'), an = pt(at.displayName||at.name||'?');
-    const hs = home.score??'', as = away.score??'';
-    const st = getStatus(g);
-    const clock = st === 'live' ? (g.competitions?.[0]?.status?.displayClock||'') : '✅ Encerrado';
-    const ven = g.competitions?.[0]?.venue?.fullName||'';
-
-    // Verifica penaltis
-    const penInfo = penaltisByGame[g.id];
-    const hasPenaltis = penInfo && (penInfo.home > 0 || penInfo.away > 0);
-    // Header do jogo: Time A X Time B, placar e tempo
-    h += '<div style="background:linear-gradient(145deg,#1e293b,#1a2332);border:1px solid #22c55e44;border-radius:12px;padding:1rem;margin-bottom:1rem;">';
-    h += '<div style="display:flex;align-items:center;justify-content:center;gap:12px;padding:.6rem 0;border-bottom:1px solid #2d3a4e;margin-bottom:1rem;">';
-    // Detecta vencedor nos penaltis
-    const hw = hasPenaltis && home.winner === true;
-    const aw = hasPenaltis && away.winner === true;
-    h += '<div class="'+(hw?'lwp':'')+'" style="display:flex;align-items:center;gap:6px;"><img class="flag" src="'+flagUrl(ha)+'" alt="" style="width:24px;height:16px;border-radius:2px;" loading="lazy" onerror="this.style.display=\'none\'"><span class="n" style="font-weight:700;font-size:.9rem;">'+hn+'</span></div>';
-    h += '<span class="'+(hw?'s':'')+'" style="font-weight:800;font-size:1.3rem;color:#f59e0b;">'+(hs!==''&&hs!==null?hs:'-')+'</span>';
-    h += '<span style="color:#475569;font-weight:500;">X</span>';
-    h += '<span class="'+(aw?'s':'')+'" style="font-weight:800;font-size:1.3rem;color:#f59e0b;">'+(as!==''&&as!==null?as:'-')+'</span>';
-    h += '<div class="'+(aw?'lwp':'')+'" style="display:flex;align-items:center;gap:6px;"><span class="n" style="font-weight:700;font-size:.9rem;">'+an+'</span><img class="flag" src="'+flagUrl(aa)+'" alt="" style="width:24px;height:16px;border-radius:2px;" loading="lazy" onerror="this.style.display=\'none\'"></div>';
-    h += '</div>';
-    h += '<div style="text-align:center;font-size:.8rem;color:'+(hasPenaltis?'#ef4444':'#22c55e')+';font-weight:600;margin-bottom:1rem;">🔴 '+(clock||'Ao vivo')+(ven?' • 📍 '+ven:'')+(hasPenaltis?' • ⚠️ Penaltis: '+penInfo.home+'×'+penInfo.away:'')+'</div>';
-    if (hasPenaltis) {
-      h += '<div style="text-align:center;padding:.4rem;margin-bottom:.8rem;background:#2a1a1a;border:1px solid #ef444444;border-radius:8px;">';
-      h += '<span style="font-weight:800;font-size:1rem;color:#ef4444;">⚽ Penaltis: '+penInfo.home+' × '+penInfo.away+'</span>';
-      h += '</div>';
-    }
-
-    // Cards dos dois times lado a lado
-    h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">';
-    [
-      { abbr: ha, name: hn, score: hs },
-      { abbr: aa, name: an, score: as }
-    ].forEach(t => {
-      const s = stats[t.abbr] || { pts:0, gp:0, w:0, t:0, l:0, gf:0, ga:0 };
-      const gd = s.gf - s.ga;
-      const gdStr = gd > 0 ? '+'+gd : String(gd);
-      const group = teamGroup[t.abbr] || '?';
-      h += '<div style="background:#1a2332;border:1px solid #2d3a4e;border-radius:10px;padding:.8rem;">';
-      h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:.6rem;">';
-      h += '<img class="flag" src="'+flagUrl(t.abbr)+'" alt="" style="width:22px;height:15px;border-radius:2px;" loading="lazy" onerror="this.style.display=\'none\'">';
-      h += '<span style="font-weight:700;font-size:.85rem;">'+t.name+'</span>';
-      h += '</div>';
-      h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:.72rem;">';
-      h += '<div style="color:#64748b;">Grupo</div><div style="font-weight:600;text-align:right;">'+group+'</div>';
-      h += '<div style="color:#64748b;">Pontos</div><div style="font-weight:700;text-align:right;color:#f59e0b;">'+s.pts+'</div>';
-      h += '<div style="color:#64748b;">Jogos</div><div style="font-weight:600;text-align:right;">'+s.gp+'</div>';
-      h += '<div style="color:#64748b;">Vitórias</div><div style="font-weight:600;text-align:right;color:#22c55e;">'+s.w+'</div>';
-      h += '<div style="color:#64748b;">Empates</div><div style="font-weight:600;text-align:right;">'+s.t+'</div>';
-      h += '<div style="color:#64748b;">Derrotas</div><div style="font-weight:600;text-align:right;color:#ef4444;">'+s.l+'</div>';
-      h += '<div style="color:#64748b;">Gols Pró</div><div style="font-weight:600;text-align:right;">'+s.gf+'</div>';
-      h += '<div style="color:#64748b;">Gols Contra</div><div style="font-weight:600;text-align:right;">'+s.ga+'</div>';
-      h += '<div style="color:#64748b;">Saldo Gols</div><div style="font-weight:700;text-align:right;'+(gd>0?'color:#22c55e':gd<0?'color:#ef4444':'')+'">'+gdStr+'</div>';
-      h += '</div></div>';
-    });
-    // Gols do jogo
-    const eventId = g.id;
-    const gameGoals = goalsByGame[eventId] || [];
-    if (gameGoals.length > 0) {
-      h += '<div style="margin-top:.6rem;padding-top:.6rem;border-top:1px solid #2d3a4e;">';
-      h += '<div style="font-size:.7rem;font-weight:600;color:#f59e0b;margin-bottom:.4rem;">⚽ Gols</div>';
-      gameGoals.forEach(goal => {
-        const isHome = goal.team === ha;
-        const teamName = isHome ? hn : an;
-        const teamFlag = isHome ? flagUrl(ha) : flagUrl(aa);
-        h += '<div style="display:flex;align-items:center;gap:6px;padding:3px 0;font-size:.72rem;">';
-        h += '<span style="color:#64748b;min-width:30px;">'+goal.minute+'</span>';
-        h += '<img class="flag" src="'+teamFlag+'" alt="" style="width:14px;height:10px;border-radius:1.5px;" loading="lazy" onerror="this.style.display=\'none\'">';
-        h += '<span style="font-weight:600;">'+goal.scorer+'</span>';
-        if (goal.assist) h += '<span style="color:#64748b;font-size:.65rem;">('+goal.assist+')</span>';
-        h += '</div>';
-      });
-      h += '</div>';
-    }
-    h += '</div></div>';
-  });
-
-  c.innerHTML = h;
 }
 
 function renderGroups(d) {
@@ -1331,33 +1030,7 @@ function renderGames() {
     const ht=ho.team||{},at=aw.team||{},st=getStatus(e);
     const ha=ht.abbreviation||'',aa=at.abbreviation||'',hn=pt(ht.displayName||ht.name||'?'),an=pt(at.displayName||at.name||'?');
     const hs=ho.score??'',as=aw.score??'',ven=co.venue?.fullName||'';
-    const clock=co.status?.displayClock||'';let sl,sc;
-    // Detecta pênaltis
-    let penaltiStr = '';
-    if (st === 'final') {
-      const cmp = e.competitions?.[0]?.competitors||[];
-      const home = cmp.find(c=>c.homeAway==='home')||cmp[0]||{};
-      const away = cmp.find(c=>c.homeAway==='away')||cmp[1]||{};
-      const hsNum = parseInt(home.score)||0, asNum = parseInt(away.score)||0;
-      if (hsNum === asNum && (home.winner || away.winner)) {
-        const ha = (home.team||{}).abbreviation||'', aa = (away.team||{}).abbreviation||'';
-        let penA = 0, penB = 0;
-        const details = e.competitions?.[0]?.details || [];
-        const teamMap = {};
-        cmp.forEach(c => { if (c.team?.id) teamMap[c.team.id] = (c.team||{}).abbreviation||''; });
-        details.forEach(d => {
-          if (!d.shootout || !d.scoringPlay) return;
-          const teamId = d.team?.id || '';
-          const tAbbr = teamMap[teamId] || '';
-          if (tAbbr === ha) penA++;
-          else if (tAbbr === aa) penB++;
-        });
-        if (penA > 0 || penB > 0) {
-          penaltiStr = ' ⚠️ ' + penA + '×' + penB;
-        }
-      }
-    }
-    if(st==='live'){sl='🔴 '+clock;sc='live';}else if(st==='final'){sl='✅ Encerrado'+penaltiStr;sc='final';}else{sl='⏳ '+fmtTime(e.date);sc='scheduled';}
+    const clock=co.status?.displayClock||'';let sl,sc;if(st==='live'){sl='🔴 '+clock;sc='live';}else if(st==='final'){sl='✅ Encerrado';sc='final';}else{sl='⏳ '+fmtTime(e.date);sc='scheduled';}
     h+='<div class="game-card"><div class="game-time"><div class="date">'+fmtDate(e.date)+'</div><div class="time">'+fmtTime(e.date)+'</div></div><div class="game-teams"><div class="team-row"><img class="flag" src="'+flagUrl(ha)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+hn+'</span><span class="score-display">'+(hs!==''&&hs!==null?hs:'-')+'</span></div><div class="team-row"><img class="flag" src="'+flagUrl(aa)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+an+'</span><span class="score-display">'+(as!==''&&as!==null?as:'-')+'</span></div></div><div class="game-status '+sc+'">'+sl+'</div>'+(ven?'<div class="game-venue">📍 '+ven+'</div>':'')+'</div>';
   });
   h+='</div>';c.innerHTML=h;
@@ -1574,15 +1247,6 @@ function buildRound32(standingsData) {
     return dd+'/'+mm+' '+hh+(hasHalf ? 'h30' : 'h');
   }
   const r32dates = r32meta.map(m => etToBrt(m.et));
-  // Mapa de cidades para nome completo do estádio/local
-  const venueMap = {
-    'LA': 'Los Angeles', 'Houston': 'Houston', 'Boston': 'Boston',
-    'Monterrey': 'Monterrey', 'Dallas': 'Dallas', 'NY': 'Nova York',
-    'CDMX': 'Cidade do México', 'Atlanta': 'Atlanta', 'Seattle': 'Seattle',
-    'SF': 'São Francisco', 'Toronto': 'Toronto', 'Vancouver': 'Vancouver',
-    'Miami': 'Miami', 'KC': 'Kansas City'
-  };
-  const r32venues = r32meta.map(m => venueMap[m.city] || m.city);
 
   function t3label(key) {
     if (!C) return '3º';
@@ -1623,48 +1287,29 @@ function buildRound32(standingsData) {
   // Oitavas: 89(74+77), 90(73+75), 93(83+84), 94(81+82), 91(76+78), 92(79+80), 95(86+88), 96(85+87)
   // Quartas: QF1(89x90), QF3(93x94), QF2(91x92), QF4(95x96)
   // Semis: SF1(QF1xQF3), SF2(QF2xQF4)
-  round32.push({ a: g('E',0), b: t3group('1E'), label: '1º E vs '+t3label('1E'), date: r32dates[2], venue: r32venues[2] });  // 74
-  round32.push({ a: g('I',0), b: t3group('1I'), label: '1º I vs '+t3label('1I'), date: r32dates[5], venue: r32venues[5] });  // 77
-  round32.push({ a: g('A',1), b: g('B',1), label: '2º A vs 2º B', date: r32dates[0], venue: r32venues[0] });                // 73
-  round32.push({ a: g('F',0), b: g('C',1), label: '1º F vs 2º C', date: r32dates[3], venue: r32venues[3] });                // 75
-  round32.push({ a: g('K',1), b: g('L',1), label: '2º K vs 2º L', date: r32dates[11], venue: r32venues[11] });               // 83
-  round32.push({ a: g('H',0), b: g('J',1), label: '1º H vs 2º J', date: r32dates[10], venue: r32venues[10] });               // 84
-  round32.push({ a: g('D',0), b: t3group('1D'), label: '1º D vs '+t3label('1D'), date: r32dates[9], venue: r32venues[9] });  // 81
-  round32.push({ a: g('G',0), b: t3group('1G'), label: '1º G vs '+t3label('1G'), date: r32dates[8], venue: r32venues[8] });  // 82
-  round32.push({ a: g('C',0), b: g('F',1), label: '1º C vs 2º F', date: r32dates[1], venue: r32venues[1] });                // 76
-  round32.push({ a: g('E',1), b: g('I',1), label: '2º E vs 2º I', date: r32dates[4], venue: r32venues[4] });                // 78
-  round32.push({ a: g('A',0), b: t3group('1A'), label: '1º A vs '+t3label('1A'), date: r32dates[6], venue: r32venues[6] });  // 79
-  round32.push({ a: g('L',0), b: t3group('1L'), label: '1º L vs '+t3label('1L'), date: r32dates[7], venue: r32venues[7] });  // 80
-  round32.push({ a: g('J',0), b: g('H',1), label: '1º J vs 2º H', date: r32dates[14], venue: r32venues[14] });               // 86
-  round32.push({ a: g('D',1), b: g('G',1), label: '2º D vs 2º G', date: r32dates[13], venue: r32venues[13] });               // 88
-  round32.push({ a: g('B',0), b: t3group('1B'), label: '1º B vs '+t3label('1B'), date: r32dates[12], venue: r32venues[12] }); // 85
-  round32.push({ a: g('K',0), b: t3group('1K'), label: '1º K vs '+t3label('1K'), date: r32dates[15], venue: r32venues[15] }); // 87
+  round32.push({ a: g('E',0), b: t3group('1E'), label: '1º E vs '+t3label('1E'), date: r32dates[2] });  // 74
+  round32.push({ a: g('I',0), b: t3group('1I'), label: '1º I vs '+t3label('1I'), date: r32dates[5] });  // 77
+  round32.push({ a: g('A',1), b: g('B',1), label: '2º A vs 2º B', date: r32dates[0] });                // 73
+  round32.push({ a: g('F',0), b: g('C',1), label: '1º F vs 2º C', date: r32dates[3] });                // 75
+  round32.push({ a: g('K',1), b: g('L',1), label: '2º K vs 2º L', date: r32dates[11] });               // 83
+  round32.push({ a: g('H',0), b: g('J',1), label: '1º H vs 2º J', date: r32dates[10] });               // 84
+  round32.push({ a: g('D',0), b: t3group('1D'), label: '1º D vs '+t3label('1D'), date: r32dates[9] });  // 81
+  round32.push({ a: g('G',0), b: t3group('1G'), label: '1º G vs '+t3label('1G'), date: r32dates[8] });  // 82
+  round32.push({ a: g('C',0), b: g('F',1), label: '1º C vs 2º F', date: r32dates[1] });                // 76
+  round32.push({ a: g('E',1), b: g('I',1), label: '2º E vs 2º I', date: r32dates[4] });                // 78
+  round32.push({ a: g('A',0), b: t3group('1A'), label: '1º A vs '+t3label('1A'), date: r32dates[6] });  // 79
+  round32.push({ a: g('L',0), b: t3group('1L'), label: '1º L vs '+t3label('1L'), date: r32dates[7] });  // 80
+  round32.push({ a: g('J',0), b: g('H',1), label: '1º J vs 2º H', date: r32dates[14] });               // 86
+  round32.push({ a: g('D',1), b: g('G',1), label: '2º D vs 2º G', date: r32dates[13] });               // 88
+  round32.push({ a: g('B',0), b: t3group('1B'), label: '1º B vs '+t3label('1B'), date: r32dates[12] }); // 85
+  round32.push({ a: g('K',0), b: t3group('1K'), label: '1º K vs '+t3label('1K'), date: r32dates[15] }); // 87
 
   return round32;
 }
 
-function simulateWinner(match, sm) {
-  // Se o jogo já aconteceu, usa o placar real do scoreMap
-  if (!match.a || !match.b) return match.a || match.b;
-  if (sm) {
-    const sa = sm[match.a.abbr];
-    const sb = sm[match.b.abbr];
-    // Se um dos times ja foi eliminado (perdeu), o outro vence
-    if (sa && sa.lost) return match.b;
-    if (sb && sb.lost) return match.a;
-    if (sa && sb && sa.status !== 'pre' && sa.status !== 'scheduled' &&
-        sb.status !== 'pre' && sb.status !== 'scheduled') {
-      const scA = sa.score, scB = sb.score;
-      // Se tem winner explícito (pênaltis), usa ele
-      if (sa.winner) return match.a;
-      if (sb.winner) return match.b;
-      // Se não, usa o placar
-      if (scA !== undefined && scB !== undefined && scA !== scB) {
-        return scA > scB ? match.a : match.b;
-      }
-    }
-  }
+function simulateWinner(match) {
   // Simula o vencedor baseado em pontos (mais pontos = mais provável)
+  if (!match.a || !match.b) return match.a || match.b;
   if (match.a.pts > match.b.pts) return match.a;
   if (match.b.pts > match.a.pts) return match.b;
   if (match.a.gd > match.b.gd) return match.a;
@@ -1673,18 +1318,13 @@ function simulateWinner(match, sm) {
   return match.b;
 }
 
-function simulateWinnerFav(match, favAbbr, sm) {
-  // Se o favorito está no match, ele sempre vence (a menos que ja tenha perdido)
+function simulateWinnerFav(match, favAbbr) {
+  // Se o favorito está no match, ele sempre vence
   if (!match.a || !match.b) return match.a || match.b;
-  // Verifica se o favorito ja foi eliminado
-  if (sm && sm[favAbbr] && sm[favAbbr].lost) {
-    // Favorito eliminado: simula normal sem privilegio
-    return simulateWinner(match, sm);
-  }
   if (match.a.abbr === favAbbr) return match.a;
   if (match.b.abbr === favAbbr) return match.b;
   // Se não, simula normal
-  return simulateWinner(match, sm);
+  return simulateWinner(match);
 }
 
 function setFavorite(abbr, name) {
@@ -1985,8 +1625,8 @@ function renderStats() {
       + '</div>');
   }
 
-  // Desclassificados na Fase de Grupos
-  h += card('🚫 Times desclassificados na Fase de Grupos', '#ef4444',
+  // Desclassificados
+  h += card('🚫 Times desclassificados', '#ef4444',
     eliminated.length === 0
       ? '<div style="padding:1.5rem;text-align:center;color:#64748b;font-size:.85rem;">Nenhum time eliminado ainda.</div>'
       : '<div style="display:flex;flex-direction:column;gap:4px;">'
@@ -2000,112 +1640,6 @@ function renderStats() {
             + '</div>';
         }).join('')
         + '</div>');
-
-  // Times desclassificados nos 32 avos (perderam na Segunda Fase)
-  const eliminated32 = [];
-  const lostTeams = new Set();
-  (allGames||[]).forEach(g => {
-    const slug = (g.season?.slug || '');
-    if (slug !== 'round-of-32') return;
-    const st = g.competitions?.[0]?.status?.type||{};
-    if (!st.completed && st.id !== '3' && !(st.description||'').toLowerCase().includes('final')) return;
-    const cmp = g.competitions?.[0]?.competitors||[];
-    if (cmp.length < 2) return;
-    const s0 = parseInt(cmp[0].score)||0;
-    const s1 = parseInt(cmp[1].score)||0;
-    // Se empatou, verifica se teve vencedor nos penaltis
-    if (s0 === s1) {
-      const w0 = cmp[0].winner === true;
-      const w1 = cmp[1].winner === true;
-      if (!w0 && !w1) return; // empate sem penaltis (fase de grupos)
-      const loserAbbr = w0 ? cmp[1].team?.abbreviation : cmp[0].team?.abbreviation;
-      if (loserAbbr && !lostTeams.has(loserAbbr)) {
-        lostTeams.add(loserAbbr);
-        let name = loserAbbr;
-        if (standingsCache && standingsCache.children) {
-          standingsCache.children.forEach(ch => {
-            (ch.standings?.entries||[]).forEach(e => {
-              const tm = e.team||{};
-              if (tm.abbreviation === loserAbbr) name = pt(tm.displayName||tm.name||loserAbbr);
-            });
-          });
-        }
-        eliminated32.push({ abbr: loserAbbr, name });
-      }
-      return;
-    }
-    const loserAbbr = s0 < s1 ? cmp[0].team?.abbreviation : cmp[1].team?.abbreviation;
-    if (loserAbbr && !lostTeams.has(loserAbbr)) {
-      lostTeams.add(loserAbbr);
-      let name = loserAbbr;
-      if (standingsCache && standingsCache.children) {
-        standingsCache.children.forEach(ch => {
-          (ch.standings?.entries||[]).forEach(e => {
-            const tm = e.team||{};
-            if (tm.abbreviation === loserAbbr) name = pt(tm.displayName||tm.name||loserAbbr);
-          });
-        });
-      }
-      eliminated32.push({ abbr: loserAbbr, name });
-    }
-  });
-  if (eliminated32.length > 0) {
-    h += card('🚫 Times desclassificados nos 32 avos', '#f59e0b',
-      '<div style="display:flex;flex-direction:column;gap:4px;">'
-        + eliminated32.map(t => {
-          return '<div style="display:flex;align-items:center;gap:8px;padding:6px 12px;background:linear-gradient(145deg,#1e293b,#1a2332);border:1px solid #2d3a4e;border-radius:8px;opacity:.65;">'
-            + '<img class="flag" src="'+flagUrl(t.abbr)+'" alt="" style="width:18px;height:12px;border-radius:2px;" loading="lazy" onerror="this.style.display=\'none\'">'
-            + '<span style="flex:1;font-weight:500;font-size:.8rem;">'+t.name+'</span>'
-            + '</div>';
-        }).join('')
-        + '</div>');
-  }
-
-  // ---- ARTILHEIROS ----
-  // Extrai todos os gols de todos os jogos (qualquer fase) e conta por jogador
-  var scorerCount = {};
-  var scorerTeam = {};
-  (allGames||[]).forEach(function(g) {
-    var st = getStatus(g);
-    if (st === 'scheduled') return;
-    var goals = extractGoals(g);
-    goals.forEach(function(goal) {
-      var name = goal.scorer;
-      if (!name || name === '?') return;
-      if (!scorerCount[name]) scorerCount[name] = 0;
-      scorerCount[name]++;
-      scorerTeam[name] = goal.team;
-    });
-  });
-  // Mapa de abreviacao -> nome do pais em portugues
-  var teamNameMap = {};
-  (allGames||[]).forEach(function(g) {
-    var cmp = g.competitions?.[0]?.competitors||[];
-    cmp.forEach(function(c) {
-      var ab = c.team?.abbreviation;
-      var dn = c.team?.displayName || c.team?.name;
-      if (ab && dn && !teamNameMap[ab]) teamNameMap[ab] = pt(dn);
-    });
-  });
-  var topScorers = Object.keys(scorerCount)
-    .map(function(name) { return { name: name, gols: scorerCount[name], team: scorerTeam[name], country: teamNameMap[scorerTeam[name]] || scorerTeam[name] }; })
-    .sort(function(a, b) { return b.gols - a.gols; })
-    .slice(0, 10);
-
-  if (topScorers.length > 0) {
-    h += card('⚽ 10 Maiores Artilheiros', '#f59e0b',
-      '<div style="display:flex;flex-direction:column;gap:6px;">'
-      + topScorers.map(function(s, i) {
-        var medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '#'+(i+1);
-        return '<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:linear-gradient(145deg,#1e293b,#1a2332);border:1px solid '+(i<3?'#f59e0b44':'#2d3a4e')+';border-radius:8px;">'
-          + '<span style="font-weight:800;font-size:.9rem;min-width:28px;color:'+(i<3?'#f59e0b':'#64748b')+';">'+medal+'</span>'
-          + '<img class="flag" src="'+flagUrl(s.team)+'" alt="" style="width:20px;height:14px;border-radius:2px;" loading="lazy" onerror="this.style.display=\'none\'">'
-          + '<span style="flex:1;font-weight:600;font-size:.85rem;">'+s.country+' - '+s.name+'</span>'
-          + '<span style="font-weight:800;font-size:1.1rem;color:#22c55e;">'+s.gols+'</span>'
-          + '<span style="font-size:.7rem;color:#64748b;">'+(s.gols === 1 ? 'gol' : 'gols')+'</span></div>';
-      }).join('')
-      + '</div>');
-  }
 
   c.innerHTML = h;
 }
@@ -2218,14 +1752,14 @@ function renderClassifiedPanel(standingsData) {
       const finished = isGroupFinished(letter, standingsData);
       const third = teams[2];
       const mathQual = third ? isMathematicallyQualified(teams[0].pts, teams[0].gd, third.pts, third.gd, 3 - third.gp) : false;
-      classified.push({ ...teams[0], name: pt(teams[0].name), status: (finished || mathQual) ? 'confirmed' : 'probable' });
+      classified.push({ ...teams[0], status: (finished || mathQual) ? 'confirmed' : 'probable' });
     }
     // 2º lugar: confirmado se grupo terminou OU se já está matematicamente garantido
     if (teams.length >= 2) {
       const finished = isGroupFinished(letter, standingsData);
       const third = teams[2];
       const mathQual = third ? isMathematicallyQualified(teams[1].pts, teams[1].gd, third.pts, third.gd, 3 - third.gp) : false;
-      classified.push({ ...teams[1], name: pt(teams[1].name), status: (finished || mathQual) ? 'confirmed' : 'probable' });
+      classified.push({ ...teams[1], status: (finished || mathQual) ? 'confirmed' : 'probable' });
     }
   });
 
@@ -2292,27 +1826,11 @@ function renderClassifiedPanel(standingsData) {
   // Adiciona os 8 melhores 3ºs
   bestThird.forEach(t => {
     const status = thirdConfirmed.has(t.abbr) ? 'confirmed' : 'probable';
-    classified.push({ abbr: t.abbr, name: pt(t.name), group: t.group, status });
-  });
-
-  // Cache para a Arte Visual
-  window.__classifiedCache = classified;
-
-  // Ordena por nome do time (alfabético, ignorando acentos)
-  classified.sort((a, b) => {
-    const na = a.name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
-    const nb = b.name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
-    if (na < nb) return -1;
-    if (na > nb) return 1;
-    return 0;
+    classified.push({ abbr: t.abbr, name: t.name, group: t.group, status });
   });
 
   let h = '<div class="classified-panel">';
-  h += '<div class="panel-title" onclick="toggleClassified()" style="cursor:pointer;user-select:none;">';
-  h += '<span id="classified-toggle" style="display:inline-block;transition:transform .2s;margin-right:6px;">▶</span>';
-  h += '<span class="bracket-icon">[</span> CLASSIFICADOS PARA A SEGUNDA FASE <span class="bracket-icon">]</span></div>';
-  h += '<div id="classified-body" style="display:none;">';
-  h += '<div style="text-align:center;font-size:.65rem;color:#64748b;margin-bottom:.6rem;">Times ordenados alfabeticamente</div>';
+  h += '<div class="panel-title"><span class="bracket-icon">[</span> CLASSIFICADOS PARA A SEGUNDA FASE <span class="bracket-icon">]</span></div>';
   h += '<div class="classified-grid">';
 
   // Mostra até 32 slots
@@ -2336,17 +1854,7 @@ function renderClassifiedPanel(standingsData) {
   h += '<span style="color:#2d3a4e;">⏳ A definir</span>';
   h += '</div>';
   h += '</div>';
-  h += '</div>';
   c.innerHTML = h;
-}
-
-function toggleClassified() {
-  const body = document.getElementById('classified-body');
-  const toggle = document.getElementById('classified-toggle');
-  if (!body || !toggle) return;
-  const isOpen = body.style.display !== 'none';
-  body.style.display = isOpen ? 'none' : 'block';
-  toggle.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(90deg)';
 }
 
 function renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events) {
@@ -2371,8 +1879,8 @@ function renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events) {
       scoreMap[ab].score = sc;
       scoreMap[ab].status = state;
     });
-    // Marca perdedor SÓ se o jogo já terminou (final/encerrado)
-    if (cmp.length >= 2 && (st.completed || st.id === '3' || (st.description||'').toLowerCase().includes('final'))) {
+    // Marca perdedor
+    if (cmp.length >= 2 && state !== 'pre' && state !== 'scheduled') {
       const s0 = parseInt(cmp[0].score)||0;
       const s1 = parseInt(cmp[1].score)||0;
       if (s0 !== s1) {
@@ -2425,14 +1933,13 @@ function renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events) {
     'Colômbia':'COL','Gana':'GHA','Egito':'EGY','Austrália':'AUS'
   };
   function gs(name){const ab=abbrMap[name];if(!ab)return null;const s=scoreMap[ab];if(!s||s.status==='pre')return null;return s.score;}
-  function isLiveGame(t1,t2){const a1=abbrMap[t1],a2=abbrMap[t2];if(!a1||!a2)return false;return (allGames||[]).some(g=>{if(getStatus(g)!=='live')return false;const cmp=g.competitions?.[0]?.competitors||[];return cmp.some(c=>c.team?.abbreviation===a1)&&cmp.some(c=>c.team?.abbreviation===a2);});}
-  function cd(t1,t2,f1,f2){const sa=gs(t1),sb=gs(t2);const sha=sa!==null?'<span class="sc">'+sa+'</span>':'',shb=sb!==null?'<span class="sc">'+sb+'</span>':'';const live=isLiveGame(t1,t2)?' live':'';return '<div class="bd-m'+live+'"><div class="t"><img class="fl" src="'+f1+'" alt="" loading="lazy"><span class="nm">'+t1+'</span>'+sha+'</div><div class="v">✕</div><div class="t"><img class="fl" src="'+f2+'" alt="" loading="lazy"><span class="nm">'+t2+'</span>'+shb+'</div></div>'}
+  function cd(t1,t2,f1,f2){const sa=gs(t1),sb=gs(t2);const sha=sa!==null?'<span class="sc">'+sa+'</span>':'',shb=sb!==null?'<span class="sc">'+sb+'</span>':'';return '<div class="bd-m"><div class="t"><img class="fl" src="'+f1+'" alt="" loading="lazy"><span class="nm">'+t1+'</span>'+sha+'</div><div class="v">✕</div><div class="t"><img class="fl" src="'+f2+'" alt="" loading="lazy"><span class="nm">'+t2+'</span>'+shb+'</div></div>'}
   function tm(t){if(!t)return '<div class="bd-m bd-ph"><div class="t"><span class="nm">─</span></div></div>';return '<div class="bd-m"><div class="t"><img class="fl" src="'+flagUrl(t.abbr)+'" alt="" loading="lazy"><span class="nm">'+(t.name||'?')+'</span></div></div>'}
-  function isConfirmed(abbr){const s=scoreMap[abbr];return s&&(s.status==='final'||s.status==='completed'||s.status==='3'||s.status==='post');}
-  function mc(a,b){if(!a||!b)return '<div class="bd-m bd-ph"><div class="t"><span class="nm">─</span></div></div>';const ca=isConfirmed(a.abbr);const cb=isConfirmed(b.abbr);const pa=ca?'':' <span class="pr">(P)</span>';const pb=cb?'':' <span class="pr">(P)</span>';return '<div class="bd-m"><div class="t"><img class="fl" src="'+flagUrl(a.abbr)+'" alt="" loading="lazy"><span class="nm">'+(a.name||'?')+'</span>'+pa+'</div><div class="v">✕</div><div class="t"><img class="fl" src="'+flagUrl(b.abbr)+'" alt="" loading="lazy"><span class="nm">'+(b.name||'?')+'</span>'+pb+'</div></div>'}
+  function isConfirmed(abbr){const s=scoreMap[abbr];return s&&s.status!=='pre'&&s.status!=='scheduled';}
+  function mc(a,b){if(!a||!b)return '<div class="bd-m bd-ph"><div class="t"><span class="nm">─</span></div></div>';const ca=isConfirmed(a.abbr);const cb=isConfirmed(b.abbr);const cls=ca||cb?' confirmed':'';const pa=ca?'':' <span class="pr">(P)</span>';const pb=cb?'':' <span class="pr">(P)</span>';return '<div class="bd-m'+cls+'"><div class="t"><img class="fl" src="'+flagUrl(a.abbr)+'" alt="" loading="lazy"><span class="nm">'+(a.name||'?')+'</span>'+pa+'</div><div class="v">✕</div><div class="t"><img class="fl" src="'+flagUrl(b.abbr)+'" alt="" loading="lazy"><span class="nm">'+(b.name||'?')+'</span>'+pb+'</div></div>'}
   let h='<div class="bd-wrap"><div class="bd">';
-  h+='<div class="bd-r"><div class="bd-rt">Segunda Fase (32)</div>';for(let i=0;i<PARES.length;i++){const g=PARES[i][0];h+=cd(g[0],g[1],g[2],g[3])}h+='</div>';
-  h+='<div class="bd-r"><div class="bd-rt">Segunda Fase (32)</div>';for(let i=0;i<PARES.length;i++){const g=PARES[i][1];h+=cd(g[0],g[1],g[2],g[3])}h+='</div>';
+  h+='<div class="bd-r"><div class="bd-rt">16 avos</div>';for(let i=0;i<PARES.length;i++){const g=PARES[i][0];h+=cd(g[0],g[1],g[2],g[3])}h+='</div>';
+  h+='<div class="bd-r"><div class="bd-rt">16 avos</div>';for(let i=0;i<PARES.length;i++){const g=PARES[i][1];h+=cd(g[0],g[1],g[2],g[3])}h+='</div>';
   h+='<div class="bd-r"><div class="bd-rt">Oitavas</div>';
   if(r16&&r16.length){for(let i=0;i<4;i++){const m=r16[i];h+=m?mc(m.a,m.b):tm()} }else{for(let i=0;i<4;i++)h+=tm()}
   h+='</div>';
@@ -2491,21 +1998,14 @@ function renderBracket(events, standingsData) {
       if (!scoreMap[ab]) scoreMap[ab] = {};
       scoreMap[ab].score = sc;
       scoreMap[ab].status = state;
-      if (c.winner) scoreMap[ab].winner = true;
     });
-    // Marca perdedor SÓ se o jogo já terminou (final/encerrado)
-    if (cmp.length >= 2 && (st.completed || st.id === '3' || (st.description||'').toLowerCase().includes('final'))) {
+    // Marca perdedor
+    if (cmp.length >= 2) {
       const s0 = parseInt(cmp[0].score)||0;
       const s1 = parseInt(cmp[1].score)||0;
       if (s0 !== s1) {
         const loser = s0 < s1 ? cmp[0].team?.abbreviation : cmp[1].team?.abbreviation;
         if (loser && scoreMap[loser]) scoreMap[loser].lost = true;
-      } else {
-        const winner = cmp.find(c => c.winner)?.team?.abbreviation;
-        if (winner) {
-          const loser = cmp.find(c => !c.winner)?.team?.abbreviation;
-          if (loser && scoreMap[loser]) scoreMap[loser].lost = true;
-        }
       }
     }
   });
@@ -2525,8 +2025,8 @@ function renderBracket(events, standingsData) {
       const m1 = matches[i];
       const m2 = matches[i+1];
       if (!m1 || !m2) break;
-      const w1 = fav ? simulateWinnerFav(m1, fav, scoreMap) : simulateWinner(m1, scoreMap);
-      const w2 = fav ? simulateWinnerFav(m2, fav, scoreMap) : simulateWinner(m2, scoreMap);
+      const w1 = fav ? simulateWinnerFav(m1, fav) : simulateWinner(m1);
+      const w2 = fav ? simulateWinnerFav(m2, fav) : simulateWinner(m2);
       if (w1 && w2) {
         winners.push({ a: w1, b: w2 });
       }
@@ -2538,28 +2038,16 @@ function renderBracket(events, standingsData) {
   const savedFav = localStorage.getItem('bracketFav') || '';
 
   // Simula os resultados
-  const r16raw = simulateRound(round32, savedFav);
-  // Reordena r16 para a ordem oficial das Oitavas: [89,90,93,94,91,92,95,96]
-  // (pares originais: 0-1=74+77→89, 2-3=73+75→90, 4-5=76+78→91, 6-7=79+80→92,
-  //  8-9=83+84→93, 10-11=81+82→94, 12-13=86+88→95, 14-15=85+87→96)
-  // Ordem oficial: 89(0), 90(1), 93(4), 94(5), 91(2), 92(3), 95(6), 96(7)
-  const r16Order = [0,1,4,5,2,3,6,7];
-  const r16 = r16Order.map(i => r16raw[i]).filter(Boolean);
-  const qfRaw = simulateRound(r16, savedFav);
-  // Reordena qf para ordem oficial: QF1(89x90), QF2(91x92), QF3(93x94), QF4(95x96)
-  // r16 ordem: [89,90,93,94,91,92,95,96]
-  // Pares do simulateRound: 0-1=89x90→QF1, 2-3=93x94→QF3, 4-5=91x92→QF2, 6-7=95x96→QF4
-  // Ordem oficial: QF1(0), QF2(2), QF3(1), QF4(3)
-  const qfOrder = [0,2,1,3];
-  const qf = qfOrder.map(i => qfRaw[i]).filter(Boolean);
+  const r16 = simulateRound(round32, savedFav);
+  const qf = simulateRound(r16, savedFav);
   const sf = simulateRound(qf, savedFav);
 
   // Final e 3º lugar
   let thirdPlace = null;
   let finalMatch = null;
   if (sf.length >= 2) {
-    const sf0Winner = savedFav ? simulateWinnerFav(sf[0], savedFav, scoreMap) : simulateWinner(sf[0], scoreMap);
-    const sf1Winner = savedFav ? simulateWinnerFav(sf[1], savedFav, scoreMap) : simulateWinner(sf[1], scoreMap);
+    const sf0Winner = savedFav ? simulateWinnerFav(sf[0], savedFav) : simulateWinner(sf[0]);
+    const sf1Winner = savedFav ? simulateWinnerFav(sf[1], savedFav) : simulateWinner(sf[1]);
     const sf0Loser = sf0Winner === sf[0].a ? sf[0].b : sf[0].a;
     const sf1Loser = sf1Winner === sf[1].a ? sf[1].b : sf[1].a;
     thirdPlace = { a: sf0Loser, b: sf1Loser };
@@ -2601,32 +2089,14 @@ function renderBracket(events, standingsData) {
   // Renderiza
   let h = '<div class="bracket-section"><div class="bracket">';
 
-  // Segunda Fase — ordenada por data crescente
+  // Segunda Fase
   h += '<div class="bracket-round"><div class="bracket-round-title">Segunda Fase (32)</div>';
-  const round32Sorted = [...round32].sort((a, b) => {
-    // Converte DD/MM HHh para string comparável MM/DD/HH
-    function sortKey(s) {
-      const parts = (s||'').split(' ');
-      const dp = parts[0] ? parts[0].split('/') : ['',''];
-      return dp[1]+'/'+dp[0]+'/'+(parts[1]||'');
-    }
-    const ka = sortKey(a.date), kb = sortKey(b.date);
-    if (ka < kb) return -1;
-    if (ka > kb) return 1;
-    return 0;
-  });
-  round32Sorted.forEach(m => {
-    if (!m.a && !m.b) return;
-    const aName = m.a ? (m.a.name || 'A definir') : 'A definir';
-    const bName = m.b ? (m.b.name || 'A definir') : 'A definir';
-    const aAbbr = m.a ? (m.a.abbr || '') : '';
-    const bAbbr = m.b ? (m.b.abbr || '') : '';
-    // Verifica se o jogo está ao vivo
-    const isLive = aAbbr && bAbbr ? (allGames||[]).some(g => {
-      if (getStatus(g) !== 'live') return false;
-      const cmp = g.competitions?.[0]?.competitors||[];
-      return cmp.some(c => c.team?.abbreviation === aAbbr) && cmp.some(c => c.team?.abbreviation === bAbbr);
-    }) : false;
+  round32.forEach(m => {
+    if (!m.a || !m.b) return;
+    const aName = m.a.name || 'A definir';
+    const bName = m.b.name || 'A definir';
+    const aAbbr = m.a.abbr || '';
+    const bAbbr = m.b.abbr || '';
     // Extrai grupos do label pra verificar cada time individualmente
     const labelGroups = (m.label||'').match(/[1-3]º ([A-L])/g) || [];
     const groupLetters = labelGroups.map(lg => lg.slice(-1));
@@ -2641,90 +2111,15 @@ function renderBracket(events, standingsData) {
     const bProbable = !bGroupFinished;
     // Confronto é provável se PELO MENOS UM time ainda não está confirmado
     const isProbable = aProbable || bProbable;
-    let matchClass = '';
-    if (isLive) matchClass = ' live';
-    else if (isProbable) matchClass = ' probable';
-    h += '<div class="bracket-match'+matchClass+'"><div class="match-teams">';
-    const aScore = aAbbr && scoreMap[aAbbr] ? scoreMap[aAbbr].score : null;
-    const bScore = bAbbr && scoreMap[bAbbr] ? scoreMap[bAbbr].score : null;
+    h += '<div class="bracket-match'+(isProbable?' probable':'')+'"><div class="match-teams">';
+    const aScore = scoreMap[aAbbr] ? scoreMap[aAbbr].score : null;
+    const bScore = scoreMap[bAbbr] ? scoreMap[bAbbr].score : null;
     const aScoreHtml = aScore !== null ? '<span class="score-display">'+aScore+'</span>' : '';
     const bScoreHtml = bScore !== null ? '<span class="score-display">'+bScore+'</span>' : '';
-    // Verifica se houve pênaltis (placar empatado mas com winner)
-    let penaltiInfo = '';
-    let winnerClassA = '', winnerClassB = '';
-    if (aScore !== null && bScore !== null && aScore === bScore && aAbbr && bAbbr) {
-      const sa = scoreMap[aAbbr];
-      const sb = scoreMap[bAbbr];
-      if (sa && sb && (sa.winner || sb.winner)) {
-        if (sa.winner) winnerClassA = ' winner-pen';
-        if (sb.winner) winnerClassB = ' winner-pen';
-        // Conta pênaltis convertidos de cada time nos details
-        let penA = 0, penB = 0;
-        (allGames||[]).forEach(g => {
-          const slug = (g.season?.slug || '');
-          if (slug !== 'round-of-32') return;
-          const cmp = g.competitions?.[0]?.competitors||[];
-          const abs = cmp.map(c => c.team?.abbreviation);
-          if (!abs.includes(aAbbr) || !abs.includes(bAbbr)) return;
-          const details = g.competitions?.[0]?.details || [];
-          details.forEach(d => {
-            if (!d.shootout || !d.scoringPlay) return;
-            const teamId = d.team?.id || '';
-            const teamMap = {};
-            cmp.forEach(c => { if (c.team?.id) teamMap[c.team.id] = c.team?.abbreviation; });
-            const tAbbr = teamMap[teamId] || '';
-            if (tAbbr === aAbbr) penA++;
-            else if (tAbbr === bAbbr) penB++;
-          });
-        });
-        const total = penA + penB;
-        penaltiInfo = ' ' + penA + '-' + penB + ' (pênaltis)';
-      }
-    }
-    h += '<div class="team-row'+winnerClassA+'"><div class="team-info"><img class="flag" src="'+flagUrl(aAbbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+aName+'</span>'+aScoreHtml+(aProbable?'<span class="bracket-probable">(provável)</span>':'')+'</div></div>';
-    // Mostra tempo de jogo se estiver ao vivo
-    let clockHtml = '';
-    if (isLive && aAbbr && bAbbr) {
-      const liveGame = (allGames||[]).find(g => {
-        if (getStatus(g) !== 'live') return false;
-        const cmp = g.competitions?.[0]?.competitors||[];
-        return cmp.some(c => c.team?.abbreviation === aAbbr) && cmp.some(c => c.team?.abbreviation === bAbbr);
-      });
-      if (liveGame) {
-        const clock = liveGame.competitions?.[0]?.status?.displayClock || '';
-        if (clock) clockHtml = '<span style="font-size:.6rem;color:#22c55e;font-weight:600;display:block;text-align:center;">🔴 '+clock+'</span>';
-      }
-    }
-    h += '<div class="match-vs">X'+clockHtml+'</div>';
-    h += '<div class="team-row'+winnerClassB+'"><div class="team-info"><img class="flag" src="'+flagUrl(bAbbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+bName+'</span>'+bScoreHtml+(bProbable?'<span class="bracket-probable">(provável)</span>':'')+'</div></div>';
-    h += '</div><div class="match-label">'+(m.date ? m.date+' — ' : '')+m.label+(isProbable?' — provável':'')+penaltiInfo+'</div>';
-    if (m.venue) h += '<div class="match-venue">📍 '+m.venue+'</div>';
-    // Gols do jogo (se já aconteceu ou está ao vivo)
-    if (aAbbr && bAbbr && (aScore !== null || isLive)) {
-      var gameGoals = [];
-      (allGames||[]).forEach(function(g) {
-        var slug = (g.season?.slug || '');
-        if (slug !== 'round-of-32') return;
-        var cmp = g.competitions?.[0]?.competitors||[];
-        var abs = cmp.map(function(c) { return c.team?.abbreviation; });
-        if (!abs.includes(aAbbr) || !abs.includes(bAbbr)) return;
-        gameGoals = extractGoals(g);
-      });
-      if (gameGoals.length > 0) {
-        h += '<div style="margin-top:4px;padding-top:4px;border-top:1px solid #1e293b;font-size:.6rem;line-height:1.4;">';
-        gameGoals.forEach(function(goal) {
-          var isA = goal.team === aAbbr;
-          var teamName = isA ? aName : bName;
-          h += '<div style="display:flex;align-items:center;gap:3px;padding:1px 0;">';
-          h += '<span style="color:#64748b;min-width:24px;">'+goal.minute+'</span>';
-          h += '<span style="color:'+(isA?'#f59e0b':'#94a3b8')+';font-weight:600;">'+teamName+'</span>';
-          h += '<span style="color:#e2e8f0;">'+goal.scorer+'</span>';
-          h += '</div>';
-        });
-        h += '</div>';
-      }
-    }
-    h += '</div>';
+    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(aAbbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+aName+'</span>'+aScoreHtml+(aProbable?'<span class="bracket-probable">(provável)</span>':'')+'</div></div>';
+    h += '<div class="match-vs">X</div>';
+    h += '<div class="team-row"><div class="team-info"><img class="flag" src="'+flagUrl(bAbbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+bName+'</span>'+bScoreHtml+(bProbable?'<span class="bracket-probable">(provável)</span>':'')+'</div></div>';
+    h += '</div><div class="match-label">'+(m.date ? m.date+' — ' : '')+m.label+(isProbable?' — provável':'')+'</div></div>';
   });
   h += '</div>';
 
@@ -2739,68 +2134,63 @@ function renderBracket(events, standingsData) {
   // Match 95: 07/07 12pm ET (Atlanta) = 13h BRT
   // Match 96: 07/07 4pm ET (Vancouver) = 17h BRT
   const r16dates = ['04/07 14h','04/07 18h','05/07 17h','05/07 21h','06/07 16h','06/07 21h','07/07 13h','07/07 17h'];
-  const r16venues = ['Houston','Filadélfia','Nova York','Cidade do México','Dallas','Seattle','Atlanta','Vancouver'];
   // Quartas (fontes: NBC Sports)
   // Match 97: 09/07 4pm ET (Boston) = 17h BRT
   // Match 98: 10/07 3pm ET (LA) = 16h BRT
   // Match 99: 11/07 5pm ET (Miami) = 18h BRT
   // Match 100: 11/07 9pm ET (KC) = 22h BRT
   const qfDates  = ['09/07 17h','10/07 16h','11/07 18h','11/07 22h'];
-  const qfVenues = ['Boston','Los Angeles','Miami','Kansas City'];
   // Semifinais (fontes: NBC Sports)
   // Match 101: 14/07 3pm ET (Dallas) = 16h BRT
   // Match 102: 15/07 3pm ET (Atlanta) = 16h BRT
   const sfDates  = ['14/07 16h','15/07 16h'];
-  const sfVenues = ['Dallas','Atlanta'];
   // 3º lugar: 18/07 5pm ET (Miami) = 18h BRT
   const thirdDate = '18/07 18h';
-  const thirdVenue = 'Miami';
   // Final: 19/07 3pm ET (NY) = 16h BRT
   const finalDate = '19/07 16h';
-  const finalVenue = 'Nova York';
 
   // Helper para renderizar time com (P) - sem score (score só na Segunda Fase)
   function teamHtml(t, showProb) {
     if (!t) return '<span class="name">A definir</span>';
     const s = scoreMap[t.abbr];
-    const confirmed = s && (s.status==='final'||s.status==='completed'||s.status==='3'||s.status==='post');
+    const confirmed = s && s.status !== 'pre' && s.status !== 'scheduled';
     const probHtml = showProb && !confirmed ? ' <span class="bracket-probable">(P)</span>' : '';
     return '<img class="flag" src="'+flagUrl(t.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(t.name||'A definir')+'</span>'+probHtml;
   }
-  function matchHtml(m, label, showProb, venue) {
-    if (!m || !m.a || !m.b) return '<div class="bracket-match probable"><div class="match-teams"><div class="team-row"><div class="team-info"><span class="name">A definir</span></div></div><div class="match-vs">X</div><div class="team-row"><div class="team-info"><span class="name">A definir</span></div></div></div><div class="match-label">'+label+'</div>'+(venue?'<div class="match-venue">📍 '+venue+'</div>':'')+'</div>';
-    return '<div class="bracket-match probable"><div class="match-teams"><div class="team-row"><div class="team-info">'+teamHtml(m.a, showProb)+'</div></div><div class="match-vs">X</div><div class="team-row"><div class="team-info">'+teamHtml(m.b, showProb)+'</div></div></div><div class="match-label">'+label+'</div>'+(venue?'<div class="match-venue">📍 '+venue+'</div>':'')+'</div>';
+  function matchHtml(m, label, showProb) {
+    if (!m || !m.a || !m.b) return '<div class="bracket-match probable"><div class="match-teams"><div class="team-row"><div class="team-info"><span class="name">A definir</span></div></div><div class="match-vs">X</div><div class="team-row"><div class="team-info"><span class="name">A definir</span></div></div></div><div class="match-label">'+label+'</div></div>';
+    return '<div class="bracket-match probable"><div class="match-teams"><div class="team-row"><div class="team-info">'+teamHtml(m.a, showProb)+'</div></div><div class="match-vs">X</div><div class="team-row"><div class="team-info">'+teamHtml(m.b, showProb)+'</div></div></div><div class="match-label">'+label+'</div></div>';
   }
 
   // Oitavas
   h += '<div class="bracket-round"><div class="bracket-round-title">Oitavas (16)</div>';
-  r16.forEach((m,i) => { h += matchHtml(m, (r16dates[i]||'')+' — provável', true, r16venues[i]); });
+  r16.forEach((m,i) => { h += matchHtml(m, (r16dates[i]||'')+' — provável', true); });
   h += '</div>';
 
   // Quartas
   h += '<div class="bracket-round"><div class="bracket-round-title">Quartas (8)</div>';
-  qf.forEach((m,i) => { h += matchHtml(m, (qfDates[i]||'')+' — provável', true, qfVenues[i]); });
+  qf.forEach((m,i) => { h += matchHtml(m, (qfDates[i]||'')+' — provável', true); });
   h += '</div>';
 
   // Semifinais
   h += '<div class="bracket-round"><div class="bracket-round-title">Semifinais (4)</div>';
-  sf.forEach((m,i) => { h += matchHtml(m, (sfDates[i]||'')+' — provável', true, sfVenues[i]); });
+  sf.forEach((m,i) => { h += matchHtml(m, (sfDates[i]||'')+' — provável', true); });
   h += '</div>';
 
   // 3º Lugar
   h += '<div class="bracket-round"><div class="bracket-round-title">3º Lugar</div>';
-  h += matchHtml(thirdPlace, thirdDate+' — provável', true, thirdVenue);
+  h += matchHtml(thirdPlace, thirdDate+' — provável', true);
   h += '</div>';
 
   // Final
   h += '<div class="bracket-round"><div class="bracket-round-title">Final</div>';
-  h += matchHtml(finalMatch, finalDate+' — Final', true, finalVenue);
+  h += matchHtml(finalMatch, finalDate+' — Final', true);
   h += '</div>';
 
   // Champion box
   let champTeam = null;
   if (finalMatch && finalMatch.a && finalMatch.b) {
-    champTeam = simulateWinner(finalMatch, scoreMap);
+    champTeam = simulateWinner(finalMatch);
   }
   h += '<div class="bracket-round"><div class="bracket-round-title">🏆 Campeão</div>';
   if (champTeam) {
@@ -2834,38 +2224,11 @@ document.querySelectorAll('.nav-btn').forEach(btn=>{
     if (btn.dataset.section === 'stats') {
       renderStats();
     }
-    // Se clicou em Cards do Ao Vivo, renderiza
-    if (btn.dataset.section === 'livecards') {
-      renderLiveCards();
-    }
-    // Se clicou em Arte Visual, renderiza
-    if (btn.dataset.section === 'artevisual') {
-      renderArteVisual();
-    }
   });
 });
 
 // Filtro
 document.getElementById('gameFilter')?.addEventListener('input', renderGames);
-
-// ─── Arte Visual ────────────────────────────────────────────────
-function renderArteVisual() {
-  const container = document.getElementById('arte-visual-container');
-  if (!container) return;
-  
-  // Pega os classificados do cache
-  const classified = window.__classifiedCache || [];
-  if (classified.length === 0) {
-    container.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>🎨 Aguardando dados dos classificados...</p></div>';
-    return;
-  }
-  
-  if (typeof ArteVisual !== 'undefined') {
-    ArteVisual.render(container, classified, null);
-  } else {
-    container.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>🎨 Carregando visualização...</p></div>';
-  }
-}
 
 // Auto refresh
 loadAll();
@@ -2876,28 +2239,6 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/copa/sw.js');
 }
 
-let deferredPrompt = null;
-
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  deferredPrompt = e;
-  document.getElementById('installBtn').classList.remove('hidden');
-});
-
-window.addEventListener('appinstalled', () => {
-  deferredPrompt = null;
-  document.getElementById('installBtn').classList.add('hidden');
-});
-
-function installPWA() {
-  if (!deferredPrompt) return;
-  deferredPrompt.prompt();
-  deferredPrompt.userChoice.then(() => {
-    deferredPrompt = null;
-    document.getElementById('installBtn').classList.add('hidden');
-  });
-}
-
 function openBMC() {
   document.getElementById('bmcOverlay').style.display = 'flex';
   document.body.style.overflow = 'hidden';
@@ -2906,10 +2247,18 @@ function closeBMC() {
   document.getElementById('bmcOverlay').style.display = 'none';
   document.body.style.overflow = '';
 }
+// ─── Arte Visual ────────────────────────────────────────────────
+function renderArteVisual() {
+  const container = document.getElementById('arte-visual-container');
+  if (!container) return;
+}
 </script>
 
-<!-- Arte Visual -->
-<script src="/copa/arte-visual.js"></script>
+  <div id="section-artevisual" class="section-content" style="display:none">
+    <div class="section-title">🎨 Arte Visual <span class="bar"></span></div>
+    <div style="font-size:.75rem;color:#64748b;margin-bottom:12px;text-align:center;">Visualização 3D dos classificados — arraste para girar</div>
+    <div id="arte-visual-container" style="width:100%;height:calc(100vh - 200px);min-height:500px;position:relative;"><div class="loading-state" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)"><div class="spinner"></div><p>🎨 Carregando visualização 3D...</p></div></div>
+  </div>
 
 <!-- BMC Modal -->
 <div class="bmc-overlay" id="bmcOverlay" onclick="if(event.target===this)closeBMC()">
@@ -2919,8 +2268,8 @@ function closeBMC() {
     <p class="sub">Se você gostou da tabela da Copa, que tal me pagar um café? ☕⚽</p>
     <div class="heart">💛</div>
     <p class="desc">
-      Toda contribuição ajuda a manter o projeto ativo —<br>
-      melhorar integrações, APIs e acompanhar os jogos com muito café.
+      Toda contribuição ajuda a manter os servidores rodando —<br>
+      atualizações ao vivo, APIs, e muito café pra acompanhar os jogos.
     </p>
     <div class="pix-box">
       <strong>📱 Pix</strong>
@@ -2935,7 +2284,9 @@ function closeBMC() {
   </div>
 </div>
 
-<!-- Arte Visual -->
+
+
+
 <script type="module">
 
 import * as THREE from 'three';
