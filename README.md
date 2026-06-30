@@ -30,7 +30,7 @@ Dados em tempo real via **ESPN API**, sem necessidade de cadastro ou chave de AP
 | 🔍 **Filtro** | Busque por qualquer time para ver apenas seus jogos |
 | 🎯 **Filtro por status** | Encerrados, ao vivo ou programados |
 | 📈 **Estatísticas** | Ataque, defesa, artilheiros e ranking de times |
-| 📺 **Cazé TV** | Jogos ao vivo que estão passando na Cazé TV |
+| 📺 **Cazé TV** | Transmissões, reacts e conteúdos ao vivo da Cazé TV no YouTube |
 | 🔄 **Auto-atualização** | Dados atualizados a cada 3 minutos |
 | 📲 **PWA** | Instalável na tela inicial do celular |
 | 🌙 **Dark mode** | Tema escuro para não cansar a vista |
