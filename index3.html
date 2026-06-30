@@ -2551,6 +2551,9 @@ function renderBracket(events, standingsData) {
   }
 
   // Renderiza diagrama
+  // Cache para a Arte Visual
+  window.__bracketCache = { r16, qf, sf, finalMatch, thirdPlace };
+
   renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events);
 
   // Renderiza botões de favoritos (sempre, pra garantir que atualiza)
@@ -2844,8 +2847,11 @@ function renderArteVisual() {
     return;
   }
   
+  // Pega dados do bracket (r16, qf, sf, finalMatch)
+  const bracketData = window.__bracketCache || null;
+  
   if (typeof ArteVisual !== 'undefined') {
-    ArteVisual.render(container, classified, null);
+    ArteVisual.render(container, classified, bracketData);
   } else {
     container.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>🎨 Carregando visualização...</p></div>';
   }
