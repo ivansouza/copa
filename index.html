@@ -2767,17 +2767,35 @@ function renderBracket(events, standingsData) {
 
   // Oitavas
   h += '<div class="bracket-round"><div class="bracket-round-title">Oitavas (16)</div>';
-  r16.forEach((m,i) => { h += matchHtml(m, (r16dates[i]||'')+' — provável', true, r16venues[i]); });
+  r16.forEach((m,i) => {
+    var bothConfirmed = m && m.a && m.b && scoreMap[m.a.abbr] && scoreMap[m.b.abbr] && 
+      (scoreMap[m.a.abbr].status==='final'||scoreMap[m.a.abbr].status==='completed'||scoreMap[m.a.abbr].status==='3'||scoreMap[m.a.abbr].status==='post') &&
+      (scoreMap[m.b.abbr].status==='final'||scoreMap[m.b.abbr].status==='completed'||scoreMap[m.b.abbr].status==='3'||scoreMap[m.b.abbr].status==='post');
+    var label = (r16dates[i]||'') + (bothConfirmed ? '' : ' — provável');
+    h += matchHtml(m, label, !bothConfirmed, r16venues[i]);
+  });
   h += '</div>';
 
   // Quartas
   h += '<div class="bracket-round"><div class="bracket-round-title">Quartas (8)</div>';
-  qf.forEach((m,i) => { h += matchHtml(m, (qfDates[i]||'')+' — provável', true, qfVenues[i]); });
+  qf.forEach((m,i) => {
+    var bothConfirmed = m && m.a && m.b && scoreMap[m.a.abbr] && scoreMap[m.b.abbr] && 
+      (scoreMap[m.a.abbr].status==='final'||scoreMap[m.a.abbr].status==='completed'||scoreMap[m.a.abbr].status==='3'||scoreMap[m.a.abbr].status==='post') &&
+      (scoreMap[m.b.abbr].status==='final'||scoreMap[m.b.abbr].status==='completed'||scoreMap[m.b.abbr].status==='3'||scoreMap[m.b.abbr].status==='post');
+    var label = (qfDates[i]||'') + (bothConfirmed ? '' : ' — provável');
+    h += matchHtml(m, label, !bothConfirmed, qfVenues[i]);
+  });
   h += '</div>';
 
   // Semifinais
   h += '<div class="bracket-round"><div class="bracket-round-title">Semifinais (4)</div>';
-  sf.forEach((m,i) => { h += matchHtml(m, (sfDates[i]||'')+' — provável', true, sfVenues[i]); });
+  sf.forEach((m,i) => {
+    var bothConfirmed = m && m.a && m.b && scoreMap[m.a.abbr] && scoreMap[m.b.abbr] && 
+      (scoreMap[m.a.abbr].status==='final'||scoreMap[m.a.abbr].status==='completed'||scoreMap[m.a.abbr].status==='3'||scoreMap[m.a.abbr].status==='post') &&
+      (scoreMap[m.b.abbr].status==='final'||scoreMap[m.b.abbr].status==='completed'||scoreMap[m.b.abbr].status==='3'||scoreMap[m.b.abbr].status==='post');
+    var label = (sfDates[i]||'') + (bothConfirmed ? '' : ' — provável');
+    h += matchHtml(m, label, !bothConfirmed, sfVenues[i]);
+  });
   h += '</div>';
 
   // 3º Lugar
