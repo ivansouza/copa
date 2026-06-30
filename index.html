@@ -1058,11 +1058,11 @@ function renderLiveCards() {
     // Detecta vencedor nos penaltis
     const hw = hasPenaltis && home.winner === true;
     const aw = hasPenaltis && away.winner === true;
-    h += '<div class="'+(hw?'lwp':'')+'" style="display:flex;align-items:center;gap:6px;"><img class="flag" src="'+flagUrl(ha)+'" alt="" style="width:24px;height:16px;border-radius:2px;" loading="lazy" onerror="this.style.display='none'"><span class="n" style="font-weight:700;font-size:.9rem;">'+hn+'</span></div>';
+    h += '<div class="'+(hw?'lwp':'')+'" style="display:flex;align-items:center;gap:6px;"><img class="flag" src="'+flagUrl(ha)+'" alt="" style="width:24px;height:16px;border-radius:2px;" loading="lazy" onerror="this.style.display=\'none\'"><span class="n" style="font-weight:700;font-size:.9rem;">'+hn+'</span></div>';
     h += '<span class="'+(hw?'s':'')+'" style="font-weight:800;font-size:1.3rem;color:#f59e0b;">'+(hs!==''&&hs!==null?hs:'-')+'</span>';
     h += '<span style="color:#475569;font-weight:500;">X</span>';
     h += '<span class="'+(aw?'s':'')+'" style="font-weight:800;font-size:1.3rem;color:#f59e0b;">'+(as!==''&&as!==null?as:'-')+'</span>';
-    h += '<div class="'+(aw?'lwp':'')+'" style="display:flex;align-items:center;gap:6px;"><span class="n" style="font-weight:700;font-size:.9rem;">'+an+'</span><img class="flag" src="'+flagUrl(aa)+'" alt="" style="width:24px;height:16px;border-radius:2px;" loading="lazy" onerror="this.style.display='none'"></div>';
+    h += '<div class="'+(aw?'lwp':'')+'" style="display:flex;align-items:center;gap:6px;"><span class="n" style="font-weight:700;font-size:.9rem;">'+an+'</span><img class="flag" src="'+flagUrl(aa)+'" alt="" style="width:24px;height:16px;border-radius:2px;" loading="lazy" onerror="this.style.display=\'none\'"></div>';
     h += '</div>';
         // Verifica penaltis
     const penInfo = penaltisByGame[g.id];
