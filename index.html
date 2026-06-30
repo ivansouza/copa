@@ -1590,6 +1590,9 @@ function simulateWinner(match, sm) {
   if (sm) {
     const sa = sm[match.a.abbr];
     const sb = sm[match.b.abbr];
+    // Se um dos times ja foi eliminado (perdeu), o outro vence
+    if (sa && sa.lost) return match.b;
+    if (sb && sb.lost) return match.a;
     if (sa && sb && sa.status !== 'pre' && sa.status !== 'scheduled' &&
         sb.status !== 'pre' && sb.status !== 'scheduled') {
       const scA = sa.score, scB = sb.score;
@@ -1612,8 +1615,13 @@ function simulateWinner(match, sm) {
 }
 
 function simulateWinnerFav(match, favAbbr) {
-  // Se o favorito está no match, ele sempre vence
+  // Se o favorito está no match, ele sempre vence (a menos que ja tenha perdido)
   if (!match.a || !match.b) return match.a || match.b;
+  // Verifica se o favorito ja foi eliminado
+  if (scoreMap && scoreMap[favAbbr] && scoreMap[favAbbr].lost) {
+    // Favorito eliminado: simula normal sem privilegio
+    return simulateWinner(match);
+  }
   if (match.a.abbr === favAbbr) return match.a;
   if (match.b.abbr === favAbbr) return match.b;
   // Se não, simula normal
