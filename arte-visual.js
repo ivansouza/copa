@@ -69,17 +69,17 @@
     }, 10000);
   }
 
-  // ─── Cria textura circular da bandeira ──────────────────────────
+  // ─── Cria textura da bandeira (quadrada, pra esfera) ────────────
   function createFlagTexture(flagUrl, abbr, size) {
     return new Promise((resolve) => {
+      const s = size || 256;
       const canvas = document.createElement('canvas');
-      canvas.width = size || 128;
-      canvas.height = size || 128;
+      canvas.width = s;
+      canvas.height = s;
       const ctx = canvas.getContext('2d');
-      const s = canvas.width;
-      const r = s / 2 - 4;
 
-      ctx.fillStyle = '#1e293b';
+      // Fundo escuro
+      ctx.fillStyle = '#0f172a';
       ctx.fillRect(0, 0, s, s);
 
       const img = new Image();
@@ -87,27 +87,31 @@
       img.src = flagUrl;
 
       img.onload = () => {
+        // Desenha a bandeira ocupando quase toda a textura
+        const margin = s * 0.08;
         ctx.save();
         ctx.beginPath();
-        ctx.arc(s/2, s/2, r, 0, Math.PI * 2);
+        ctx.arc(s/2, s/2, s/2 - margin, 0, Math.PI * 2);
         ctx.clip();
-        ctx.drawImage(img, 4, 4, s - 8, s - 8);
+        ctx.drawImage(img, margin, margin, s - margin*2, s - margin*2);
         ctx.restore();
+        // Borda dourada
         ctx.strokeStyle = '#f59e0b';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 3;
         ctx.beginPath();
-        ctx.arc(s/2, s/2, r, 0, Math.PI * 2);
+        ctx.arc(s/2, s/2, s/2 - margin, 0, Math.PI * 2);
         ctx.stroke();
         resolve(new window.__THREE.THREE.CanvasTexture(canvas));
       };
 
       img.onerror = () => {
+        // Fallback: círculo com abreviatura
         ctx.fillStyle = '#2d3a4e';
         ctx.beginPath();
-        ctx.arc(s/2, s/2, r, 0, Math.PI * 2);
+        ctx.arc(s/2, s/2, s/2 - 8, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = '#f59e0b';
-        ctx.font = `bold ${s * 0.28}px Inter, sans-serif`;
+        ctx.font = `bold ${s * 0.3}px Inter, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(abbr || '?', s/2, s/2);
@@ -116,22 +120,28 @@
     });
   }
 
-  // ─── Cria um time (bandeira + label) numa posição ───────────────
+  // ─── Cria um time (esfera com bandeira + label) ────────────────
   async function createTeamMesh(team, x, y, z, flagSize, labelOffset, opacity) {
     const THREE = window.__THREE.THREE;
     const flagSrc = window.flagUrl ? window.flagUrl(team.abbr) : '';
-    const tex = await createFlagTexture(flagSrc, team.abbr, 128);
+    const tex = await createFlagTexture(flagSrc, team.abbr, 256);
 
-    const geo = new THREE.PlaneGeometry(flagSize, flagSize);
-    const mat = new THREE.MeshBasicMaterial({
+    // Esfera com a bandeira como textura
+    const geo = new THREE.SphereGeometry(flagSize * 0.5, 24, 24);
+    const mat = new THREE.MeshStandardMaterial({
       map: tex,
-      side: THREE.DoubleSide,
+      roughness: 0.3,
+      metalness: 0.1,
+      emissive: new THREE.Color(0xf59e0b),
+      emissiveIntensity: 0.05,
       transparent: true,
       opacity: opacity || 1,
     });
     const mesh = new THREE.Mesh(geo, mat);
     mesh.position.set(x, y, z);
-    mesh.lookAt(0, y, 0);
+    // Rotaciona levemente pra variar
+    mesh.rotation.y = Math.random() * Math.PI * 2;
+    mesh.rotation.x = (Math.random() - 0.5) * 0.3;
 
     // Label
     const c2 = document.createElement('canvas');
