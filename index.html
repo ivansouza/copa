@@ -1123,42 +1123,6 @@ function renderLiveCards() {
     h += '</div></div>';
   });
 
-  // ---- ARTILHEIROS ----
-  // Extrai todos os gols de todos os jogos (qualquer fase) e conta por jogador
-  var scorerCount = {};
-  var scorerTeam = {};
-  (allGames||[]).forEach(function(g) {
-    var st = getStatus(g);
-    if (st === 'scheduled') return;
-    var goals = extractGoals(g);
-    goals.forEach(function(goal) {
-      var name = goal.scorer;
-      if (!name || name === '?') return;
-      if (!scorerCount[name]) scorerCount[name] = 0;
-      scorerCount[name]++;
-      scorerTeam[name] = goal.team;
-    });
-  });
-  var topScorers = Object.keys(scorerCount)
-    .map(function(name) { return { name: name, gols: scorerCount[name], team: scorerTeam[name] }; })
-    .sort(function(a, b) { return b.gols - a.gols; })
-    .slice(0, 10);
-
-  if (topScorers.length > 0) {
-    h += card('⚽ 10 Maiores Artilheiros', '#f59e0b',
-      '<div style="display:flex;flex-direction:column;gap:6px;">'
-      + topScorers.map(function(s, i) {
-        var medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '#'+(i+1);
-        return '<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:linear-gradient(145deg,#1e293b,#1a2332);border:1px solid '+(i<3?'#f59e0b44':'#2d3a4e')+';border-radius:8px;">'
-          + '<span style="font-weight:800;font-size:.9rem;min-width:28px;color:'+(i<3?'#f59e0b':'#64748b')+';">'+medal+'</span>'
-          + '<img class="flag" src="'+flagUrl(s.team)+'" alt="" style="width:20px;height:14px;border-radius:2px;" loading="lazy" onerror="this.style.display=\'none\'">'
-          + '<span style="flex:1;font-weight:600;font-size:.85rem;">'+s.name+'</span>'
-          + '<span style="font-weight:800;font-size:1.1rem;color:#22c55e;">'+s.gols+'</span>'
-          + '<span style="font-size:.7rem;color:#64748b;">'+(s.gols === 1 ? 'gol' : 'gols')+'</span></div>';
-      }).join('')
-      + '</div>');
-  }
-
   c.innerHTML = h;
 }
 
