@@ -665,7 +665,6 @@
     <button class="nav-btn" data-section="stats">📈 Estatísticas</button>
     <button class="nav-btn" data-section="live">📺 Ao Vivo na Cazé TV</button>
     <button class="nav-btn" data-section="artevisual">🎨 Arte Visual</button>
-    
   </div>
 
   <div id="section-groups" class="section-content" style="display:none">
@@ -738,12 +737,6 @@
         </div>
       </div>
     </div>
-  </div>
-
-  <div id="section-artevisual" class="section-content" style="display:none">
-    <div class="section-title">🎨 Arte Visual <span class="bar"></span></div>
-    <div style="font-size:.75rem;color:#64748b;margin-bottom:12px;text-align:center;">Visualização 3D dos classificados — arraste para girar</div>
-    <div id="arte-visual-container" style="width:100%;height:calc(100vh - 200px);min-height:500px;position:relative;"><div class="loading-state" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)"><div class="spinner"></div><p>🎨 Carregando visualização 3D...</p></div></div>
   </div>
 
   <div id="section-livecards" class="section-content" style="display:none">
@@ -2558,7 +2551,6 @@ function renderBracket(events, standingsData) {
   }
 
   // Renderiza diagrama
-  window.__bracketCache = { round32: round32, r16raw: r16raw, r16: r16, qf: qf, sf: sf, finalMatch: finalMatch, thirdPlace: thirdPlace };
   renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events);
 
   // Renderiza botões de favoritos (sempre, pra garantir que atualiza)
@@ -2827,7 +2819,6 @@ document.querySelectorAll('.nav-btn').forEach(btn=>{
       renderStats();
     }
     // Se clicou em Cards do Ao Vivo, renderiza
-    if (btn.dataset.section === 'artevisual') { renderArteVisual(); }
     if (btn.dataset.section === 'livecards') {
       renderLiveCards();
     }
@@ -2845,16 +2836,19 @@ document.getElementById('gameFilter')?.addEventListener('input', renderGames);
 function renderArteVisual() {
   const container = document.getElementById('arte-visual-container');
   if (!container) return;
-  // Remove canvas anterior se existir (para recriação)
-  var oldCanvas = container.querySelector('canvas');
-  if (oldCanvas) {
-    oldCanvas.remove();
-    container.innerHTML = '';
+  
+  // Pega os classificados do cache
+  const classified = window.__classifiedCache || [];
+  if (classified.length === 0) {
+    container.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>🎨 Aguardando dados dos classificados...</p></div>';
+    return;
   }
-  // Mostra loading
-  container.innerHTML = '<div class="loading-state" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)"><div class="spinner"></div><p>🎨 Carregando visualização 3D...</p></div>';
-  // A função real está definida no final do HTML
-  // Ela substitui esta função na primeira execução
+  
+  if (typeof ArteVisual !== 'undefined') {
+    ArteVisual.render(container, classified, null);
+  } else {
+    container.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>🎨 Carregando visualização...</p></div>';
+  }
 }
 
 // Auto refresh
@@ -2924,308 +2918,6 @@ function closeBMC() {
     <div class="footer">Copa do Mundo 2026 &bull; Dados via ESPN API</div>
   </div>
 </div>
-
-<script>
-
-// ─── Arte Visual ────────────────────────────────────────────────
-function _realRenderArteVisual() {
-  const container = document.getElementById('arte-visual-container');
-  if (!container) return;
-  
-  function loadScript(src, cb) {
-    const s = document.createElement('script');
-    s.src = src;
-    s.onload = cb;
-    document.head.appendChild(s);
-  }
-  
-  loadScript('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js', function() {
-    loadScript('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js', function() {
-      initArteVisual(container);
-    });
-  });
-}
-
-function initArteVisual(container) {
-  container.innerHTML = '';
-  
-  const RINGS = [5.0, 4.2, 3.2, 2.2, 1.2];
-  const SIZES = [0.6, 0.75, 0.9, 1.05, 1.2];
-  const C = 0xf59e0b;
-  
-  const classified = window.__classifiedCache || [];
-  const outerTeams = classified.length > 0 ? classified : getMockTeams();
-  
-  function getMockTeams() {
-    return [
-      {abbr:'ARG',name:'Argentina'},{abbr:'BRA',name:'Brasil'},{abbr:'FRA',name:'França'},{abbr:'ENG',name:'Inglaterra'},
-      {abbr:'ESP',name:'Espanha'},{abbr:'GER',name:'Alemanha'},{abbr:'NED',name:'Holanda'},{abbr:'POR',name:'Portugal'},
-      {abbr:'BEL',name:'Bélgica'},{abbr:'CRO',name:'Croácia'},{abbr:'URU',name:'Uruguai'},{abbr:'COL',name:'Colômbia'},
-      {abbr:'JPN',name:'Japão'},{abbr:'KOR',name:'Coreia do Sul'},{abbr:'USA',name:'Estados Unidos'},{abbr:'MEX',name:'México'},
-      {abbr:'CAN',name:'Canadá'},{abbr:'ECU',name:'Equador'},{abbr:'PAR',name:'Paraguai'},{abbr:'MAR',name:'Marrocos'},
-      {abbr:'SEN',name:'Senegal'},{abbr:'NGA',name:'Nigéria'},{abbr:'CMR',name:'Camarões'},{abbr:'EGY',name:'Egito'},
-      {abbr:'TUN',name:'Tunísia'},{abbr:'RSA',name:'África do Sul'},{abbr:'AUS',name:'Austrália'},{abbr:'IRN',name:'Irã'},
-      {abbr:'KSA',name:'Arábia Saudita'},{abbr:'DEN',name:'Dinamarca'},{abbr:'SUI',name:'Suíça'},{abbr:'AUT',name:'Áustria'},
-    ];
-  }
-  
-  function flagUrl(a) { return a ? 'https://a.espncdn.com/i/teamlogos/countries/500/'+a.toLowerCase()+'.png' : ''; }
-  
-  const w = container.clientWidth || 700;
-  const h = container.clientHeight || 500;
-  
-  const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0f172a);
-  
-  const camera = new THREE.PerspectiveCamera(50, w/h, 0.1, 100);
-  camera.position.set(0, 4, 13);
-  
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(w, h);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  container.appendChild(renderer.domElement);
-  
-  const controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.08;
-  controls.autoRotate = true;
-  controls.autoRotateSpeed = 0.5;
-  controls.minDistance = 5;
-  controls.maxDistance = 20;
-  controls.target.set(0, 0, 0);
-  
-  scene.add(new THREE.AmbientLight(0x404060, 0.8));
-  const d1 = new THREE.DirectionalLight(0xffffff, 1.2);
-  d1.position.set(5, 10, 7);
-  scene.add(d1);
-  
-  // Estrelas
-  const starGeo = new THREE.BufferGeometry();
-  const starPos = new Float32Array(800 * 3);
-  for (let i = 0; i < 800*3; i++) starPos[i] = (Math.random()-0.5)*100;
-  starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
-  scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0x64748b, size: 0.08, transparent: true, opacity: 0.4 })));
-  
-  // Anéis com inclinação de 15 graus no eixo Z (invisíveis)
-  RINGS.forEach(function(r, i) {
-    var pts = [];
-    var tiltZ = i * (Math.PI / 12);
-    for (var j = 0; j <= 64; j++) {
-      var a = (j / 64) * Math.PI * 2;
-      var px = r * Math.sin(a);
-      var pz = r * Math.cos(a);
-      pts.push(new THREE.Vector3(px, pz * Math.sin(tiltZ), pz * Math.cos(tiltZ)));
-    }
-    scene.add(new THREE.Line(
-      new THREE.BufferGeometry().setFromPoints(pts),
-      new THREE.LineBasicMaterial({ color: 0x2d3a4e, transparent: true, opacity: 0.0 })
-    ));
-  });
-  
-  // Helper: posição 3D com inclinação no eixo Z
-  function pos(ringIdx, idx, total) {
-    var r = RINGS[ringIdx];
-    var tilt = ringIdx * (Math.PI / 12);
-    var ang = (idx / total) * Math.PI * 2;
-    var px = r * Math.sin(ang);
-    var pz = r * Math.cos(ang);
-    return new THREE.Vector3(px, pz * Math.sin(tilt), pz * Math.cos(tilt));
-  }
-  
-  // Cria textura patchwork
-  function createPatchTexture(abbr, cb) {
-    var s = 512;
-    var canvas = document.createElement('canvas');
-    canvas.width = s; canvas.height = s;
-    var ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(0, 0, s, s);
-    var img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.src = flagUrl(abbr);
-    img.onload = function() {
-      var cols = 3, rows = 3;
-      var cellW = s / cols, cellH = s / rows;
-      for (var r = 0; r < rows; r++) {
-        for (var c = 0; c < cols; c++) {
-          var x = c * cellW, y = r * cellH;
-          var offset = (r % 2) * cellW * 0.5;
-          var cx = x + cellW/2 + offset, cy = y + cellH/2;
-          var rad = Math.min(cellW, cellH) * 0.45;
-          ctx.save();
-          ctx.beginPath();
-          for (var i = 0; i < 6; i++) {
-            var a = (i / 6) * Math.PI * 2 - Math.PI / 2;
-            var px = cx + rad * Math.cos(a), py = cy + rad * Math.sin(a);
-            i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
-          }
-          ctx.closePath(); ctx.clip();
-          ctx.drawImage(img, x + offset, y, cellW, cellH);
-          ctx.restore();
-          ctx.strokeStyle = '#f59e0b';
-          ctx.lineWidth = 1.5;
-          ctx.beginPath();
-          for (var i = 0; i < 6; i++) {
-            var a = (i / 6) * Math.PI * 2 - Math.PI / 2;
-            var px = cx + rad * Math.cos(a), py = cy + rad * Math.sin(a);
-            i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
-          }
-          ctx.closePath(); ctx.stroke();
-        }
-      }
-      cb(new THREE.CanvasTexture(canvas));
-    };
-    img.onerror = function() {
-      ctx.fillStyle = '#2d3a4e';
-      ctx.fillRect(0, 0, s, s);
-      ctx.fillStyle = '#f59e0b';
-      ctx.font = 'bold 180px Inter, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(abbr || '?', s/2, s/2);
-      cb(new THREE.CanvasTexture(canvas));
-    };
-  }
-  
-  function createSphere(team, x, y, z, size, opacity) {
-    createPatchTexture(team.abbr, function(tex) {
-      var geo = new THREE.SphereGeometry(size * 0.5, 24, 24);
-      var mat = new THREE.MeshStandardMaterial({
-        map: tex, roughness: 0.4, metalness: 0.1,
-        emissive: new THREE.Color(C), emissiveIntensity: 0.03,
-        transparent: true, opacity: opacity || 1,
-      });
-      var mesh = new THREE.Mesh(geo, mat);
-      mesh.position.set(x, y, z);
-      mesh.rotation.y = Math.random() * Math.PI * 2;
-      scene.add(mesh);
-    });
-  }
-  
-  // ─── Anel 0: 32 times na ordem do bracket ───────────────────
-  // Usa a ordem dos matches da Segunda Fase (round32)
-  var bracketData = window.__bracketCache || null;
-  var outerRingTeams = [];
-  if (bracketData && bracketData.round32) {
-    bracketData.round32.forEach(function(m) {
-      if (m && m.a && !outerRingTeams.find(function(t) { return t.abbr === m.a.abbr; })) outerRingTeams.push(m.a);
-      if (m && m.b && !outerRingTeams.find(function(t) { return t.abbr === m.b.abbr; })) outerRingTeams.push(m.b);
-    });
-  }
-  if (outerRingTeams.length < 32) outerRingTeams = outerTeams.slice(0, 32);
-  
-  for (var i = 0; i < 32; i++) {
-    var t = outerRingTeams[i];
-    var p = pos(0, i, 32);
-    createSphere(t, p.x, p.y, p.z, SIZES[0], 1);
-  }
-  
-  // ─── Anéis internos: times do bracket na ordem dos matches ───
-  // Cada anel usa os times da fase correspondente, na ordem dos matches
-  // Isso garante que as linhas conectem cada match ao próximo na posição certa
-  var ringSources = [
-    // Anel 1: usa r16raw (sem reordenação) para bater com a ordem do round32
-    { count: 16, ri: 1, src: bracketData ? (bracketData.r16raw || bracketData.r16) : null },
-    { count: 8,  ri: 2, src: bracketData ? bracketData.qf : null },
-    { count: 4,  ri: 3, src: bracketData ? bracketData.sf : null },
-    { count: 2,  ri: 4, src: bracketData ? (bracketData.finalMatch ? [bracketData.finalMatch] : null) : null }
-  ];
-  
-  ringSources.forEach(function(ring) {
-    var r = RINGS[ring.ri];
-    var s = SIZES[ring.ri];
-    var n = ring.count;
-    var teams = [];
-    
-    if (ring.src && ring.src.length > 0) {
-      // Extrai times na ORDEM EXATA dos matches
-      // match 0: times A e B vão para posições 0 e 1
-      // match 1: times A e B vão para posições 2 e 3
-      // etc.
-      ring.src.forEach(function(m) {
-        if (m && m.a && m.a.abbr) teams.push({abbr: m.a.abbr, name: m.a.name || m.a.abbr});
-        if (m && m.b && m.b.abbr) teams.push({abbr: m.b.abbr, name: m.b.name || m.b.abbr});
-      });
-    }
-    
-    if (teams.length < n) {
-      teams = outerTeams.slice(0, n);
-    }
-    
-    for (var j = 0; j < n && j < teams.length; j++) {
-      var p = pos(ring.ri, j, n);
-      createSphere(teams[j], p.x, p.y, p.z, s, 0.85);
-    }
-  });
-  
-  // ─── Linhas: cada par do anel externo para o anel interno ─────
-  function drawLines(matches, outerRing, innerRing, outerTotal, innerTotal) {
-    if (!matches) return;
-    matches.forEach(function(m, mi) {
-      if (!m || !m.a || !m.b) return;
-      var pA = pos(outerRing, mi * 2, outerTotal);
-      var pB = pos(outerRing, mi * 2 + 1, outerTotal);
-      var pW = pos(innerRing, mi, innerTotal);
-      var mat = new THREE.LineBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.5 });
-      scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([pA, pW]), mat));
-      scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([pB, pW]), mat));
-    });
-  }
-  
-  
-  if (bracketData && bracketData.round32) {
-    drawLines(bracketData.round32, 0, 1, 32, 16);
-    drawLines(bracketData.r16, 1, 2, 16, 8);
-    drawLines(bracketData.qf, 2, 3, 8, 4);
-    drawLines(bracketData.sf, 3, 4, 4, 2);
-    
-    // Linhas da final para o centro (esfera dourada)
-    if (bracketData.finalMatch && bracketData.finalMatch.a && bracketData.finalMatch.b) {
-      var pA = pos(4, 0, 2);
-      var pB = pos(4, 1, 2);
-      var pW = new THREE.Vector3(0, 0, 0);
-      var mat = new THREE.LineBasicMaterial({ color: 0xffd700, transparent: true, opacity: 1.0 });
-      scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([pA, pW]), mat));
-      scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([pB, pW]), mat));
-    }
-  }
-  
-  // ─── Centro ────────────────────────────────────────────────────
-  var cg = new THREE.SphereGeometry(0.4, 24, 24);
-  var cm = new THREE.MeshStandardMaterial({
-    color: C, emissive: C, emissiveIntensity: 0.4,
-    metalness: 0.8, roughness: 0.2,
-  });
-  var center = new THREE.Mesh(cg, cm);
-  center.position.set(0, 0, 0);
-  scene.add(center);
-  
-  function animate() {
-    requestAnimationFrame(animate);
-    controls.update();
-    renderer.render(scene, camera);
-  }
-  
-  window.addEventListener('resize', function() {
-    var w2 = container.clientWidth || 700;
-    var h2 = container.clientHeight || 500;
-    camera.aspect = w2 / h2;
-    camera.updateProjectionMatrix();
-    renderer.setSize(w2, h2);
-  });
-  
-  animate();
-}
-
-// Substitui a renderArteVisual pela versão real na primeira execução
-window.renderArteVisual = _realRenderArteVisual;
-// Se o container já está visível (veio de setFavorite), renderiza agora
-var arteContainer = document.getElementById('arte-visual-container');
-if (arteContainer && arteContainer.querySelector('canvas') === null && arteContainer.innerHTML.indexOf('spinner') >= 0) {
-  _realRenderArteVisual();
-}
-
-</script>
 
 </body>
 </html>
