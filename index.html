@@ -1614,18 +1614,18 @@ function simulateWinner(match, sm) {
   return match.b;
 }
 
-function simulateWinnerFav(match, favAbbr) {
+function simulateWinnerFav(match, favAbbr, sm) {
   // Se o favorito está no match, ele sempre vence (a menos que ja tenha perdido)
   if (!match.a || !match.b) return match.a || match.b;
   // Verifica se o favorito ja foi eliminado
-  if (scoreMap && scoreMap[favAbbr] && scoreMap[favAbbr].lost) {
+  if (sm && sm[favAbbr] && sm[favAbbr].lost) {
     // Favorito eliminado: simula normal sem privilegio
-    return simulateWinner(match);
+    return simulateWinner(match, sm);
   }
   if (match.a.abbr === favAbbr) return match.a;
   if (match.b.abbr === favAbbr) return match.b;
   // Se não, simula normal
-  return simulateWinner(match);
+  return simulateWinner(match, sm);
 }
 
 function setFavorite(abbr, name) {
@@ -2463,8 +2463,8 @@ function renderBracket(events, standingsData) {
       const m1 = matches[i];
       const m2 = matches[i+1];
       if (!m1 || !m2) break;
-      const w1 = fav ? simulateWinnerFav(m1, fav) : simulateWinner(m1, scoreMap);
-      const w2 = fav ? simulateWinnerFav(m2, fav) : simulateWinner(m2, scoreMap);
+      const w1 = fav ? simulateWinnerFav(m1, fav, scoreMap) : simulateWinner(m1, scoreMap);
+      const w2 = fav ? simulateWinnerFav(m2, fav, scoreMap) : simulateWinner(m2, scoreMap);
       if (w1 && w2) {
         winners.push({ a: w1, b: w2 });
       }
@@ -2496,8 +2496,8 @@ function renderBracket(events, standingsData) {
   let thirdPlace = null;
   let finalMatch = null;
   if (sf.length >= 2) {
-    const sf0Winner = savedFav ? simulateWinnerFav(sf[0], savedFav) : simulateWinner(sf[0], scoreMap);
-    const sf1Winner = savedFav ? simulateWinnerFav(sf[1], savedFav) : simulateWinner(sf[1], scoreMap);
+    const sf0Winner = savedFav ? simulateWinnerFav(sf[0], savedFav, scoreMap) : simulateWinner(sf[0], scoreMap);
+    const sf1Winner = savedFav ? simulateWinnerFav(sf[1], savedFav, scoreMap) : simulateWinner(sf[1], scoreMap);
     const sf0Loser = sf0Winner === sf[0].a ? sf[0].b : sf[0].a;
     const sf1Loser = sf1Winner === sf[1].a ? sf[1].b : sf[1].a;
     thirdPlace = { a: sf0Loser, b: sf1Loser };
