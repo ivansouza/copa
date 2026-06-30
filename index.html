@@ -2629,6 +2629,31 @@ function renderBracket(events, standingsData) {
     h += '<div class="team-row'+winnerClassB+'"><div class="team-info"><img class="flag" src="'+flagUrl(bAbbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+bName+'</span>'+bScoreHtml+(bProbable?'<span class="bracket-probable">(provável)</span>':'')+'</div></div>';
     h += '</div><div class="match-label">'+(m.date ? m.date+' — ' : '')+m.label+(isProbable?' — provável':'')+penaltiInfo+'</div>';
     if (m.venue) h += '<div class="match-venue">📍 '+m.venue+'</div>';
+    // Gols do jogo (se já aconteceu ou está ao vivo)
+    if (aAbbr && bAbbr && (aScore !== null || isLive)) {
+      var gameGoals = [];
+      (allGames||[]).forEach(function(g) {
+        var slug = (g.season?.slug || '');
+        if (slug !== 'round-of-32') return;
+        var cmp = g.competitions?.[0]?.competitors||[];
+        var abs = cmp.map(function(c) { return c.team?.abbreviation; });
+        if (!abs.includes(aAbbr) || !abs.includes(bAbbr)) return;
+        gameGoals = extractGoals(g);
+      });
+      if (gameGoals.length > 0) {
+        h += '<div style="margin-top:4px;padding-top:4px;border-top:1px solid #1e293b;font-size:.6rem;line-height:1.4;">';
+        gameGoals.forEach(function(goal) {
+          var isA = goal.team === aAbbr;
+          var teamName = isA ? aName : bName;
+          h += '<div style="display:flex;align-items:center;gap:3px;padding:1px 0;">';
+          h += '<span style="color:#64748b;min-width:24px;">'+goal.minute+'</span>';
+          h += '<span style="color:'+(isA?'#f59e0b':'#94a3b8')+';font-weight:600;">'+teamName+'</span>';
+          h += '<span style="color:#e2e8f0;">'+goal.scorer+'</span>';
+          h += '</div>';
+        });
+        h += '</div>';
+      }
+    }
     h += '</div>';
   });
   h += '</div>';
