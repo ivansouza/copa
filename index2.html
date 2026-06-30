@@ -1684,125 +1684,89 @@ function simulateWinnerFav(match, favAbbr, sm) {
 // Estado dos finalistas escolhidos
 var selectedFinalists = { a: null, b: null };
 
+// Carrega do localStorage ao iniciar
+(function() {
+  var f1 = localStorage.getItem('bracketFav');
+  var f2 = localStorage.getItem('bracketFav2');
+  if (f1) selectedFinalists.a = { abbr: f1 };
+  if (f2) selectedFinalists.b = { abbr: f2 };
+})();
+
 function setFavorite(abbr, name) {
   if (!abbr) {
-    // Limpar: reseta tudo
+    // Limpar
     selectedFinalists = { a: null, b: null };
     localStorage.removeItem('bracketFav');
     localStorage.removeItem('bracketFav2');
-    document.querySelectorAll('.fav-btn').forEach(b => b.classList.remove('active', 'blink'));
-    document.querySelectorAll('.fav-btn').forEach(b => b.classList.remove('active'));
-    const btn = document.querySelector('[data-section="bracket"]');
-    if (btn) btn.click();
+    document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('active', 'blink'); });
+    renderBracketWithFavs();
     return;
   }
   
-  // Se já tem dois finalistas escolhidos, reseta
+  // Se clicou no mesmo time já selecionado como primeiro, desseleciona
+  if (selectedFinalists.a && selectedFinalists.a.abbr === abbr) {
+    selectedFinalists.a = null;
+    localStorage.removeItem('bracketFav');
+    document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('active', 'blink'); });
+    renderBracketWithFavs();
+    return;
+  }
+  
+  // Se clicou no mesmo time já selecionado como segundo, desseleciona
+  if (selectedFinalists.b && selectedFinalists.b.abbr === abbr) {
+    selectedFinalists.b = null;
+    localStorage.removeItem('bracketFav2');
+    document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('active', 'blink'); });
+    // Re-marca o primeiro se existir
+    if (selectedFinalists.a) {
+      var btn = document.querySelector('.fav-btn[data-abbr="'+selectedFinalists.a.abbr+'"]');
+      if (btn) btn.classList.add('active');
+    }
+    renderBracketWithFavs();
+    return;
+  }
+  
+  // Se já tem dois, reseta e começa de novo
   if (selectedFinalists.a && selectedFinalists.b) {
     selectedFinalists = { a: null, b: null };
+    localStorage.removeItem('bracketFav');
     localStorage.removeItem('bracketFav2');
   }
   
-  // Se não tem primeiro finalista, escolhe este
+  // Se não tem primeiro, este é o primeiro
   if (!selectedFinalists.a) {
     selectedFinalists.a = { abbr: abbr, name: name };
     localStorage.setItem('bracketFav', abbr);
-    
-    // Destaca o botão escolhido
-    document.querySelectorAll('.fav-btn').forEach(b => b.classList.remove('active', 'blink'));
-    const btn = document.querySelector('.fav-btn[data-abbr="'+abbr+'"]');
+    document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('active', 'blink'); });
+    var btn = document.querySelector('.fav-btn[data-abbr="'+abbr+'"]');
     if (btn) btn.classList.add('active');
-    
-    // Calcula possíveis adversários na final
-    // Usa o bracket atual para determinar quem pode chegar à final
-    highlightPossibleRivals(abbr);
+    renderBracketWithFavs();
     return;
   }
   
-  // Se já tem primeiro finalista, este é o segundo
+  // Se não tem segundo, este é o segundo
   if (!selectedFinalists.b) {
     selectedFinalists.b = { abbr: abbr, name: name };
     localStorage.setItem('bracketFav2', abbr);
-    
-    // Para de piscar
-    document.querySelectorAll('.fav-btn').forEach(b => b.classList.remove('blink'));
-    document.querySelectorAll('.fav-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.fav-btn[data-abbr="'+selectedFinalists.a.abbr+'"]').forEach(b => b.classList.add('active'));
-    document.querySelectorAll('.fav-btn[data-abbr="'+abbr+'"]').forEach(b => b.classList.add('active'));
-    
-    // Re-renderiza o bracket com os dois finalistas
-    if (window.standingsCache) {
-      renderBracket(allGames || [], standingsCache);
-    }
+    document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('blink'); });
+    document.querySelectorAll('.fav-btn[data-abbr="'+selectedFinalists.a.abbr+'"]').forEach(function(b) { b.classList.add('active'); });
+    document.querySelectorAll('.fav-btn[data-abbr="'+abbr+'"]').forEach(function(b) { b.classList.add('active'); });
+    renderBracketWithFavs();
   }
 }
 
-function highlightPossibleRivals(chosenAbbr) {
-  // Pega todos os times NÃO eliminados que não são o escolhido
-  var sm = window.__scoreMap || {};
-  var possibleRivals = [];
-  
-  document.querySelectorAll('.fav-btn').forEach(function(b) {
-    var ab = b.dataset.abbr;
-    if (!ab || ab === chosenAbbr) return;
-    if (b.disabled) return;
-    // Verifica se não está eliminado
-    var s = sm[ab];
-    if (s && s.lost) return;
-    possibleRivals.push(ab);
-  });
-  
-  // Se não tem bracket cacheado, todos os não-eliminados são rivais possíveis
-  // Se tem bracket, tenta filtrar apenas os do lado oposto
-  var bd = window.__bracketCache || null;
-  if (bd && bd.r16 && bd.r16.length > 0) {
-    // Tenta descobrir de que lado o time escolhido está
-    var chosenSide = null;
-    for (var i = 0; i < bd.r16.length; i++) {
-      var m = bd.r16[i];
-      if (m && m.a && m.a.abbr === chosenAbbr || (m && m.b && m.b.abbr === chosenAbbr)) {
-        chosenSide = (i < 4) ? 'left' : 'right';
-        break;
-      }
-    }
-    
-    if (chosenSide) {
-      var rivalSide = chosenSide === 'left' ? 'right' : 'left';
-      var rivalIndices = rivalSide === 'left' ? [0,1,4,5] : [2,3,6,7];
-      var sideRivals = [];
-      rivalIndices.forEach(function(idx) {
-        var m = bd.r16[idx];
-        if (m && m.a && m.a.abbr) sideRivals.push(m.a.abbr);
-        if (m && m.b && m.b.abbr) sideRivals.push(m.b.abbr);
-      });
-      // Filtra apenas os que estão no lado oposto
-      possibleRivals = possibleRivals.filter(function(ab) {
-        return sideRivals.includes(ab);
-      });
-    }
+function renderBracketWithFavs() {
+  if (window.standingsCache) {
+    renderBracket(allGames || [], standingsCache);
+  } else if (typeof loadAll === 'function') {
+    loadAll();
+    setTimeout(function() {
+      if (window.standingsCache) renderBracket(allGames || [], standingsCache);
+    }, 2000);
   }
-  
-  // Faz os botões dos possíveis rivais piscarem
-  document.querySelectorAll('.fav-btn').forEach(function(b) {
-    var ab = b.dataset.abbr;
-    if (ab && possibleRivals.includes(ab)) {
-      b.classList.add('blink');
-    }
-  });
-  
-  // Mostra instrução
-  var instrucao = document.getElementById('favInstruction');
-  if (!instrucao) {
-    instrucao = document.createElement('div');
-    instrucao.id = 'favInstruction';
-    instrucao.style.cssText = 'text-align:center;font-size:.75rem;color:#f59e0b;margin-top:8px;font-weight:600;';
-    var favSection = document.getElementById('favSection');
-    if (favSection) favSection.appendChild(instrucao);
-  }
-  instrucao.textContent = 'Agora escolha o adversário na final (times piscando)';
 }
 
-function isMathematicallyEliminated(t, teamPosition, allThird, standingsData) {
+function isMathematicallyEliminatedfunction isMathematicallyEliminated(t, teamPosition, allThird, standingsData) {
   // Um time está matematicamente eliminado se NENHUM cenário possível
   // permite ele se classificar (como 1º/2º do grupo ou top 8 dos 3ºs)
   const pos = teamPosition[t.ab];
@@ -2652,9 +2616,9 @@ function renderBracket(events, standingsData) {
     return winners;
   }
 
-  // Pega os finalistas salvos
-  const savedFav = localStorage.getItem('bracketFav') || '';
-  const savedFav2 = localStorage.getItem('bracketFav2') || '';
+  // Pega os finalistas escolhidos
+  const savedFav = (window.selectedFinalists && window.selectedFinalists.a) ? window.selectedFinalists.a.abbr : '';
+  const savedFav2 = (window.selectedFinalists && window.selectedFinalists.b) ? window.selectedFinalists.b.abbr : '';
 
     // Simula os resultados
   var r16raw, r16, qf, sf;
