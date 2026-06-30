@@ -33,6 +33,12 @@ self.addEventListener('fetch', e => {
     return;
   }
 
+  // Arte Visual e index3: sempre da rede (evita cache problemático)
+  if (e.request.url.includes('arte-visual') || e.request.url.includes('index3')) {
+    e.respondWith(fetch(e.request));
+    return;
+  }
+
   // Assets estáticos: cache first
   e.respondWith(
     caches.match(e.request).then(cached => {
