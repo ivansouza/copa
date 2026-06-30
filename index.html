@@ -3006,19 +3006,23 @@ function initArteVisual(container) {
   starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
   scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0x64748b, size: 0.08, transparent: true, opacity: 0.4 })));
   
-  // Anéis com inclinação de 15 graus no eixo Z (invisíveis)
+  // Anéis com inclinação de 15 graus no eixo Z (pontilhados)
   RINGS.forEach(function(r, i) {
     var pts = [];
     var tiltZ = i * (Math.PI / 12);
-    for (var j = 0; j <= 64; j++) {
-      var a = (j / 64) * Math.PI * 2;
-      var px = r * Math.sin(a);
-      var pz = r * Math.cos(a);
-      pts.push(new THREE.Vector3(px, pz * Math.sin(tiltZ), pz * Math.cos(tiltZ)));
+    var segs = 48;
+    for (var j = 0; j <= segs; j++) {
+      var a = (j / segs) * Math.PI * 2;
+      // Pula alguns pontos pra criar efeito pontilhado
+      if (j % 3 === 0) {
+        var px = r * Math.sin(a);
+        var pz = r * Math.cos(a);
+        pts.push(new THREE.Vector3(px, pz * Math.sin(tiltZ), pz * Math.cos(tiltZ)));
+      }
     }
     scene.add(new THREE.Line(
       new THREE.BufferGeometry().setFromPoints(pts),
-      new THREE.LineBasicMaterial({ color: 0x2d3a4e, transparent: true, opacity: 0.0 })
+      new THREE.LineBasicMaterial({ color: 0x4a5568, transparent: true, opacity: 0.4 })
     ));
   });
   
