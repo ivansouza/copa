@@ -120,8 +120,8 @@
     });
   }
 
-  // ─── Cria um time (esfera com bandeira + label) ────────────────
-  async function createTeamMesh(team, x, y, z, flagSize, labelOffset, opacity) {
+  // ─── Cria uma esfera com bandeira ───────────────────────────────
+  async function createTeamMesh(team, x, y, z, flagSize, opacity) {
     const THREE = window.__THREE.THREE;
     const flagSrc = window.flagUrl ? window.flagUrl(team.abbr) : '';
     const tex = await createFlagTexture(flagSrc, team.abbr, 256);
@@ -139,34 +139,11 @@
     });
     const mesh = new THREE.Mesh(geo, mat);
     mesh.position.set(x, y, z);
-    // Rotaciona levemente pra variar
     mesh.rotation.y = Math.random() * Math.PI * 2;
     mesh.rotation.x = (Math.random() - 0.5) * 0.3;
 
-    // Label
-    const c2 = document.createElement('canvas');
-    c2.width = 256; c2.height = 48;
-    const ctx = c2.getContext('2d');
-    ctx.fillStyle = 'rgba(15,23,42,0.6)';
-    ctx.fillRect(0, 0, 256, 48);
-    ctx.fillStyle = '#e2e8f0';
-    ctx.font = 'bold 15px Inter, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(team.name, 128, 24);
-    const lTex = new THREE.CanvasTexture(c2);
-    const lMat = new THREE.SpriteMaterial({ map: lTex, transparent: true, depthTest: false });
-    const label = new THREE.Sprite(lMat);
-    const off = labelOffset || 0.7;
-    const dist = Math.sqrt(x*x + z*z);
-    const nx = dist > 0 ? x + (x / dist) * off : x;
-    const nz = dist > 0 ? z + (z / dist) * off : z;
-    label.position.set(nx, y - 0.4, nz);
-    label.scale.set(1.2, 0.22, 1);
-
     const grp = new THREE.Group();
     grp.add(mesh);
-    grp.add(label);
     grp.userData = { team, abbr: team.abbr };
     return grp;
   }
@@ -250,7 +227,7 @@
       const x = CFG.outerRadius * Math.sin(angle);
       const z = CFG.outerRadius * Math.cos(angle);
       outerTasks.push(
-        createTeamMesh(team, x, 0, z, CFG.flagSize, 0.8, 1).then(m => {
+        createTeamMesh(team, x, 0, z, CFG.flagSize, 1).then(m => {
           m.userData.ring = 'outer';
           m.userData.angle = angle;
           m.userData.index = i;
@@ -326,7 +303,7 @@
         const x = radius * Math.sin(angle);
         const z = radius * Math.cos(angle);
         innerTasks.push(
-          createTeamMesh(team, x, 0, z, CFG.innerFlagSize, 0.5, 0.85).then(m => {
+          createTeamMesh(team, x, 0, z, CFG.innerFlagSize, 0.85).then(m => {
             m.userData.ring = ringData[ri].label;
             m.userData.angle = angle;
             teamMeshes.push(m);
