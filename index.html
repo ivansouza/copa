@@ -942,58 +942,30 @@ function renderLiveCards() {
   const c = document.getElementById('livecards-container');
   if (!c) return;
 
-  // Pega TODOS os jogos ao vivo e encerrados (qualquer fase), ordenados por data decrescente
-  const liveGames = (allGames||[]).filter(g => {
+  // Pega os jogos ao vivo
+  // Pega TODOS os jogos da Segunda Fase (round-of-32), ordenados por data decrescente
+  const r32Games = (allGames||[]).filter(g => {
+    const slug = (g.season?.slug || '');
+    if (slug !== 'round-of-32') return false;
+    // Só jogos que já aconteceram (ao vivo ou encerrados)
     const st = getStatus(g);
     return st === 'live' || st === 'final';
   }).sort((a, b) => new Date(b.date) - new Date(a.date));
-  if (!liveGames.length) {
-    c.innerHTML = '<div class="error-state" style="text-align:center;padding:2rem;"><p>🔴 Nenhum jogo ao vivo ou encerrado encontrado.</p></div>';
+  if (!r32Games.length) {
+    c.innerHTML = '<div class="error-state" style="text-align:center;padding:2rem;"><p>🔴 Nenhum jogo da Segunda Fase encontrado.</p></div>';
     return;
   }
 
   // Extrai gols dos dados que já temos (allGames -> competitions[0].details)
   const goalsByGame = {};
-  liveGames.forEach(g => {
+  r32Games.forEach(g => {
     const goals = extractGoals(g);
     if (goals.length > 0) goalsByGame[g.id] = goals;
   });
 
-  // Extrai pênaltis dos detalhes de cada jogo
-  const penaltisByGame = {};
-  liveGames.forEach(g => {
-    const cmp = g.competitions?.[0]?.competitors||[];
-    const home = cmp.find(c=>c.homeAway==='home')||cmp[0]||{};
-    const away = cmp.find(c=>c.homeAway==='away')||cmp[1]||{};
-    const ha = (home.team||{}).abbreviation||'', aa = (away.team||{}).abbreviation||'';
-    if (!ha || !aa) return;
-    const hs = parseInt(home.score)||0, as = parseInt(away.score)||0;
-    // Só verifica pênaltis se o placar está empatado
-    if (hs !== as) return;
-    // Verifica se tem winner (indica pênaltis)
-    const homeWinner = home.winner === true;
-    const awayWinner = away.winner === true;
-    if (!homeWinner && !awayWinner) return;
-    // Conta pênaltis convertidos nos details (shootout=true)
-    let penA = 0, penB = 0;
-    const details = g.competitions?.[0]?.details || [];
-    const teamMap = {};
-    cmp.forEach(c => { if (c.team?.id) teamMap[c.team.id] = (c.team||{}).abbreviation||''; });
-    details.forEach(d => {
-      if (!d.shootout || !d.scoringPlay) return;
-      const teamId = d.team?.id || '';
-      const tAbbr = teamMap[teamId] || '';
-      if (tAbbr === ha) penA++;
-      else if (tAbbr === aa) penB++;
-    });
-    if (penA > 0 || penB > 0) {
-      penaltisByGame[g.id] = { home: penA, away: penB, homeAbbr: ha, awayAbbr: aa };
-    }
-  });
-
   // Coleta abreviações dos times
   const liveAbbrs = new Set();
-  liveGames.forEach(g => {
+  r32Games.forEach(g => {
     const cmp = g.competitions?.[0]?.competitors||[];
     cmp.forEach(c => { if (c.team?.abbreviation) liveAbbrs.add(c.team.abbreviation); });
   });
@@ -1033,9 +1005,9 @@ function renderLiveCards() {
     });
   }
 
-  let h = '';
+    let h = '';
 
-  liveGames.forEach(g => {
+  r32Games.forEach(g => {
     const cmp = g.competitions?.[0]?.competitors||[];
     const home = cmp.find(c=>c.homeAway==='home')||cmp[0]||{};
     const away = cmp.find(c=>c.homeAway==='away')||cmp[1]||{};
@@ -1046,42 +1018,17 @@ function renderLiveCards() {
     const st = getStatus(g);
     const clock = st === 'live' ? (g.competitions?.[0]?.status?.displayClock||'') : '✅ Encerrado';
     const ven = g.competitions?.[0]?.venue?.fullName||'';
-    const slug = (g.season?.slug || '').replace(/-/g, ' ');
-
-    // Verifica se tem pênaltis neste jogo
-    const penInfo = penaltisByGame[g.id];
-    const hasPenaltis = penInfo && (penInfo.home > 0 || penInfo.away > 0);
 
     // Header do jogo: Time A X Time B, placar e tempo
-    h += '<div style="background:linear-gradient(145deg,#1e293b,#1a2332);border:1px solid '+(hasPenaltis?'#ef444488':'#22c55e44')+';border-radius:12px;padding:1rem;margin-bottom:1rem;">';
+    h += '<div style="background:linear-gradient(145deg,#1e293b,#1a2332);border:1px solid #22c55e44;border-radius:12px;padding:1rem;margin-bottom:1rem;">';
     h += '<div style="display:flex;align-items:center;justify-content:center;gap:12px;padding:.6rem 0;border-bottom:1px solid #2d3a4e;margin-bottom:1rem;">';
-    h += '<div style="display:flex;align-items:center;gap:6px;"><img class="flag" src="'+flagUrl(ha)+'" alt="" style="width:24px;height:16px;border-radius:2px;" loading="lazy" onerror="this.style.display='none'"><span style="font-weight:700;font-size:.9rem;">'+hn+'</span></div>';
+    h += '<div style="display:flex;align-items:center;gap:6px;"><img class="flag" src="'+flagUrl(ha)+'" alt="" style="width:24px;height:16px;border-radius:2px;" loading="lazy" onerror="this.style.display=\'none\'"><span style="font-weight:700;font-size:.9rem;">'+hn+'</span></div>';
     h += '<span style="font-weight:800;font-size:1.3rem;color:#f59e0b;">'+(hs!==''&&hs!==null?hs:'-')+'</span>';
     h += '<span style="color:#475569;font-weight:500;">X</span>';
     h += '<span style="font-weight:800;font-size:1.3rem;color:#f59e0b;">'+(as!==''&&as!==null?as:'-')+'</span>';
-    h += '<div style="display:flex;align-items:center;gap:6px;"><span style="font-weight:700;font-size:.9rem;">'+an+'</span><img class="flag" src="'+flagUrl(aa)+'" alt="" style="width:24px;height:16px;border-radius:2px;" loading="lazy" onerror="this.style.display='none'"></div>';
+    h += '<div style="display:flex;align-items:center;gap:6px;"><span style="font-weight:700;font-size:.9rem;">'+an+'</span><img class="flag" src="'+flagUrl(aa)+'" alt="" style="width:24px;height:16px;border-radius:2px;" loading="lazy" onerror="this.style.display=\'none\'"></div>';
     h += '</div>';
-
-    // Status + fase + pênaltis
-    let statusLine = '';
-    if (st === 'live') {
-      statusLine = '🔴 '+(clock||'Ao vivo');
-    } else {
-      statusLine = '✅ Encerrado';
-    }
-    if (slug) statusLine += ' • 🏆 '+slug;
-    if (ven) statusLine += ' • 📍 '+ven;
-    if (hasPenaltis) {
-      statusLine += ' • ⚠️ Pênaltis: '+penInfo.home+' × '+penInfo.away;
-    }
-    h += '<div style="text-align:center;font-size:.8rem;color:'+(hasPenaltis?'#ef4444':'#22c55e')+';font-weight:600;margin-bottom:1rem;">'+statusLine+'</div>';
-
-    // Se tem pênaltis, mostra destaque
-    if (hasPenaltis) {
-      h += '<div style="text-align:center;padding:.4rem;margin-bottom:.8rem;background:#2a1a1a;border:1px solid #ef444444;border-radius:8px;">';
-      h += '<span style="font-weight:800;font-size:1rem;color:#ef4444;">⚽ Pênaltis: '+penInfo.home+' × '+penInfo.away+'</span>';
-      h += '</div>';
-    }
+    h += '<div style="text-align:center;font-size:.8rem;color:#22c55e;font-weight:600;margin-bottom:1rem;">🔴 '+(clock||'Ao vivo')+(ven?' • 📍 '+ven:'')+'</div>';
 
     // Cards dos dois times lado a lado
     h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">';
@@ -1095,7 +1042,7 @@ function renderLiveCards() {
       const group = teamGroup[t.abbr] || '?';
       h += '<div style="background:#1a2332;border:1px solid #2d3a4e;border-radius:10px;padding:.8rem;">';
       h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:.6rem;">';
-      h += '<img class="flag" src="'+flagUrl(t.abbr)+'" alt="" style="width:22px;height:15px;border-radius:2px;" loading="lazy" onerror="this.style.display='none'">';
+      h += '<img class="flag" src="'+flagUrl(t.abbr)+'" alt="" style="width:22px;height:15px;border-radius:2px;" loading="lazy" onerror="this.style.display=\'none\'">';
       h += '<span style="font-weight:700;font-size:.85rem;">'+t.name+'</span>';
       h += '</div>';
       h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:.72rem;">';
@@ -1122,7 +1069,7 @@ function renderLiveCards() {
         const teamFlag = isHome ? flagUrl(ha) : flagUrl(aa);
         h += '<div style="display:flex;align-items:center;gap:6px;padding:3px 0;font-size:.72rem;">';
         h += '<span style="color:#64748b;min-width:30px;">'+goal.minute+'</span>';
-        h += '<img class="flag" src="'+teamFlag+'" alt="" style="width:14px;height:10px;border-radius:1.5px;" loading="lazy" onerror="this.style.display='none'">';
+        h += '<img class="flag" src="'+teamFlag+'" alt="" style="width:14px;height:10px;border-radius:1.5px;" loading="lazy" onerror="this.style.display=\'none\'">';
         h += '<span style="font-weight:600;">'+goal.scorer+'</span>';
         if (goal.assist) h += '<span style="color:#64748b;font-size:.65rem;">('+goal.assist+')</span>';
         h += '</div>';
@@ -1281,32 +1228,7 @@ function renderGames() {
     const ht=ho.team||{},at=aw.team||{},st=getStatus(e);
     const ha=ht.abbreviation||'',aa=at.abbreviation||'',hn=pt(ht.displayName||ht.name||'?'),an=pt(at.displayName||at.name||'?');
     const hs=ho.score??'',as=aw.score??'',ven=co.venue?.fullName||'';
-    const clock=co.status?.displayClock||'';let sl,sc;    // Detecta pênaltis
-    let penaltiStr = '';
-    if (st === 'final') {
-      const cmp = e.competitions?.[0]?.competitors||[];
-      const home = cmp.find(c=>c.homeAway==='home')||cmp[0]||{};
-      const away = cmp.find(c=>c.homeAway==='away')||cmp[1]||{};
-      const hsNum = parseInt(home.score)||0, asNum = parseInt(away.score)||0;
-      if (hsNum === asNum && (home.winner || away.winner)) {
-        const ha = (home.team||{}).abbreviation||'', aa = (away.team||{}).abbreviation||'';
-        let penA = 0, penB = 0;
-        const details = e.competitions?.[0]?.details || [];
-        const teamMap = {};
-        cmp.forEach(c => { if (c.team?.id) teamMap[c.team.id] = (c.team||{}).abbreviation||''; });
-        details.forEach(d => {
-          if (!d.shootout || !d.scoringPlay) return;
-          const teamId = d.team?.id || '';
-          const tAbbr = teamMap[teamId] || '';
-          if (tAbbr === ha) penA++;
-          else if (tAbbr === aa) penB++;
-        });
-        if (penA > 0 || penB > 0) {
-          penaltiStr = ' ⚠️ ' + penA + '×' + penB;
-        }
-      }
-    }
-    if(st==='live'){sl='🔴 '+clock;sc='live';}else if(st==='final'){sl='✅ Encerrado'+penaltiStr;sc='final';}else{sl='⏳ '+fmtTime(e.date);sc='scheduled';}
+    const clock=co.status?.displayClock||'';let sl,sc;if(st==='live'){sl='🔴 '+clock;sc='live';}else if(st==='final'){sl='✅ Encerrado';sc='final';}else{sl='⏳ '+fmtTime(e.date);sc='scheduled';}
     h+='<div class="game-card"><div class="game-time"><div class="date">'+fmtDate(e.date)+'</div><div class="time">'+fmtTime(e.date)+'</div></div><div class="game-teams"><div class="team-row"><img class="flag" src="'+flagUrl(ha)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+hn+'</span><span class="score-display">'+(hs!==''&&hs!==null?hs:'-')+'</span></div><div class="team-row"><img class="flag" src="'+flagUrl(aa)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+an+'</span><span class="score-display">'+(as!==''&&as!==null?as:'-')+'</span></div></div><div class="game-status '+sc+'">'+sl+'</div>'+(ven?'<div class="game-venue">📍 '+ven+'</div>':'')+'</div>';
   });
   h+='</div>';c.innerHTML=h;
