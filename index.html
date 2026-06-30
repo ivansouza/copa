@@ -415,6 +415,10 @@
     0%, 100% { text-shadow: 0 0 8px rgba(239,68,68,0.6); }
     50% { text-shadow: 0 0 20px rgba(239,68,68,1), 0 0 40px rgba(239,68,68,0.4); }
   }
+  .lwp { animation: lpr 1.5s infinite; }
+  .lwp .n { color:#ef4444!important; font-weight:800!important; }
+  .lwp .s { color:#ef4444!important; font-weight:800!important; }
+  @keyframes lpr { 0%,100%{text-shadow:0 0 8px rgba(239,68,68,0.6)} 50%{text-shadow:0 0 20px rgba(239,68,68,1),0 0 40px rgba(239,68,68,0.4)} }
   @media (max-width: 600px) {
     .classified-grid { grid-template-columns: repeat(2, 1fr); }
   }
@@ -1051,11 +1055,14 @@ function renderLiveCards() {
     // Header do jogo: Time A X Time B, placar e tempo
     h += '<div style="background:linear-gradient(145deg,#1e293b,#1a2332);border:1px solid #22c55e44;border-radius:12px;padding:1rem;margin-bottom:1rem;">';
     h += '<div style="display:flex;align-items:center;justify-content:center;gap:12px;padding:.6rem 0;border-bottom:1px solid #2d3a4e;margin-bottom:1rem;">';
-    h += '<div style="display:flex;align-items:center;gap:6px;"><img class="flag" src="'+flagUrl(ha)+'" alt="" style="width:24px;height:16px;border-radius:2px;" loading="lazy" onerror="this.style.display=\'none\'"><span style="font-weight:700;font-size:.9rem;">'+hn+'</span></div>';
-    h += '<span style="font-weight:800;font-size:1.3rem;color:#f59e0b;">'+(hs!==''&&hs!==null?hs:'-')+'</span>';
+    // Detecta vencedor nos penaltis
+    const hw = hasPenaltis && home.winner === true;
+    const aw = hasPenaltis && away.winner === true;
+    h += '<div class="'+(hw?'lwp':'')+'" style="display:flex;align-items:center;gap:6px;"><img class="flag" src="'+flagUrl(ha)+'" alt="" style="width:24px;height:16px;border-radius:2px;" loading="lazy" onerror="this.style.display='none'"><span class="n" style="font-weight:700;font-size:.9rem;">'+hn+'</span></div>';
+    h += '<span class="'+(hw?'s':'')+'" style="font-weight:800;font-size:1.3rem;color:#f59e0b;">'+(hs!==''&&hs!==null?hs:'-')+'</span>';
     h += '<span style="color:#475569;font-weight:500;">X</span>';
-    h += '<span style="font-weight:800;font-size:1.3rem;color:#f59e0b;">'+(as!==''&&as!==null?as:'-')+'</span>';
-    h += '<div style="display:flex;align-items:center;gap:6px;"><span style="font-weight:700;font-size:.9rem;">'+an+'</span><img class="flag" src="'+flagUrl(aa)+'" alt="" style="width:24px;height:16px;border-radius:2px;" loading="lazy" onerror="this.style.display=\'none\'"></div>';
+    h += '<span class="'+(aw?'s':'')+'" style="font-weight:800;font-size:1.3rem;color:#f59e0b;">'+(as!==''&&as!==null?as:'-')+'</span>';
+    h += '<div class="'+(aw?'lwp':'')+'" style="display:flex;align-items:center;gap:6px;"><span class="n" style="font-weight:700;font-size:.9rem;">'+an+'</span><img class="flag" src="'+flagUrl(aa)+'" alt="" style="width:24px;height:16px;border-radius:2px;" loading="lazy" onerror="this.style.display='none'"></div>';
     h += '</div>';
         // Verifica penaltis
     const penInfo = penaltisByGame[g.id];
