@@ -24,8 +24,8 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // API externa: sempre busca da rede (não cachear)
-  if (e.request.url.includes('worldcup26.ir')) {
+  // API externa (ESPN): sempre busca da rede (não cachear)
+  if (e.request.url.includes('espn.com')) {
     e.respondWith(fetch(e.request).catch(() => new Response(
       JSON.stringify({ error: 'offline' }),
       { status: 503, headers: { 'Content-Type': 'application/json' } }

@@ -291,10 +291,13 @@
 
   .loading-state, .error-state { grid-column: 1 / -1; text-align: center; padding: 4rem 2rem; }
   .loading-state .spinner { width: 40px; height: 40px; border: 3px solid #2d3a4e; border-top-color: #f59e0b; border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 1rem; }
+  .loading-state p { color: #94a3b8; font-size: .85rem; }
   @keyframes spin { to { transform: rotate(360deg); } }
   .error-state { color: #f87171; }
   .error-state .retry-btn { margin-top: 1rem; padding: .6rem 1.5rem; background: #3b82f6; color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background .2s; }
   .error-state .retry-btn:hover { background: #2563eb; }
+  .skeleton { background: linear-gradient(90deg, #1e293b 25%, #2d3a4e 50%, #1e293b 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
   .games-section { margin-top: 1rem; }
   .live-section { margin-top: 1rem; }
   /* ── bracket diagram ── */
@@ -665,7 +668,7 @@
       <span><b>GC</b>: Gols Contra</span>
       <span><b>SG</b>: Saldo de Gols</span>
     </div>
-    <div id="groups-container"><div class="loading-state"><div class="spinner"></div><p>Carregando grupos...</p></div></div>
+    <div id="groups-container"><div class="loading-state"><div class="spinner"></div><p>📊 Buscando classificação dos grupos...</p></div></div>
   </div>
 
   <div id="section-bracket" class="section-content">
@@ -678,7 +681,7 @@
       <div class="fav-title">🌟 Qual time você quer na final?</div>
       <div class="fav-grid" id="favGrid"></div>
     </div>
-    <div id="bracket-container"><div class="loading-state"><div class="spinner"></div><p>Carregando bracket...</p></div></div>
+    <div id="bracket-container"><div class="loading-state"><div class="spinner"></div><p>🏅 Montando chaveamento da fase final...</p></div></div>
   </div>
 
   <div id="section-games" class="section-content" style="display:none">
@@ -691,12 +694,12 @@
     </div>
     <div id="dateNav" class="date-nav"></div>
     <div id="gameCount" class="game-count"></div>
-    <div id="games-container"><div class="loading-state"><div class="spinner"></div><p>Carregando jogos...</p></div></div>
+    <div id="games-container"><div class="loading-state"><div class="spinner"></div><p>📅 Carregando agenda de jogos...</p></div></div>
   </div>
 
   <div id="section-stats" class="section-content" style="display:none">
     <div class="section-title">📈 Estatísticas <span class="bar"></span></div>
-    <div id="stats-container"><div class="loading-state"><div class="spinner"></div><p>Carregando estatísticas...</p></div></div>
+    <div id="stats-container"><div class="loading-state"><div class="spinner"></div><p>📈 Calculando estatísticas dos times...</p></div></div>
   </div>
 
   <div id="section-live" class="section-content" style="display:none">
@@ -727,7 +730,7 @@
 
   <div id="section-livecards" class="section-content" style="display:none">
     <div class="section-title">🃏 Ao Vivo e Encerrados <span class="bar"></span></div>
-    <div id="livecards-container"><div class="loading-state"><div class="spinner"></div><p>Carregando estatísticas dos times ao vivo...</p></div></div>
+    <div id="livecards-container"><div class="loading-state"><div class="spinner"></div><p>🃏 Buscando jogos ao vivo e encerrados...</p></div></div>
   </div>
 </div>
 
