@@ -664,6 +664,7 @@
     <button class="nav-btn" data-section="games">📅 Jogos</button>
     <button class="nav-btn" data-section="stats">📈 Estatísticas</button>
     <button class="nav-btn" data-section="live">📺 Ao Vivo na Cazé TV</button>
+    <button class="nav-btn" data-section="artevisual">🎨 Arte Visual</button>
   </div>
 
   <div id="section-groups" class="section-content" style="display:none">
@@ -741,6 +742,12 @@
   <div id="section-livecards" class="section-content" style="display:none">
     <div class="section-title">🃏 Ao Vivo e Encerrados <span class="bar"></span></div>
     <div id="livecards-container"><div class="loading-state"><div class="spinner"></div><p>🃏 Buscando jogos ao vivo e encerrados...</p></div></div>
+  </div>
+
+  <div id="section-artevisual" class="section-content" style="display:none">
+    <div class="section-title">🎨 Arte Visual <span class="bar"></span></div>
+    <div style="font-size:.75rem;color:#64748b;margin-bottom:12px;text-align:center;">Visualização circular dos 32 classificados — clique em uma bandeira para destacar o caminho</div>
+    <div id="arte-visual-container"><div class="loading-state"><div class="spinner"></div><p>🎨 Preparando visualização circular...</p></div></div>
   </div>
 </div>
 
@@ -2272,6 +2279,9 @@ function renderClassifiedPanel(standingsData) {
     classified.push({ abbr: t.abbr, name: pt(t.name), group: t.group, status });
   });
 
+  // Cache para a Arte Visual
+  window.__classifiedCache = classified;
+
   // Ordena por nome do time (alfabético, ignorando acentos)
   classified.sort((a, b) => {
     const na = a.name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
@@ -2812,11 +2822,34 @@ document.querySelectorAll('.nav-btn').forEach(btn=>{
     if (btn.dataset.section === 'livecards') {
       renderLiveCards();
     }
+    // Se clicou em Arte Visual, renderiza
+    if (btn.dataset.section === 'artevisual') {
+      renderArteVisual();
+    }
   });
 });
 
 // Filtro
 document.getElementById('gameFilter')?.addEventListener('input', renderGames);
+
+// ─── Arte Visual ────────────────────────────────────────────────
+function renderArteVisual() {
+  const container = document.getElementById('arte-visual-container');
+  if (!container) return;
+  
+  // Pega os classificados do cache
+  const classified = window.__classifiedCache || [];
+  if (classified.length === 0) {
+    container.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>🎨 Aguardando dados dos classificados...</p></div>';
+    return;
+  }
+  
+  if (typeof ArteVisual !== 'undefined') {
+    ArteVisual.render(container, classified, null);
+  } else {
+    container.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>🎨 Carregando visualização...</p></div>';
+  }
+}
 
 // Auto refresh
 loadAll();
@@ -2858,6 +2891,9 @@ function closeBMC() {
   document.body.style.overflow = '';
 }
 </script>
+
+<!-- Arte Visual -->
+<script src="/copa/arte-visual.js"></script>
 
 <!-- BMC Modal -->
 <div class="bmc-overlay" id="bmcOverlay" onclick="if(event.target===this)closeBMC()">
