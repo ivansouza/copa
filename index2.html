@@ -2670,21 +2670,31 @@ function renderBracket(events, standingsData) {
   var r16Order = [0,1,4,5,2,3,6,7];
   var qfOrder = [0,2,1,3];
   
+  // Função que simula um match dando vantagem para QUALQUER um dos favoritos
+  function simulateWithFavs(match, fav1, fav2) {
+    if (!match || !match.a || !match.b) return null;
+    // Tenta o primeiro favorito
+    var w = simulateWinnerFav(match, fav1, scoreMap);
+    // Se o primeiro não está no match, tenta o segundo
+    if (w === match.a || w === match.b) return w;
+    return simulateWinnerFav(match, fav2, scoreMap);
+  }
+  
   if (savedFav && savedFav2) {
     r16raw = simulateRound(round32, savedFav);
     r16 = r16Order.map(i => r16raw[i]).filter(Boolean);
     
     var qfMatches = [];
-    if (r16[0] && r16[1]) qfMatches.push({ a: simulateWinnerFav(r16[0], savedFav, scoreMap), b: simulateWinnerFav(r16[1], savedFav, scoreMap) });
-    if (r16[2] && r16[3]) qfMatches.push({ a: simulateWinnerFav(r16[2], savedFav2, scoreMap), b: simulateWinnerFav(r16[3], savedFav2, scoreMap) });
-    if (r16[4] && r16[5]) qfMatches.push({ a: simulateWinnerFav(r16[4], savedFav, scoreMap), b: simulateWinnerFav(r16[5], savedFav, scoreMap) });
-    if (r16[6] && r16[7]) qfMatches.push({ a: simulateWinnerFav(r16[6], savedFav2, scoreMap), b: simulateWinnerFav(r16[7], savedFav2, scoreMap) });
+    if (r16[0] && r16[1]) qfMatches.push({ a: simulateWithFavs(r16[0], savedFav, savedFav2), b: simulateWithFavs(r16[1], savedFav, savedFav2) });
+    if (r16[2] && r16[3]) qfMatches.push({ a: simulateWithFavs(r16[2], savedFav, savedFav2), b: simulateWithFavs(r16[3], savedFav, savedFav2) });
+    if (r16[4] && r16[5]) qfMatches.push({ a: simulateWithFavs(r16[4], savedFav, savedFav2), b: simulateWithFavs(r16[5], savedFav, savedFav2) });
+    if (r16[6] && r16[7]) qfMatches.push({ a: simulateWithFavs(r16[6], savedFav, savedFav2), b: simulateWithFavs(r16[7], savedFav, savedFav2) });
     
     qf = qfOrder.map(i => qfMatches[i]).filter(Boolean);
     
     var sfMatches = [];
-    if (qf[0] && qf[2]) sfMatches.push({ a: simulateWinnerFav(qf[0], savedFav, scoreMap), b: simulateWinnerFav(qf[2], savedFav, scoreMap) });
-    if (qf[1] && qf[3]) sfMatches.push({ a: simulateWinnerFav(qf[1], savedFav2, scoreMap), b: simulateWinnerFav(qf[3], savedFav2, scoreMap) });
+    if (qf[0] && qf[2]) sfMatches.push({ a: simulateWithFavs(qf[0], savedFav, savedFav2), b: simulateWithFavs(qf[2], savedFav, savedFav2) });
+    if (qf[1] && qf[3]) sfMatches.push({ a: simulateWithFavs(qf[1], savedFav, savedFav2), b: simulateWithFavs(qf[3], savedFav, savedFav2) });
     sf = sfMatches;
   } else {
     r16raw = simulateRound(round32, savedFav);
