@@ -253,37 +253,55 @@
     outerGroups.forEach(g => scene.add(g));
 
     // ─── Anéis internos: dados do bracket ─────────────────────────
-    if (!bracketData) return;
-
-    const { r16, qf, sf, finalMatch } = bracketData;
-
-    // Helper: extrai times únicos de um array de matches
-    function extractTeams(matches) {
-      const teams = [];
-      (matches || []).forEach(m => {
-        if (m && m.a && m.a.abbr && !teams.find(t => t.abbr === m.a.abbr)) {
-          teams.push({ abbr: m.a.abbr, name: m.a.name || m.a.abbr });
-        }
-        if (m && m.b && m.b.abbr && !teams.find(t => t.abbr === m.b.abbr)) {
-          teams.push({ abbr: m.b.abbr, name: m.b.name || m.b.abbr });
-        }
-      });
-      return teams;
-    }
-
-    const ringData = [
-      { teams: extractTeams(r16), radius: CFG.ringRadii[0], label: 'Oitavas' },
-      { teams: extractTeams(qf),  radius: CFG.ringRadii[1], label: 'Quartas' },
-      { teams: extractTeams(sf),  radius: CFG.ringRadii[2], label: 'Semi' },
+    let ringData = [
+      { teams: [], radius: CFG.ringRadii[0], label: 'Oitavas' },
+      { teams: [], radius: CFG.ringRadii[1], label: 'Quartas' },
+      { teams: [], radius: CFG.ringRadii[2], label: 'Semi' },
+      { teams: [], radius: CFG.ringRadii[3], label: 'Final' },
     ];
 
-    // Final
-    const finalTeams = [];
-    if (finalMatch) {
-      if (finalMatch.a && finalMatch.a.abbr) finalTeams.push({ abbr: finalMatch.a.abbr, name: finalMatch.a.name || finalMatch.a.abbr });
-      if (finalMatch.b && finalMatch.b.abbr) finalTeams.push({ abbr: finalMatch.b.abbr, name: finalMatch.b.name || finalMatch.b.abbr });
+    if (bracketData) {
+      const { r16, qf, sf, finalMatch } = bracketData;
+
+      // Helper: extrai times únicos de um array de matches
+      function extractTeams(matches) {
+        const teams = [];
+        (matches || []).forEach(m => {
+          if (m && m.a && m.a.abbr && !teams.find(t => t.abbr === m.a.abbr)) {
+            teams.push({ abbr: m.a.abbr, name: m.a.name || m.a.abbr });
+          }
+          if (m && m.b && m.b.abbr && !teams.find(t => t.abbr === m.b.abbr)) {
+            teams.push({ abbr: m.b.abbr, name: m.b.name || m.b.abbr });
+          }
+        });
+        return teams;
+      }
+
+      ringData[0].teams = extractTeams(r16);
+      ringData[1].teams = extractTeams(qf);
+      ringData[2].teams = extractTeams(sf);
+
+      if (finalMatch) {
+        if (finalMatch.a && finalMatch.a.abbr) ringData[3].teams.push({ abbr: finalMatch.a.abbr, name: finalMatch.a.name || finalMatch.a.abbr });
+        if (finalMatch.b && finalMatch.b.abbr) ringData[3].teams.push({ abbr: finalMatch.b.abbr, name: finalMatch.b.name || finalMatch.b.abbr });
+      }
+    } else {
+      // Fallback: usa os próprios classificados para popular os anéis
+      // Pega os primeiros times em ordem para cada fase
+      const all = classified.slice(0, 32);
+      if (all.length >= 16) {
+        ringData[0].teams = all.slice(0, 16).map(t => ({ abbr: t.abbr, name: t.name }));
+      }
+      if (all.length >= 8) {
+        ringData[1].teams = all.slice(0, 8).map(t => ({ abbr: t.abbr, name: t.name }));
+      }
+      if (all.length >= 4) {
+        ringData[2].teams = all.slice(0, 4).map(t => ({ abbr: t.abbr, name: t.name }));
+      }
+      if (all.length >= 2) {
+        ringData[3].teams = all.slice(0, 2).map(t => ({ abbr: t.abbr, name: t.name }));
+      }
     }
-    ringData.push({ teams: finalTeams, radius: CFG.ringRadii[3], label: 'Final' });
 
     // Renderiza cada anel
     for (let ri = 0; ri < ringData.length; ri++) {

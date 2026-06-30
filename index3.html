@@ -2553,6 +2553,7 @@ function renderBracket(events, standingsData) {
   // Renderiza diagrama
   // Cache para a Arte Visual
   window.__bracketCache = { r16, qf, sf, finalMatch, thirdPlace };
+  console.log('[ArteVisual] Bracket cached:', r16?.length, 'r16,', qf?.length, 'qf,', sf?.length, 'sf');
 
   renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events);
 
