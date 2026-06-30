@@ -415,6 +415,22 @@
     0%, 100% { text-shadow: 0 0 8px rgba(239,68,68,0.6); }
     50% { text-shadow: 0 0 20px rgba(239,68,68,1), 0 0 40px rgba(239,68,68,0.4); }
   }
+  /* Glow vermelho para vencedor nos penaltis - cards Ao Vivo */
+  .live-winner-pen {
+    animation: live-pulse-red 1.5s infinite;
+  }
+  .live-winner-pen .name {
+    color: #ef4444 !important;
+    font-weight: 800 !important;
+  }
+  .live-winner-pen .score {
+    color: #ef4444 !important;
+    font-weight: 800 !important;
+  }
+  @keyframes live-pulse-red {
+    0%, 100% { box-shadow: 0 0 8px rgba(239,68,68,0.4), 0 0 16px rgba(239,68,68,0.2); }
+    50% { box-shadow: 0 0 20px rgba(239,68,68,0.8), 0 0 40px rgba(239,68,68,0.4); }
+  }
   @media (max-width: 600px) {
     .classified-grid { grid-template-columns: repeat(2, 1fr); }
   }
@@ -1049,13 +1065,18 @@ function renderLiveCards() {
     const ven = g.competitions?.[0]?.venue?.fullName||'';
 
     // Header do jogo: Time A X Time B, placar e tempo
-    h += '<div style="background:linear-gradient(145deg,#1e293b,#1a2332);border:1px solid #22c55e44;border-radius:12px;padding:1rem;margin-bottom:1rem;">';
+    // Verifica se tem vencedor nos penaltis
+    const homeWinner = home.winner === true;
+    const awayWinner = away.winner === true;
+    const homePenWin = hasPenaltis && homeWinner;
+    const awayPenWin = hasPenaltis && awayWinner;
+    h += '<div style="background:linear-gradient(145deg,#1e293b,#1a2332);border:1px solid '+(hasPenaltis?'#ef444488':'#22c55e44')+';border-radius:12px;padding:1rem;margin-bottom:1rem;">';
     h += '<div style="display:flex;align-items:center;justify-content:center;gap:12px;padding:.6rem 0;border-bottom:1px solid #2d3a4e;margin-bottom:1rem;">';
-    h += '<div style="display:flex;align-items:center;gap:6px;"><img class="flag" src="'+flagUrl(ha)+'" alt="" style="width:24px;height:16px;border-radius:2px;" loading="lazy" onerror="this.style.display=\'none\'"><span style="font-weight:700;font-size:.9rem;">'+hn+'</span></div>';
-    h += '<span style="font-weight:800;font-size:1.3rem;color:#f59e0b;">'+(hs!==''&&hs!==null?hs:'-')+'</span>';
+    h += '<div style="display:flex;align-items:center;gap:6px;'+(homePenWin?'background:rgba(239,68,68,0.1);border-radius:8px;padding:4px 8px;':'')+'"><img class="flag" src="'+flagUrl(ha)+'" alt="" style="width:24px;height:16px;border-radius:2px;" loading="lazy" onerror="this.style.display='none'"><span style="font-weight:'+(homePenWin?'800':'700')+';font-size:.9rem;'+(homePenWin?'color:#ef4444;text-shadow:0 0 12px rgba(239,68,68,0.8);':'')+'">'+hn+(homePenWin?' 🏆':'')+'</span></div>';
+    h += '<span style="font-weight:800;font-size:1.3rem;color:'+(homePenWin?'#ef4444;text-shadow:0 0 12px rgba(239,68,68,0.8)':'#f59e0b')+';">'+(hs!==''&&hs!==null?hs:'-')+'</span>';
     h += '<span style="color:#475569;font-weight:500;">X</span>';
-    h += '<span style="font-weight:800;font-size:1.3rem;color:#f59e0b;">'+(as!==''&&as!==null?as:'-')+'</span>';
-    h += '<div style="display:flex;align-items:center;gap:6px;"><span style="font-weight:700;font-size:.9rem;">'+an+'</span><img class="flag" src="'+flagUrl(aa)+'" alt="" style="width:24px;height:16px;border-radius:2px;" loading="lazy" onerror="this.style.display=\'none\'"></div>';
+    h += '<span style="font-weight:800;font-size:1.3rem;color:'+(awayPenWin?'#ef4444;text-shadow:0 0 12px rgba(239,68,68,0.8)':'#f59e0b')+';">'+(as!==''&&as!==null?as:'-')+'</span>';
+    h += '<div style="display:flex;align-items:center;gap:6px;'+(awayPenWin?'background:rgba(239,68,68,0.1);border-radius:8px;padding:4px 8px;':'')+'"><span style="font-weight:'+(awayPenWin?'800':'700')+';font-size:.9rem;'+(awayPenWin?'color:#ef4444;text-shadow:0 0 12px rgba(239,68,68,0.8);':'')+'">'+an+(awayPenWin?' 🏆':'')+'</span><img class="flag" src="'+flagUrl(aa)+'" alt="" style="width:24px;height:16px;border-radius:2px;" loading="lazy" onerror="this.style.display='none'"></div>';
     h += '</div>';
         // Verifica penaltis
     const penInfo = penaltisByGame[g.id];
@@ -1070,17 +1091,18 @@ function renderLiveCards() {
     // Cards dos dois times lado a lado
     h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">';
     [
-      { abbr: ha, name: hn, score: hs },
-      { abbr: aa, name: an, score: as }
+      { abbr: ha, name: hn, score: hs, winner: homeWinner },
+      { abbr: aa, name: an, score: as, winner: awayWinner }
     ].forEach(t => {
       const s = stats[t.abbr] || { pts:0, gp:0, w:0, t:0, l:0, gf:0, ga:0 };
       const gd = s.gf - s.ga;
       const gdStr = gd > 0 ? '+'+gd : String(gd);
       const group = teamGroup[t.abbr] || '?';
       h += '<div style="background:#1a2332;border:1px solid #2d3a4e;border-radius:10px;padding:.8rem;">';
-      h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:.6rem;">';
-      h += '<img class="flag" src="'+flagUrl(t.abbr)+'" alt="" style="width:22px;height:15px;border-radius:2px;" loading="lazy" onerror="this.style.display=\'none\'">';
-      h += '<span style="font-weight:700;font-size:.85rem;">'+t.name+'</span>';
+      const isWinner = t.winner && hasPenaltis;
+      h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:.6rem;'+(isWinner?'background:rgba(239,68,68,0.1);border-radius:8px;padding:4px 8px;':'')+'">';
+      h += '<img class="flag" src="'+flagUrl(t.abbr)+'" alt="" style="width:22px;height:15px;border-radius:2px;" loading="lazy" onerror="this.style.display='none'">';
+      h += '<span style="font-weight:'+(isWinner?'800':'700')+';font-size:.85rem;'+(isWinner?'color:#ef4444;text-shadow:0 0 12px rgba(239,68,68,0.8);':'')+'">'+t.name+(isWinner?' 🏆':'')+'</span>';
       h += '</div>';
       h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:.72rem;">';
       h += '<div style="color:#64748b;">Grupo</div><div style="font-weight:600;text-align:right;">'+group+'</div>';
