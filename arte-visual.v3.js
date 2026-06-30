@@ -17,9 +17,10 @@
 
   const CFG = {
     outerRadius: 5,
-    ringRadii: [4.0, 3.0, 2.0, 1.0],
-    flagSize: 0.8,
-    innerFlagSize: 0.6,
+    ringRadii: [4.2, 3.2, 2.2, 1.2],
+    // Esferas menores nos anéis externos, maiores perto do centro
+    // Anel externo (32): 0.5, Oitavas (16): 0.6, Quartas (8): 0.7, Semi (4): 0.8, Final (2): 0.9, Centro: 1.0
+    sphereSizes: [0.5, 0.6, 0.7, 0.8, 0.9],
     autoRotateSpeed: 0.5,
   };
 
@@ -219,7 +220,8 @@
     const num = Math.min(classified.length, 32);
     if (num === 0) return;
 
-    // ─── Anel externo: 32 classificados ───────────────────────────
+    // ─── Anel externo: 32 classificados (esferas menores) ────────
+    const outerSize = CFG.sphereSizes[0];
     const outerTasks = [];
     for (let i = 0; i < num; i++) {
       const team = classified[i];
@@ -227,7 +229,7 @@
       const x = CFG.outerRadius * Math.sin(angle);
       const z = CFG.outerRadius * Math.cos(angle);
       outerTasks.push(
-        createTeamMesh(team, x, 0, z, CFG.flagSize, 1).then(m => {
+        createTeamMesh(team, x, 0, z, outerSize, 1).then(m => {
           m.userData.ring = 'outer';
           m.userData.angle = angle;
           m.userData.index = i;
@@ -290,11 +292,13 @@
       }
     }
 
-    // Renderiza cada anel
+    // Renderiza cada anel interno (esferas crescendo em direção ao centro)
     for (let ri = 0; ri < ringData.length; ri++) {
       const { teams, radius } = ringData[ri];
       if (teams.length === 0) continue;
 
+      // Esfera maior quanto mais perto do centro
+      const sphereSize = CFG.sphereSizes[ri + 1];
       const n = teams.length;
       const innerTasks = [];
       for (let i = 0; i < n; i++) {
@@ -303,7 +307,7 @@
         const x = radius * Math.sin(angle);
         const z = radius * Math.cos(angle);
         innerTasks.push(
-          createTeamMesh(team, x, 0, z, CFG.innerFlagSize, 0.85).then(m => {
+          createTeamMesh(team, x, 0, z, sphereSize, 0.85).then(m => {
             m.userData.ring = ringData[ri].label;
             m.userData.angle = angle;
             teamMeshes.push(m);
@@ -315,8 +319,9 @@
       innerGroups.forEach(g => scene.add(g));
     }
 
-    // ─── Centro: esfera dourada (troféu) ──────────────────────────
-    const sg = new THREE.SphereGeometry(0.2, 16, 16);
+    // ─── Centro: esfera dourada (troféu) — a maior de todas ──────
+    const centerSize = CFG.sphereSizes[CFG.sphereSizes.length - 1];
+    const sg = new THREE.SphereGeometry(centerSize * 0.5, 24, 24);
     const sm = new THREE.MeshStandardMaterial({
       color: 0xf59e0b, emissive: 0xf59e0b, emissiveIntensity: 0.4,
       metalness: 0.8, roughness: 0.2,
