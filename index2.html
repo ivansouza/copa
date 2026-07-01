@@ -1802,43 +1802,13 @@ function renderBracketWithFavs() {
 
 function highlightRivals(chosenAbbr) {
   var sm = window.__scoreMap || {};
-  var bd = window.__bracketCache || null;
   
-  // Determina de que lado do bracket o time escolhido está usando o r16
-  // Lado esquerdo: r16 índices 0,1,4,5 | Lado direito: r16 índices 2,3,6,7
-  var chosenR16Idx = -1;
-  if (bd && bd.r16) {
-    for (var i = 0; i < bd.r16.length; i++) {
-      var m = bd.r16[i];
-      if (m && (m.a && m.a.abbr === chosenAbbr || m.b && m.b.abbr === chosenAbbr)) {
-        chosenR16Idx = i;
-        break;
-      }
-    }
-  }
-  
-  var leftIndices = [0,1,4,5];
-  var rightIndices = [2,3,6,7];
-  var chosenSide = leftIndices.includes(chosenR16Idx) ? 'left' : 'right';
-  var rivalIndices = chosenSide === 'left' ? rightIndices : leftIndices;
-  
-  // Pega todos os times dos índices rivais no r16
-  var rivalTeams = [];
-  if (bd && bd.r16) {
-    rivalIndices.forEach(function(idx) {
-      var m = bd.r16[idx];
-      if (m && m.a && m.a.abbr) rivalTeams.push(m.a.abbr);
-      if (m && m.b && m.b.abbr) rivalTeams.push(m.b.abbr);
-    });
-  }
-  
-  // Pisca apenas os times do lado oposto que não estão eliminados
+  // Pisca TODOS os times não eliminados, exceto o escolhido
   document.querySelectorAll('.fav-btn').forEach(function(b) {
     var ab = b.dataset.abbr;
     if (!ab || ab === chosenAbbr || b.disabled) return;
     var s = sm[ab];
     if (s && s.lost) return;
-    if (rivalTeams.length > 0 && !rivalTeams.includes(ab)) return;
     b.classList.add('blink');
   });
   
