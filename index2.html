@@ -3012,9 +3012,7 @@ loadAll();
 setInterval(loadAll, REFRESH_MS);
 
 // Service Worker
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/copa/sw.js');
-}
+
 
 let deferredPrompt = null;
 
