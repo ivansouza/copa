@@ -1692,8 +1692,15 @@ var selectedFinalists = { a: null, b: null };
 
 // Determina de que lado do bracket um time está (0=esquerdo, 1=direito)
 function getTeamSide(abbr) {
+  // Tenta usar o bracketCache primeiro, depois a variável round32
+  var matches = null;
   var bd = window.__bracketCache || null;
-  if (!bd || !bd.round32) return -1;
+  if (bd && bd.round32) {
+    matches = bd.round32;
+  } else if (typeof round32 !== 'undefined' && round32 && round32.length > 0) {
+    matches = round32;
+  }
+  if (!matches) return -1;
   // Lado esquerdo: pares 0,1,2,3,8,9,10,11 -> r16 índices 0,1,4,5
   // Lado direito: pares 4,5,6,7,12,13,14,15 -> r16 índices 2,3,6,7
   var leftPairs = [0,1,2,3,8,9,10,11];
