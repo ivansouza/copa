@@ -1750,10 +1750,14 @@ function setFavorite(abbr, name) {
     document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('active', 'blink'); });
     document.querySelector('.fav-btn[data-abbr="'+abbr+'"]')?.classList.add('active');
     // Atualiza o diagrama com o primeiro time
-    var btn = document.querySelector('[data-section="bracket"]');
-    if (btn) btn.click();
+    if (window.standingsCache) {
+      renderBracket(allGames || [], standingsCache);
+    } else {
+      var btn = document.querySelector('[data-section="bracket"]');
+      if (btn) btn.click();
+    }
     // Depois mostra os rivais
-    setTimeout(function() { highlightRivals(abbr); }, 300);
+    setTimeout(function() { highlightRivals(abbr); }, 500);
     return;
   }
   
@@ -1765,8 +1769,12 @@ function setFavorite(abbr, name) {
     document.querySelectorAll('.fav-btn[data-abbr="'+selectedFinalists.a.abbr+'"]').forEach(function(b) { b.classList.add('active'); });
     document.querySelectorAll('.fav-btn[data-abbr="'+abbr+'"]').forEach(function(b) { b.classList.add('active'); });
     // Re-renderiza o bracket com os dois finalistas
-    var btn = document.querySelector('[data-section="bracket"]');
-    if (btn) btn.click();
+    if (window.standingsCache) {
+      renderBracket(allGames || [], standingsCache);
+    } else {
+      var btn = document.querySelector('[data-section="bracket"]');
+      if (btn) btn.click();
+    }
   }
 }
 
