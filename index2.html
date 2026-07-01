@@ -1782,19 +1782,29 @@ function setFavorite(abbr, name) {
 
 
 function renderBracketWithFavs() {
+  // Tenta renderizar direto se tiver cache
   if (window.standingsCache) {
     renderBracket(allGames || [], standingsCache);
     return;
   }
+  // Força o carregamento dos dados chamando loadAll
+  if (typeof loadAll === 'function') {
+    loadAll();
+  }
+  // Tenta clicar no botão Mata-Mata para forçar a renderização
   var btn = document.querySelector('[data-section="bracket"]');
   if (btn) btn.click();
+  // Fica tentando até ter os dados
   var attempts = 0;
   var timer = setInterval(function() {
     attempts++;
     if (window.standingsCache) {
       renderBracket(allGames || [], standingsCache);
       clearInterval(timer);
-    } else if (attempts > 20) {
+    } else if (attempts > 30) {
+      // Se não conseguir, tenta um hard refresh clicando de novo
+      var btn2 = document.querySelector('[data-section="bracket"]');
+      if (btn2) btn2.click();
       clearInterval(timer);
     }
   }, 500);
