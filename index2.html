@@ -342,7 +342,9 @@
   .fav-btn:hover{border-color:#d4a017;color:#f0d060}
   .fav-btn.active{background:#d4a017;border-color:#d4a017;color:#0f1a0f;font-weight:700}
   .fav-btn .fl{width:14px;height:10px;border-radius:1.5px;flex:none}
-  .fav-btn.clear{color:#64748b;font-size:10px}
+  .fav-btn.blink { animation: blink-fav 0.8s ease-in-out infinite; }
+@keyframes blink-fav { 0%,100% { background: #f59e0b44; border-color: #f59e0b; } 50% { background: #f59e0b22; border-color: #f59e0b66; } }
+.fav-btn.clear{color:#64748b;font-size:10px}
   .fav-btn.clear:hover{color:#ef4444;border-color:#ef4444}
   .fav-btn.disabled{opacity:0.4;cursor:not-allowed;border-color:#1e293b;background:#162316;color:#475569}
   .fav-btn.disabled:hover{border-color:#1e293b;color:#475569}
@@ -1679,17 +1681,148 @@ function simulateWinnerFav(match, favAbbr, sm) {
   return simulateWinner(match, sm);
 }
 
+// Estado dos finalistas
+var selectedFinalists = { a: null, b: null };
+
+// Carrega do localStorage ao iniciar
+(function() {
+  var f1 = localStorage.getItem('bracketFav');
+  var f2 = localStorage.getItem('bracketFav2');
+  if (f1) selectedFinalists.a = { abbr: f1 };
+  if (f2) selectedFinalists.b = { abbr: f2 };
+})();
+
 function setFavorite(abbr, name) {
-  localStorage.setItem('bracketFav', abbr);
-  // Atualiza o texto do botão ativo
-  document.querySelectorAll('.fav-btn').forEach(b => b.classList.remove('active'));
-  if (abbr) {
-    const btn = document.querySelector('.fav-btn[data-abbr="'+abbr+'"]');
-    if (btn) btn.classList.add('active');
+  if (!abbr) {
+    // Limpar
+    selectedFinalists = { a: null, b: null };
+    localStorage.removeItem('bracketFav');
+    localStorage.removeItem('bracketFav2');
+    document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('active', 'blink'); });
+    var btn = document.querySelector('[data-section="bracket"]');
+    if (btn) btn.click();
+    return;
   }
-  // Re-renderiza o bracket
-  const btn = document.querySelector('[data-section="bracket"]');
-  if (btn) btn.click();
+  
+  // Se clicou num time já selecionado, desseleciona
+  if (selectedFinalists.a && selectedFinalists.a.abbr === abbr) {
+    selectedFinalists.a = null;
+    localStorage.removeItem('bracketFav');
+    document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('active', 'blink'); });
+    if (selectedFinalists.b) {
+      // Se tem segundo, ele vira o primeiro
+      selectedFinalists.a = selectedFinalists.b;
+      selectedFinalists.b = null;
+      localStorage.setItem('bracketFav', selectedFinalists.a.abbr);
+      localStorage.removeItem('bracketFav2');
+      document.querySelector('.fav-btn[data-abbr="'+selectedFinalists.a.abbr+'"]')?.classList.add('active');
+      // Mostra rivais para o novo primeiro
+      highlightRivals(selectedFinalists.a.abbr);
+    } else {
+      var btn = document.querySelector('[data-section="bracket"]');
+      if (btn) btn.click();
+    }
+    return;
+  }
+  
+  if (selectedFinalists.b && selectedFinalists.b.abbr === abbr) {
+    selectedFinalists.b = null;
+    localStorage.removeItem('bracketFav2');
+    document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('active', 'blink'); });
+    if (selectedFinalists.a) {
+      document.querySelector('.fav-btn[data-abbr="'+selectedFinalists.a.abbr+'"]')?.classList.add('active');
+      highlightRivals(selectedFinalists.a.abbr);
+    }
+    return;
+  }
+  
+  // Se já tem dois, reseta
+  if (selectedFinalists.a && selectedFinalists.b) {
+    selectedFinalists = { a: null, b: null };
+    localStorage.removeItem('bracketFav');
+    localStorage.removeItem('bracketFav2');
+  }
+  
+  // Escolhe o primeiro
+  if (!selectedFinalists.a) {
+    selectedFinalists.a = { abbr: abbr, name: name };
+    localStorage.setItem('bracketFav', abbr);
+    document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('active', 'blink'); });
+    document.querySelector('.fav-btn[data-abbr="'+abbr+'"]')?.classList.add('active');
+    highlightRivals(abbr);
+    return;
+  }
+  
+  // Escolhe o segundo
+  if (!selectedFinalists.b) {
+    selectedFinalists.b = { abbr: abbr, name: name };
+    localStorage.setItem('bracketFav2', abbr);
+    document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('blink'); });
+    document.querySelectorAll('.fav-btn[data-abbr="'+selectedFinalists.a.abbr+'"]').forEach(function(b) { b.classList.add('active'); });
+    document.querySelectorAll('.fav-btn[data-abbr="'+abbr+'"]').forEach(function(b) { b.classList.add('active'); });
+    // Re-renderiza o bracket com os dois finalistas
+    var btn = document.querySelector('[data-section="bracket"]');
+    if (btn) btn.click();
+  }
+}
+
+function highlightRivals(chosenAbbr) {
+  // Pega o bracket cacheado para determinar de que lado o time está
+  var bd = window.__bracketCache || null;
+  var sm = window.__scoreMap || {};
+  var rivals = [];
+  
+  if (bd && bd.r16) {
+    // Descobre de que lado o time escolhido está
+    var chosenSide = null;
+    for (var i = 0; i < bd.r16.length; i++) {
+      var m = bd.r16[i];
+      if (m && (m.a.abbr === chosenAbbr || m.b.abbr === chosenAbbr)) {
+        chosenSide = i < 4 ? 'left' : 'right';
+        break;
+      }
+    }
+    
+    if (chosenSide) {
+      var rivalSide = chosenSide === 'left' ? 'right' : 'left';
+      var rivalIndices = rivalSide === 'left' ? [0,1,4,5] : [2,3,6,7];
+      
+      rivalIndices.forEach(function(idx) {
+        var m = bd.r16[idx];
+        if (m && m.a && m.a.abbr) rivals.push(m.a.abbr);
+        if (m && m.b && m.b.abbr) rivals.push(m.b.abbr);
+      });
+    }
+  }
+  
+  // Se não conseguiu determinar, pisca todos os não-eliminados
+  if (rivals.length === 0) {
+    document.querySelectorAll('.fav-btn').forEach(function(b) {
+      var ab = b.dataset.abbr;
+      if (!ab || ab === chosenAbbr || b.disabled) return;
+      var s = sm[ab];
+      if (s && s.lost) return;
+      b.classList.add('blink');
+    });
+  } else {
+    document.querySelectorAll('.fav-btn').forEach(function(b) {
+      var ab = b.dataset.abbr;
+      if (ab && rivals.includes(ab) && !b.disabled) {
+        b.classList.add('blink');
+      }
+    });
+  }
+  
+  // Mostra instrução
+  var inst = document.getElementById('favInstruction');
+  if (!inst) {
+    inst = document.createElement('div');
+    inst.id = 'favInstruction';
+    inst.style.cssText = 'text-align:center;font-size:.75rem;color:#f59e0b;margin-top:8px;font-weight:600;';
+    var sec = document.getElementById('favSection');
+    if (sec) sec.appendChild(inst);
+  }
+  inst.textContent = 'Agora escolha o adversário na final (times piscando)';
 }
 
 function isMathematicallyEliminated(t, teamPosition, allThird, standingsData) {
@@ -2895,7 +3028,9 @@ loadAll();
 setInterval(loadAll, REFRESH_MS);
 
 // Service Worker
-
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/copa/sw.js');
+}
 
 let deferredPrompt = null;
 
@@ -3262,91 +3397,5 @@ if (arteContainer && arteContainer.querySelector('canvas') === null && arteConta
 
 </script>
 
-
-// ─── Seleção de dois finalistas ──────────────────────────────
-var selectedFinalists = { a: null, b: null };
-
-// Carrega do localStorage ao iniciar
-(function() {
-  var f1 = localStorage.getItem('bracketFav');
-  var f2 = localStorage.getItem('bracketFav2');
-  if (f1) selectedFinalists.a = { abbr: f1 };
-  if (f2) selectedFinalists.b = { abbr: f2 };
-})();
-
-function setFavorite(abbr, name) {
-  if (!abbr) {
-    selectedFinalists = { a: null, b: null };
-    localStorage.removeItem('bracketFav');
-    localStorage.removeItem('bracketFav2');
-    document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('active', 'blink'); });
-    renderBracketWithFavs();
-    return;
-  }
-  
-  if (selectedFinalists.a && selectedFinalists.a.abbr === abbr) {
-    selectedFinalists.a = null;
-    localStorage.removeItem('bracketFav');
-    document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('active', 'blink'); });
-    renderBracketWithFavs();
-    return;
-  }
-  
-  if (selectedFinalists.b && selectedFinalists.b.abbr === abbr) {
-    selectedFinalists.b = null;
-    localStorage.removeItem('bracketFav2');
-    document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('active', 'blink'); });
-    if (selectedFinalists.a) {
-      var btn = document.querySelector('.fav-btn[data-abbr="'+selectedFinalists.a.abbr+'"]');
-      if (btn) btn.classList.add('active');
-    }
-    renderBracketWithFavs();
-    return;
-  }
-  
-  if (selectedFinalists.a && selectedFinalists.b) {
-    selectedFinalists = { a: null, b: null };
-    localStorage.removeItem('bracketFav');
-    localStorage.removeItem('bracketFav2');
-  }
-  
-  if (!selectedFinalists.a) {
-    selectedFinalists.a = { abbr: abbr, name: name };
-    localStorage.setItem('bracketFav', abbr);
-    document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('active', 'blink'); });
-    var btn = document.querySelector('.fav-btn[data-abbr="'+abbr+'"]');
-    if (btn) btn.classList.add('active');
-    renderBracketWithFavs();
-    return;
-  }
-  
-  if (!selectedFinalists.b) {
-    selectedFinalists.b = { abbr: abbr, name: name };
-    localStorage.setItem('bracketFav2', abbr);
-    document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('blink'); });
-    document.querySelectorAll('.fav-btn[data-abbr="'+selectedFinalists.a.abbr+'"]').forEach(function(b) { b.classList.add('active'); });
-    document.querySelectorAll('.fav-btn[data-abbr="'+abbr+'"]').forEach(function(b) { b.classList.add('active'); });
-    renderBracketWithFavs();
-  }
-}
-
-function renderBracketWithFavs() {
-  if (window.standingsCache) {
-    renderBracket(allGames || [], standingsCache);
-    return;
-  }
-  var btn = document.querySelector('[data-section="bracket"]');
-  if (btn) btn.click();
-  var attempts = 0;
-  var timer = setInterval(function() {
-    attempts++;
-    if (window.standingsCache) {
-      renderBracket(allGames || [], standingsCache);
-      clearInterval(timer);
-    } else if (attempts > 20) {
-      clearInterval(timer);
-    }
-  }, 500);
-}
 </body>
 </html>
