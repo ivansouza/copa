@@ -1766,33 +1766,37 @@ function setFavorite(abbr, name) {
     document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('active', 'blink', 'same-side'); b.disabled = false; });
     document.querySelector('.fav-btn[data-abbr="'+abbr+'"]')?.classList.add('active');
     
-    // Mostra rivais do lado OPOSTO (piscando) e mesmo lado (vermelho)
-    var chosenSide = getTeamSide(abbr);
-    document.querySelectorAll('.fav-btn').forEach(function(b) {
-      var ba = b.dataset.abbr;
-      if (!ba || ba === abbr || b.disabled) return;
-      if (chosenSide >= 0) {
-        var teamSide = getTeamSide(ba);
-        if (teamSide === chosenSide) {
-          b.classList.add('same-side');
-          b.disabled = true;
-          return;
-        }
-      }
-      b.classList.add('blink');
-    });
-    
-    var inst = document.getElementById('favInstruction');
-    if (!inst) {
-      inst = document.createElement('div');
-      inst.id = 'favInstruction';
-      inst.style.cssText = 'text-align:center;font-size:.75rem;color:#f59e0b;margin-top:8px;font-weight:600;';
-      var sec = document.getElementById('favSection');
-      if (sec) sec.appendChild(inst);
-    }
-    inst.textContent = 'Agora escolha o adversário na final (times piscando)';
+    // Primeiro renderiza o bracket para popular o cache
     var btn = document.querySelector('[data-section="bracket"]');
     if (btn) btn.click();
+    
+    // Depois mostra os rivais (com delay para o cache ser populado)
+    setTimeout(function() {
+      var chosenSide = getTeamSide(abbr);
+      document.querySelectorAll('.fav-btn').forEach(function(b) {
+        var ba = b.dataset.abbr;
+        if (!ba || ba === abbr || b.disabled) return;
+        if (chosenSide >= 0) {
+          var teamSide = getTeamSide(ba);
+          if (teamSide === chosenSide) {
+            b.classList.add('same-side');
+            b.disabled = true;
+            return;
+          }
+        }
+        b.classList.add('blink');
+      });
+      
+      var inst = document.getElementById('favInstruction');
+      if (!inst) {
+        inst = document.createElement('div');
+        inst.id = 'favInstruction';
+        inst.style.cssText = 'text-align:center;font-size:.75rem;color:#f59e0b;margin-top:8px;font-weight:600;';
+        var sec = document.getElementById('favSection');
+        if (sec) sec.appendChild(inst);
+      }
+      inst.textContent = 'Agora escolha o adversário na final (times piscando)';
+    }, 500);
     return;
   }
   
