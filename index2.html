@@ -342,8 +342,6 @@
   .fav-btn:hover{border-color:#d4a017;color:#f0d060}
   .fav-btn.active{background:#d4a017;border-color:#d4a017;color:#0f1a0f;font-weight:700}
   .fav-btn .fl{width:14px;height:10px;border-radius:1.5px;flex:none}
-  .fav-btn.blink { animation: blink-fav 0.8s ease-in-out infinite; }
-  @keyframes blink-fav { 0%,100% { background: #f59e0b44; border-color: #f59e0b; } 50% { background: #f59e0b22; border-color: #f59e0b66; } }
   .fav-btn.clear{color:#64748b;font-size:10px}
   .fav-btn.clear:hover{color:#ef4444;border-color:#ef4444}
   .fav-btn.disabled{opacity:0.4;cursor:not-allowed;border-color:#1e293b;background:#162316;color:#475569}
@@ -1681,103 +1679,20 @@ function simulateWinnerFav(match, favAbbr, sm) {
   return simulateWinner(match, sm);
 }
 
-// Estado dos finalistas escolhidos
-var selectedFinalists = { a: null, b: null };
-
-// Carrega do localStorage ao iniciar
-(function() {
-  var f1 = localStorage.getItem('bracketFav');
-  var f2 = localStorage.getItem('bracketFav2');
-  if (f1) selectedFinalists.a = { abbr: f1 };
-  if (f2) selectedFinalists.b = { abbr: f2 };
-})();
-
 function setFavorite(abbr, name) {
-  if (!abbr) {
-    // Limpar
-    selectedFinalists = { a: null, b: null };
-    localStorage.removeItem('bracketFav');
-    localStorage.removeItem('bracketFav2');
-    document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('active', 'blink'); });
-    renderBracketWithFavs();
-    return;
-  }
-  
-  // Se clicou no mesmo time já selecionado como primeiro, desseleciona
-  if (selectedFinalists.a && selectedFinalists.a.abbr === abbr) {
-    selectedFinalists.a = null;
-    localStorage.removeItem('bracketFav');
-    document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('active', 'blink'); });
-    renderBracketWithFavs();
-    return;
-  }
-  
-  // Se clicou no mesmo time já selecionado como segundo, desseleciona
-  if (selectedFinalists.b && selectedFinalists.b.abbr === abbr) {
-    selectedFinalists.b = null;
-    localStorage.removeItem('bracketFav2');
-    document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('active', 'blink'); });
-    // Re-marca o primeiro se existir
-    if (selectedFinalists.a) {
-      var btn = document.querySelector('.fav-btn[data-abbr="'+selectedFinalists.a.abbr+'"]');
-      if (btn) btn.classList.add('active');
-    }
-    renderBracketWithFavs();
-    return;
-  }
-  
-  // Se já tem dois, reseta e começa de novo
-  if (selectedFinalists.a && selectedFinalists.b) {
-    selectedFinalists = { a: null, b: null };
-    localStorage.removeItem('bracketFav');
-    localStorage.removeItem('bracketFav2');
-  }
-  
-  // Se não tem primeiro, este é o primeiro
-  if (!selectedFinalists.a) {
-    selectedFinalists.a = { abbr: abbr, name: name };
-    localStorage.setItem('bracketFav', abbr);
-    document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('active', 'blink'); });
-    var btn = document.querySelector('.fav-btn[data-abbr="'+abbr+'"]');
+  localStorage.setItem('bracketFav', abbr);
+  // Atualiza o texto do botão ativo
+  document.querySelectorAll('.fav-btn').forEach(b => b.classList.remove('active'));
+  if (abbr) {
+    const btn = document.querySelector('.fav-btn[data-abbr="'+abbr+'"]');
     if (btn) btn.classList.add('active');
-    renderBracketWithFavs();
-    return;
   }
-  
-  // Se não tem segundo, este é o segundo
-  if (!selectedFinalists.b) {
-    selectedFinalists.b = { abbr: abbr, name: name };
-    localStorage.setItem('bracketFav2', abbr);
-    document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('blink'); });
-    document.querySelectorAll('.fav-btn[data-abbr="'+selectedFinalists.a.abbr+'"]').forEach(function(b) { b.classList.add('active'); });
-    document.querySelectorAll('.fav-btn[data-abbr="'+abbr+'"]').forEach(function(b) { b.classList.add('active'); });
-    renderBracketWithFavs();
-  }
-}
-
-function renderBracketWithFavs() {
-  // Tenta renderizar diretamente se tiver cache
-  if (window.standingsCache) {
-    renderBracket(allGames || [], standingsCache);
-    return;
-  }
-  // Se não tem cache, clica no Mata-Mata que carrega os dados
-  var btn = document.querySelector('[data-section="bracket"]');
+  // Re-renderiza o bracket
+  const btn = document.querySelector('[data-section="bracket"]');
   if (btn) btn.click();
-  // Tenta de novo após os dados carregarem
-  var attempts = 0;
-  var timer = setInterval(function() {
-    attempts++;
-    if (window.standingsCache) {
-      renderBracket(allGames || [], standingsCache);
-      clearInterval(timer);
-    } else if (attempts > 20) {
-      clearInterval(timer); // desiste após 10 segundos
-    }
-  }, 500);
 }
 
-function isMathematicallyEliminatedfunction isMathematicallyEliminated(t, teamPosition, allThird, standingsData) {
+function isMathematicallyEliminated(t, teamPosition, allThird, standingsData) {
   // Um time está matematicamente eliminado se NENHUM cenário possível
   // permite ele se classificar (como 1º/2º do grupo ou top 8 dos 3ºs)
   const pos = teamPosition[t.ab];
@@ -2595,7 +2510,19 @@ function renderBracket(events, standingsData) {
     existingEvents[st].push(e);
   });
 
-  // Função para simular uma rodada (com favoritos opcionais)
+  // Função que simula um match garantindo que os favoritos avancem
+  function simulateWithFavs(match, fav1, fav2) {
+    if (!match || !match.a || !match.b) return null;
+    if (match.a.abbr === fav1 || match.b.abbr === fav1) {
+      return simulateWinnerFav(match, fav1, scoreMap);
+    }
+    if (match.a.abbr === fav2 || match.b.abbr === fav2) {
+      return simulateWinnerFav(match, fav2, scoreMap);
+    }
+    return simulateWinner(match, scoreMap);
+  }
+  
+  // Função para simular uma rodada (com favorito opcional)
   function simulateRound(matches, fav) {
     const winners = [];
     for (let i = 0; i < matches.length; i += 2) {
@@ -2610,71 +2537,28 @@ function renderBracket(events, standingsData) {
     }
     return winners;
   }
-  
-  // Função para simular com dois finalistas específicos
-  function simulateRoundWithFinalists(matches, fav1, fav2) {
-    const winners = [];
-    for (let i = 0; i < matches.length; i += 2) {
-      const m1 = matches[i];
-      const m2 = matches[i+1];
-      if (!m1 || !m2) break;
-      const w1 = fav1 ? simulateWinnerFav(m1, fav1, scoreMap) : simulateWinner(m1, scoreMap);
-      const w2 = fav2 ? simulateWinnerFav(m2, fav2, scoreMap) : simulateWinner(m2, scoreMap);
-      if (w1 && w2) {
-        winners.push({ a: w1, b: w2 });
-      }
-    }
-    return winners;
-  }
 
-  // Pega os finalistas do localStorage
+  // Pega o favorito salvo
   const savedFav = localStorage.getItem('bracketFav') || '';
   const savedFav2 = localStorage.getItem('bracketFav2') || '';
 
-    // Simula os resultados
-  var r16raw, r16, qf, sf;
-  var r16Order = [0,1,4,5,2,3,6,7];
-  var qfOrder = [0,2,1,3];
-  
-  // Função que simula um match garantindo que os favoritos avancem
-  function simulateWithFavs(match, fav1, fav2) {
-    if (!match || !match.a || !match.b) return null;
-    // Se o favorito 1 está no match, ele vence
-    if (match.a.abbr === fav1 || match.b.abbr === fav1) {
-      return simulateWinnerFav(match, fav1, scoreMap);
-    }
-    // Se o favorito 2 está no match, ele vence
-    if (match.a.abbr === fav2 || match.b.abbr === fav2) {
-      return simulateWinnerFav(match, fav2, scoreMap);
-    }
-    // Nenhum favorito no match: simula normal
-    return simulateWinner(match, scoreMap);
-  }
-  
-  if (savedFav && savedFav2) {
-    r16raw = simulateRound(round32, savedFav);
-    r16 = r16Order.map(i => r16raw[i]).filter(Boolean);
-    
-    var qfMatches = [];
-    if (r16[0] && r16[1]) qfMatches.push({ a: simulateWithFavs(r16[0], savedFav, savedFav2), b: simulateWithFavs(r16[1], savedFav, savedFav2) });
-    if (r16[2] && r16[3]) qfMatches.push({ a: simulateWithFavs(r16[2], savedFav, savedFav2), b: simulateWithFavs(r16[3], savedFav, savedFav2) });
-    if (r16[4] && r16[5]) qfMatches.push({ a: simulateWithFavs(r16[4], savedFav, savedFav2), b: simulateWithFavs(r16[5], savedFav, savedFav2) });
-    if (r16[6] && r16[7]) qfMatches.push({ a: simulateWithFavs(r16[6], savedFav, savedFav2), b: simulateWithFavs(r16[7], savedFav, savedFav2) });
-    
-    qf = qfOrder.map(i => qfMatches[i]).filter(Boolean);
-    
-    var sfMatches = [];
-    if (qf[0] && qf[2]) sfMatches.push({ a: simulateWithFavs(qf[0], savedFav, savedFav2), b: simulateWithFavs(qf[2], savedFav, savedFav2) });
-    if (qf[1] && qf[3]) sfMatches.push({ a: simulateWithFavs(qf[1], savedFav, savedFav2), b: simulateWithFavs(qf[3], savedFav, savedFav2) });
-    sf = sfMatches;
-  } else {
-    r16raw = simulateRound(round32, savedFav);
-    r16 = r16Order.map(i => r16raw[i]).filter(Boolean);
-    var qfRaw = simulateRound(r16, savedFav);
-    qf = qfOrder.map(i => qfRaw[i]).filter(Boolean);
-    sf = simulateRound(qf, savedFav);
-  }
-  
+  // Simula os resultados
+  const r16raw = simulateRound(round32, savedFav);
+  // Reordena r16 para a ordem oficial das Oitavas: [89,90,93,94,91,92,95,96]
+  // (pares originais: 0-1=74+77→89, 2-3=73+75→90, 4-5=76+78→91, 6-7=79+80→92,
+  //  8-9=83+84→93, 10-11=81+82→94, 12-13=86+88→95, 14-15=85+87→96)
+  // Ordem oficial: 89(0), 90(1), 93(4), 94(5), 91(2), 92(3), 95(6), 96(7)
+  const r16Order = [0,1,4,5,2,3,6,7];
+  const r16 = r16Order.map(i => r16raw[i]).filter(Boolean);
+  const qfRaw = simulateRound(r16, savedFav);
+  // Reordena qf para ordem oficial: QF1(89x90), QF2(91x92), QF3(93x94), QF4(95x96)
+  // r16 ordem: [89,90,93,94,91,92,95,96]
+  // Pares do simulateRound: 0-1=89x90→QF1, 2-3=93x94→QF3, 4-5=91x92→QF2, 6-7=95x96→QF4
+  // Ordem oficial: QF1(0), QF2(2), QF3(1), QF4(3)
+  const qfOrder = [0,2,1,3];
+  const qf = qfOrder.map(i => qfRaw[i]).filter(Boolean);
+  const sf = simulateRound(qf, savedFav);
+
   // Final e 3º lugar
   let thirdPlace = null;
   let finalMatch = null;
@@ -2686,11 +2570,9 @@ function renderBracket(events, standingsData) {
     thirdPlace = { a: sf0Loser, b: sf1Loser };
     finalMatch = { a: sf0Winner, b: sf1Winner };
   }
-  
-  // Cache para a Arte Visual
-  window.__bracketCache = { round32: round32, r16raw: r16raw, r16: r16, qf: qf, sf: sf, finalMatch: finalMatch, thirdPlace: thirdPlace };
-  
+
   // Renderiza diagrama
+  window.__bracketCache = { round32: round32, r16raw: r16raw, r16: r16, qf: qf, sf: sf, finalMatch: finalMatch, thirdPlace: thirdPlace };
   renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events);
 
   // Renderiza botões de favoritos (sempre, pra garantir que atualiza)
@@ -2709,6 +2591,7 @@ function renderBracket(events, standingsData) {
     // Ordena por nome
     allTeams.sort((a,b) => a.name.localeCompare(b.name));
     const savedFav = localStorage.getItem('bracketFav') || '';
+  const savedFav2 = localStorage.getItem('bracketFav2') || '';
     let hh = '';
     allTeams.forEach(t => {
       const active = t.abbr === savedFav ? ' active' : '';
@@ -3379,5 +3262,91 @@ if (arteContainer && arteContainer.querySelector('canvas') === null && arteConta
 
 </script>
 
+
+// ─── Seleção de dois finalistas ──────────────────────────────
+var selectedFinalists = { a: null, b: null };
+
+// Carrega do localStorage ao iniciar
+(function() {
+  var f1 = localStorage.getItem('bracketFav');
+  var f2 = localStorage.getItem('bracketFav2');
+  if (f1) selectedFinalists.a = { abbr: f1 };
+  if (f2) selectedFinalists.b = { abbr: f2 };
+})();
+
+function setFavorite(abbr, name) {
+  if (!abbr) {
+    selectedFinalists = { a: null, b: null };
+    localStorage.removeItem('bracketFav');
+    localStorage.removeItem('bracketFav2');
+    document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('active', 'blink'); });
+    renderBracketWithFavs();
+    return;
+  }
+  
+  if (selectedFinalists.a && selectedFinalists.a.abbr === abbr) {
+    selectedFinalists.a = null;
+    localStorage.removeItem('bracketFav');
+    document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('active', 'blink'); });
+    renderBracketWithFavs();
+    return;
+  }
+  
+  if (selectedFinalists.b && selectedFinalists.b.abbr === abbr) {
+    selectedFinalists.b = null;
+    localStorage.removeItem('bracketFav2');
+    document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('active', 'blink'); });
+    if (selectedFinalists.a) {
+      var btn = document.querySelector('.fav-btn[data-abbr="'+selectedFinalists.a.abbr+'"]');
+      if (btn) btn.classList.add('active');
+    }
+    renderBracketWithFavs();
+    return;
+  }
+  
+  if (selectedFinalists.a && selectedFinalists.b) {
+    selectedFinalists = { a: null, b: null };
+    localStorage.removeItem('bracketFav');
+    localStorage.removeItem('bracketFav2');
+  }
+  
+  if (!selectedFinalists.a) {
+    selectedFinalists.a = { abbr: abbr, name: name };
+    localStorage.setItem('bracketFav', abbr);
+    document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('active', 'blink'); });
+    var btn = document.querySelector('.fav-btn[data-abbr="'+abbr+'"]');
+    if (btn) btn.classList.add('active');
+    renderBracketWithFavs();
+    return;
+  }
+  
+  if (!selectedFinalists.b) {
+    selectedFinalists.b = { abbr: abbr, name: name };
+    localStorage.setItem('bracketFav2', abbr);
+    document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('blink'); });
+    document.querySelectorAll('.fav-btn[data-abbr="'+selectedFinalists.a.abbr+'"]').forEach(function(b) { b.classList.add('active'); });
+    document.querySelectorAll('.fav-btn[data-abbr="'+abbr+'"]').forEach(function(b) { b.classList.add('active'); });
+    renderBracketWithFavs();
+  }
+}
+
+function renderBracketWithFavs() {
+  if (window.standingsCache) {
+    renderBracket(allGames || [], standingsCache);
+    return;
+  }
+  var btn = document.querySelector('[data-section="bracket"]');
+  if (btn) btn.click();
+  var attempts = 0;
+  var timer = setInterval(function() {
+    attempts++;
+    if (window.standingsCache) {
+      renderBracket(allGames || [], standingsCache);
+      clearInterval(timer);
+    } else if (attempts > 20) {
+      clearInterval(timer);
+    }
+  }, 500);
+}
 </body>
 </html>
