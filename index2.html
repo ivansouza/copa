@@ -1756,9 +1756,25 @@ function setFavorite(abbr, name) {
 }
 
 function renderBracketWithFavs() {
-  // Força atualização do bracket clicando no botão Mata-Mata
+  // Tenta renderizar diretamente se tiver cache
+  if (window.standingsCache) {
+    renderBracket(allGames || [], standingsCache);
+    return;
+  }
+  // Se não tem cache, clica no Mata-Mata que carrega os dados
   var btn = document.querySelector('[data-section="bracket"]');
   if (btn) btn.click();
+  // Tenta de novo após os dados carregarem
+  var attempts = 0;
+  var timer = setInterval(function() {
+    attempts++;
+    if (window.standingsCache) {
+      renderBracket(allGames || [], standingsCache);
+      clearInterval(timer);
+    } else if (attempts > 20) {
+      clearInterval(timer); // desiste após 10 segundos
+    }
+  }, 500);
 }
 
 function isMathematicallyEliminatedfunction isMathematicallyEliminated(t, teamPosition, allThird, standingsData) {
