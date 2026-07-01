@@ -1749,7 +1749,11 @@ function setFavorite(abbr, name) {
     localStorage.setItem('bracketFav', abbr);
     document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('active', 'blink'); });
     document.querySelector('.fav-btn[data-abbr="'+abbr+'"]')?.classList.add('active');
-    highlightRivals(abbr);
+    // Atualiza o diagrama com o primeiro time
+    var btn = document.querySelector('[data-section="bracket"]');
+    if (btn) btn.click();
+    // Depois mostra os rivais
+    setTimeout(function() { highlightRivals(abbr); }, 300);
     return;
   }
   
@@ -1768,13 +1772,40 @@ function setFavorite(abbr, name) {
 
 function highlightRivals(chosenAbbr) {
   var sm = window.__scoreMap || {};
+  var bd = window.__bracketCache || null;
   
-  // Pisca todos os times NÃO eliminados, exceto o escolhido
+  // Descobre de que lado do bracket o time escolhido está
+  var chosenSide = null;
+  if (bd && bd.r16) {
+    for (var i = 0; i < bd.r16.length; i++) {
+      var m = bd.r16[i];
+      if (m && (m.a.abbr === chosenAbbr || m.b.abbr === chosenAbbr)) {
+        chosenSide = i < 4 ? 'left' : 'right';
+        break;
+      }
+    }
+  }
+  
+  // Pisca apenas os times do LADO OPOSTO que não estão eliminados
   document.querySelectorAll('.fav-btn').forEach(function(b) {
     var ab = b.dataset.abbr;
     if (!ab || ab === chosenAbbr || b.disabled) return;
     var s = sm[ab];
     if (s && s.lost) return;
+    
+    // Se sabe o lado do escolhido, só mostra times do lado oposto
+    if (chosenSide && bd && bd.r16) {
+      var teamSide = null;
+      for (var i = 0; i < bd.r16.length; i++) {
+        var m = bd.r16[i];
+        if (m && (m.a.abbr === ab || m.b.abbr === ab)) {
+          teamSide = i < 4 ? 'left' : 'right';
+          break;
+        }
+      }
+      if (teamSide === chosenSide) return; // mesmo lado, não pisca
+    }
+    
     b.classList.add('blink');
   });
   
