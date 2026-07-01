@@ -2776,7 +2776,7 @@ function renderBracket(events, standingsData) {
   const savedFav2 = localStorage.getItem('bracketFav2') || '';
     let hh = '';
     allTeams.forEach(t => {
-      const active = t.abbr === savedFav ? ' active' : '';
+      const active = (t.abbr === savedFav || t.abbr === savedFav2) ? ' active' : '';
       // Verifica se o time perdeu (tem scoreMap mas perdeu)
       const s = scoreMap[t.abbr];
       const lost = s && s.status !== 'pre' && s.status !== 'scheduled' && s.lost;
