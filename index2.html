@@ -1767,51 +1767,16 @@ function setFavorite(abbr, name) {
 }
 
 function highlightRivals(chosenAbbr) {
-  // Pega o bracket cacheado para determinar de que lado o time está
-  var bd = window.__bracketCache || null;
   var sm = window.__scoreMap || {};
-  var rivals = [];
   
-  if (bd && bd.r16) {
-    // Descobre de que lado o time escolhido está
-    var chosenSide = null;
-    for (var i = 0; i < bd.r16.length; i++) {
-      var m = bd.r16[i];
-      if (m && (m.a.abbr === chosenAbbr || m.b.abbr === chosenAbbr)) {
-        chosenSide = i < 4 ? 'left' : 'right';
-        break;
-      }
-    }
-    
-    if (chosenSide) {
-      var rivalSide = chosenSide === 'left' ? 'right' : 'left';
-      var rivalIndices = rivalSide === 'left' ? [0,1,4,5] : [2,3,6,7];
-      
-      rivalIndices.forEach(function(idx) {
-        var m = bd.r16[idx];
-        if (m && m.a && m.a.abbr) rivals.push(m.a.abbr);
-        if (m && m.b && m.b.abbr) rivals.push(m.b.abbr);
-      });
-    }
-  }
-  
-  // Se não conseguiu determinar, pisca todos os não-eliminados
-  if (rivals.length === 0) {
-    document.querySelectorAll('.fav-btn').forEach(function(b) {
-      var ab = b.dataset.abbr;
-      if (!ab || ab === chosenAbbr || b.disabled) return;
-      var s = sm[ab];
-      if (s && s.lost) return;
-      b.classList.add('blink');
-    });
-  } else {
-    document.querySelectorAll('.fav-btn').forEach(function(b) {
-      var ab = b.dataset.abbr;
-      if (ab && rivals.includes(ab) && !b.disabled) {
-        b.classList.add('blink');
-      }
-    });
-  }
+  // Pisca todos os times NÃO eliminados, exceto o escolhido
+  document.querySelectorAll('.fav-btn').forEach(function(b) {
+    var ab = b.dataset.abbr;
+    if (!ab || ab === chosenAbbr || b.disabled) return;
+    var s = sm[ab];
+    if (s && s.lost) return;
+    b.classList.add('blink');
+  });
   
   // Mostra instrução
   var inst = document.getElementById('favInstruction');
