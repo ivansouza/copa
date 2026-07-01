@@ -1705,8 +1705,8 @@ function getTeamSide(abbr) {
   // Lado esquerdo: pares 0,1,2,3,8,9,10,11 -> r16 índices 0,1,4,5
   // Lado direito: pares 4,5,6,7,12,13,14,15 -> r16 índices 2,3,6,7
   var leftPairs = [0,1,2,3,8,9,10,11];
-  for (var i = 0; i < bd.round32.length; i++) {
-    var m = bd.round32[i];
+  for (var i = 0; i < matches.length; i++) {
+    var m = matches[i];
     if (!m) continue;
     var pair = Math.floor(i / 2);
     if ((m.a && m.a.abbr === abbr) || (m.b && m.b.abbr === abbr)) {
