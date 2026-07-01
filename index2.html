@@ -2718,26 +2718,42 @@ function renderBracket(events, standingsData) {
   var qfOrder = [0,2,1,3];
   
   if (savedFav && savedFav2) {
-    // Lado esquerdo do bracket: r16 índices 0,1,4,5 -> usa savedFav
-    // Lado direito do bracket: r16 índices 2,3,6,7 -> usa savedFav2
+    // Detecta de que lado cada favorito está
+    // Lado esquerdo: r16 índices 0,1,4,5 | Lado direito: r16 índices 2,3,6,7
+    var fav1Side = null, fav2Side = null;
     r16raw = simulateRound(round32, savedFav);
     r16 = r16Order.map(i => r16raw[i]).filter(Boolean);
     
+    // Verifica em qual r16 match cada favorito aparece
+    for (var i = 0; i < r16.length; i++) {
+      var m = r16[i];
+      if (!m) continue;
+      if (m.a && m.a.abbr === savedFav) fav1Side = i < 4 ? 'left' : 'right';
+      if (m.b && m.b.abbr === savedFav) fav1Side = i < 4 ? 'left' : 'right';
+      if (m.a && m.a.abbr === savedFav2) fav2Side = i < 4 ? 'left' : 'right';
+      if (m.b && m.b.abbr === savedFav2) fav2Side = i < 4 ? 'left' : 'right';
+    }
+    
+    // Se não detectou, assume savedFav=left, savedFav2=right
+    if (!fav1Side) fav1Side = 'left';
+    if (!fav2Side) fav2Side = 'right';
+    
     var qfMatches = [];
-    // QF1 e QF3: lado esquerdo (usa savedFav)
-    if (r16[0] && r16[1]) qfMatches.push({ a: simulateWinnerFav(r16[0], savedFav, scoreMap), b: simulateWinnerFav(r16[1], savedFav, scoreMap) });
-    if (r16[4] && r16[5]) qfMatches.push({ a: simulateWinnerFav(r16[4], savedFav, scoreMap), b: simulateWinnerFav(r16[5], savedFav, scoreMap) });
-    // QF2 e QF4: lado direito (usa savedFav2)
-    if (r16[2] && r16[3]) qfMatches.push({ a: simulateWinnerFav(r16[2], savedFav2, scoreMap), b: simulateWinnerFav(r16[3], savedFav2, scoreMap) });
-    if (r16[6] && r16[7]) qfMatches.push({ a: simulateWinnerFav(r16[6], savedFav2, scoreMap), b: simulateWinnerFav(r16[7], savedFav2, scoreMap) });
+    // QF1 (r16[0]x[1]) e QF3 (r16[4]x[5]): lado esquerdo
+    var leftFav = fav1Side === 'left' ? savedFav : savedFav2;
+    var rightFav = fav2Side === 'right' ? savedFav2 : savedFav;
+    
+    if (r16[0] && r16[1]) qfMatches.push({ a: simulateWinnerFav(r16[0], leftFav, scoreMap), b: simulateWinnerFav(r16[1], leftFav, scoreMap) });
+    if (r16[4] && r16[5]) qfMatches.push({ a: simulateWinnerFav(r16[4], leftFav, scoreMap), b: simulateWinnerFav(r16[5], leftFav, scoreMap) });
+    // QF2 (r16[2]x[3]) e QF4 (r16[6]x[7]): lado direito
+    if (r16[2] && r16[3]) qfMatches.push({ a: simulateWinnerFav(r16[2], rightFav, scoreMap), b: simulateWinnerFav(r16[3], rightFav, scoreMap) });
+    if (r16[6] && r16[7]) qfMatches.push({ a: simulateWinnerFav(r16[6], rightFav, scoreMap), b: simulateWinnerFav(r16[7], rightFav, scoreMap) });
     
     qf = qfOrder.map(i => qfMatches[i]).filter(Boolean);
     
     var sfMatches = [];
-    // SF1: lado esquerdo (usa savedFav)
-    if (qf[0] && qf[2]) sfMatches.push({ a: simulateWinnerFav(qf[0], savedFav, scoreMap), b: simulateWinnerFav(qf[2], savedFav, scoreMap) });
-    // SF2: lado direito (usa savedFav2)
-    if (qf[1] && qf[3]) sfMatches.push({ a: simulateWinnerFav(qf[1], savedFav2, scoreMap), b: simulateWinnerFav(qf[3], savedFav2, scoreMap) });
+    if (qf[0] && qf[2]) sfMatches.push({ a: simulateWinnerFav(qf[0], leftFav, scoreMap), b: simulateWinnerFav(qf[2], leftFav, scoreMap) });
+    if (qf[1] && qf[3]) sfMatches.push({ a: simulateWinnerFav(qf[1], rightFav, scoreMap), b: simulateWinnerFav(qf[3], rightFav, scoreMap) });
     sf = sfMatches;
   } else {
     r16raw = simulateRound(round32, savedFav);
