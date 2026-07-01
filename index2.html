@@ -1804,38 +1804,31 @@ function highlightRivals(chosenAbbr) {
   var sm = window.__scoreMap || {};
   var bd = window.__bracketCache || null;
   
-  // Determina de que lado do bracket o time escolhido está
-  // Usando o round32 (Segunda Fase): 16 matches
-  // Lado esquerdo: matches que alimentam as oitavas 89,90,93,94 (r16 índices 0,1,4,5)
-  // Lado direito: matches que alimentam as oitavas 91,92,95,96 (r16 índices 2,3,6,7)
-  // No round32: 
-  //   Lado esquerdo: matches nos pares (0,1), (2,3), (8,9), (10,11)
-  //   Lado direito: matches nos pares (4,5), (6,7), (12,13), (14,15)
-  var chosenPair = -1;
-  if (bd && bd.round32) {
-    for (var i = 0; i < bd.round32.length; i++) {
-      var m = bd.round32[i];
-      if (m && (m.a.abbr === chosenAbbr || m.b.abbr === chosenAbbr)) {
-        chosenPair = Math.floor(i / 2);
+  // Determina de que lado do bracket o time escolhido está usando o r16
+  // Lado esquerdo: r16 índices 0,1,4,5 | Lado direito: r16 índices 2,3,6,7
+  var chosenR16Idx = -1;
+  if (bd && bd.r16) {
+    for (var i = 0; i < bd.r16.length; i++) {
+      var m = bd.r16[i];
+      if (m && (m.a && m.a.abbr === chosenAbbr || m.b && m.b.abbr === chosenAbbr)) {
+        chosenR16Idx = i;
         break;
       }
     }
   }
   
-  // Lado esquerdo: pairs 0,1,4,5 | Lado direito: pairs 2,3,6,7
-  var leftPairs = [0,1,4,5];
-  var chosenSide = leftPairs.includes(chosenPair) ? 'left' : 'right';
-  var rivalPairs = chosenSide === 'left' ? [2,3,6,7] : [0,1,4,5];
+  var leftIndices = [0,1,4,5];
+  var rightIndices = [2,3,6,7];
+  var chosenSide = leftIndices.includes(chosenR16Idx) ? 'left' : 'right';
+  var rivalIndices = chosenSide === 'left' ? rightIndices : leftIndices;
   
-  // Pega todos os times dos pares rivais
+  // Pega todos os times dos índices rivais no r16
   var rivalTeams = [];
-  if (bd && bd.round32) {
-    bd.round32.forEach(function(m, i) {
-      var pair = Math.floor(i / 2);
-      if (rivalPairs.includes(pair)) {
-        if (m.a && m.a.abbr) rivalTeams.push(m.a.abbr);
-        if (m.b && m.b.abbr) rivalTeams.push(m.b.abbr);
-      }
+  if (bd && bd.r16) {
+    rivalIndices.forEach(function(idx) {
+      var m = bd.r16[idx];
+      if (m && m.a && m.a.abbr) rivalTeams.push(m.a.abbr);
+      if (m && m.b && m.b.abbr) rivalTeams.push(m.b.abbr);
     });
   }
   
@@ -1845,7 +1838,6 @@ function highlightRivals(chosenAbbr) {
     if (!ab || ab === chosenAbbr || b.disabled) return;
     var s = sm[ab];
     if (s && s.lost) return;
-    // Só mostra se estiver na lista de rivais (lado oposto)
     if (rivalTeams.length > 0 && !rivalTeams.includes(ab)) return;
     b.classList.add('blink');
   });
