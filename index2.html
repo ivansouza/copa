@@ -1756,14 +1756,9 @@ function setFavorite(abbr, name) {
 }
 
 function renderBracketWithFavs() {
-  if (window.standingsCache) {
-    renderBracket(allGames || [], standingsCache);
-  } else if (typeof loadAll === 'function') {
-    loadAll();
-    setTimeout(function() {
-      if (window.standingsCache) renderBracket(allGames || [], standingsCache);
-    }, 2000);
-  }
+  // Força atualização do bracket clicando no botão Mata-Mata
+  var btn = document.querySelector('[data-section="bracket"]');
+  if (btn) btn.click();
 }
 
 function isMathematicallyEliminatedfunction isMathematicallyEliminated(t, teamPosition, allThird, standingsData) {
