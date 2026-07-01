@@ -2739,7 +2739,19 @@ function renderBracket(events, standingsData) {
     sf = simulateRound(qf, savedFav);
   }
   
-  // Renderiza diagrama  // Renderiza diagrama
+  // Final e 3º lugar
+  let thirdPlace = null;
+  let finalMatch = null;
+  if (sf.length >= 2) {
+    const sf0Winner = savedFav ? simulateWinnerFav(sf[0], savedFav, scoreMap) : simulateWinner(sf[0], scoreMap);
+    const sf1Winner = savedFav ? simulateWinnerFav(sf[1], savedFav, scoreMap) : simulateWinner(sf[1], scoreMap);
+    const sf0Loser = sf0Winner === sf[0].a ? sf[0].b : sf[0].a;
+    const sf1Loser = sf1Winner === sf[1].a ? sf[1].b : sf[1].a;
+    thirdPlace = { a: sf0Loser, b: sf1Loser };
+    finalMatch = { a: sf0Winner, b: sf1Winner };
+  }
+  
+  // Renderiza diagrama
   window.__bracketCache = { round32: round32, r16raw: r16raw, r16: r16, qf: qf, sf: sf, finalMatch: finalMatch, thirdPlace: thirdPlace };
   renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events);
 
