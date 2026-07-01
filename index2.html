@@ -1802,13 +1802,46 @@ function renderBracketWithFavs() {
 
 function highlightRivals(chosenAbbr) {
   var sm = window.__scoreMap || {};
+  var bd = window.__bracketCache || null;
   
-  // Pisca TODOS os times não eliminados, exceto o escolhido
+  // Determina de que lado do bracket o time está usando o round32
+  // Lado esquerdo: oitavas 89,90,93,94 (pares 0,1,2,3,8,9,10,11)
+  // Lado direito: oitavas 91,92,95,96 (pares 4,5,6,7,12,13,14,15)
+  var leftPairs = [0,1,2,3,8,9,10,11];
+  var chosenPair = -1;
+  
+  if (bd && bd.round32) {
+    for (var i = 0; i < bd.round32.length; i++) {
+      var m = bd.round32[i];
+      if (m && (m.a && m.a.abbr === chosenAbbr || m.b && m.b.abbr === chosenAbbr)) {
+        chosenPair = Math.floor(i / 2);
+        break;
+      }
+    }
+  }
+  
+  var chosenSide = leftPairs.includes(chosenPair) ? 'left' : 'right';
+  var rivalPairs = chosenSide === 'left' ? [4,5,6,7,12,13,14,15] : leftPairs;
+  
+  // Pega todos os times dos pares rivais
+  var rivalTeams = [];
+  if (bd && bd.round32) {
+    bd.round32.forEach(function(m, i) {
+      var pair = Math.floor(i / 2);
+      if (rivalPairs.includes(pair)) {
+        if (m.a && m.a.abbr) rivalTeams.push(m.a.abbr);
+        if (m.b && m.b.abbr) rivalTeams.push(m.b.abbr);
+      }
+    });
+  }
+  
+  // Pisca apenas os times do lado oposto que não estão eliminados
   document.querySelectorAll('.fav-btn').forEach(function(b) {
     var ab = b.dataset.abbr;
     if (!ab || ab === chosenAbbr || b.disabled) return;
     var s = sm[ab];
     if (s && s.lost) return;
+    if (rivalTeams.length > 0 && !rivalTeams.includes(ab)) return;
     b.classList.add('blink');
   });
   
