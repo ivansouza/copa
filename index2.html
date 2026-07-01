@@ -1778,6 +1778,26 @@ function setFavorite(abbr, name) {
   }
 }
 
+
+function renderBracketWithFavs() {
+  if (window.standingsCache) {
+    renderBracket(allGames || [], standingsCache);
+    return;
+  }
+  var btn = document.querySelector('[data-section="bracket"]');
+  if (btn) btn.click();
+  var attempts = 0;
+  var timer = setInterval(function() {
+    attempts++;
+    if (window.standingsCache) {
+      renderBracket(allGames || [], standingsCache);
+      clearInterval(timer);
+    } else if (attempts > 20) {
+      clearInterval(timer);
+    }
+  }, 500);
+}
+
 function highlightRivals(chosenAbbr) {
   var sm = window.__scoreMap || {};
   var bd = window.__bracketCache || null;
