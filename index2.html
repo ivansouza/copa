@@ -1690,6 +1690,24 @@ var selectedFinalists = { a: null, b: null };
   if (f2) selectedFinalists.b = { abbr: f2 };
 })();
 
+// Determina de que lado do bracket um time está (0=esquerdo, 1=direito)
+function getTeamSide(abbr) {
+  var bd = window.__bracketCache || null;
+  if (!bd || !bd.round32) return -1;
+  // Lado esquerdo: pares 0,1,2,3,8,9,10,11 -> r16 índices 0,1,4,5
+  // Lado direito: pares 4,5,6,7,12,13,14,15 -> r16 índices 2,3,6,7
+  var leftPairs = [0,1,2,3,8,9,10,11];
+  for (var i = 0; i < bd.round32.length; i++) {
+    var m = bd.round32[i];
+    if (!m) continue;
+    var pair = Math.floor(i / 2);
+    if ((m.a && m.a.abbr === abbr) || (m.b && m.b.abbr === abbr)) {
+      return leftPairs.includes(pair) ? 0 : 1;
+    }
+  }
+  return -1;
+}
+
 function setFavorite(abbr, name) {
   if (!abbr) {
     selectedFinalists = { a: null, b: null };
@@ -1739,10 +1757,19 @@ function setFavorite(abbr, name) {
     localStorage.setItem('bracketFav', abbr);
     document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('active', 'blink'); });
     document.querySelector('.fav-btn[data-abbr="'+abbr+'"]')?.classList.add('active');
-    // Mostra rivais
+    
+    // Mostra apenas rivais do lado OPOSTO
+    var chosenSide = getTeamSide(abbr);
     document.querySelectorAll('.fav-btn').forEach(function(b) {
-      if (b.dataset.abbr && b.dataset.abbr !== abbr && !b.disabled) b.classList.add('blink');
+      var ba = b.dataset.abbr;
+      if (!ba || ba === abbr || b.disabled) return;
+      if (chosenSide >= 0) {
+        var teamSide = getTeamSide(ba);
+        if (teamSide === chosenSide) return; // mesmo lado, não pode
+      }
+      b.classList.add('blink');
     });
+    
     var inst = document.getElementById('favInstruction');
     if (!inst) {
       inst = document.createElement('div');
@@ -1758,6 +1785,15 @@ function setFavorite(abbr, name) {
   }
   
   if (!selectedFinalists.b) {
+    // Verifica se o segundo time está no lado oposto
+    var side1 = getTeamSide(selectedFinalists.a.abbr);
+    var side2 = getTeamSide(abbr);
+    if (side1 >= 0 && side2 >= 0 && side1 === side2) {
+      var inst = document.getElementById('favInstruction');
+      if (inst) inst.textContent = 'Esse time está no mesmo lado! Escolha um dos que estão piscando.';
+      return;
+    }
+    
     selectedFinalists.b = { abbr: abbr, name: name };
     localStorage.setItem('bracketFav2', abbr);
     document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('blink'); });
