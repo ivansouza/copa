@@ -1681,10 +1681,8 @@ function simulateWinnerFav(match, favAbbr, sm) {
   return simulateWinner(match, sm);
 }
 
-// Estado dos finalistas
 var selectedFinalists = { a: null, b: null };
 
-// Carrega do localStorage ao iniciar
 (function() {
   var f1 = localStorage.getItem('bracketFav');
   var f2 = localStorage.getItem('bracketFav2');
@@ -1694,7 +1692,6 @@ var selectedFinalists = { a: null, b: null };
 
 function setFavorite(abbr, name) {
   if (!abbr) {
-    // Limpar
     selectedFinalists = { a: null, b: null };
     localStorage.removeItem('bracketFav');
     localStorage.removeItem('bracketFav2');
@@ -1704,24 +1701,18 @@ function setFavorite(abbr, name) {
     return;
   }
   
-  // Se clicou num time já selecionado, desseleciona
   if (selectedFinalists.a && selectedFinalists.a.abbr === abbr) {
     selectedFinalists.a = null;
     localStorage.removeItem('bracketFav');
     document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('active', 'blink'); });
     if (selectedFinalists.b) {
-      // Se tem segundo, ele vira o primeiro
       selectedFinalists.a = selectedFinalists.b;
       selectedFinalists.b = null;
       localStorage.setItem('bracketFav', selectedFinalists.a.abbr);
       localStorage.removeItem('bracketFav2');
-      document.querySelector('.fav-btn[data-abbr="'+selectedFinalists.a.abbr+'"]')?.classList.add('active');
-      // Mostra rivais para o novo primeiro
-      highlightRivals(selectedFinalists.a.abbr);
-    } else {
-      var btn = document.querySelector('[data-section="bracket"]');
-      if (btn) btn.click();
     }
+    var btn = document.querySelector('[data-section="bracket"]');
+    if (btn) btn.click();
     return;
   }
   
@@ -1731,140 +1722,52 @@ function setFavorite(abbr, name) {
     document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('active', 'blink'); });
     if (selectedFinalists.a) {
       document.querySelector('.fav-btn[data-abbr="'+selectedFinalists.a.abbr+'"]')?.classList.add('active');
-      highlightRivals(selectedFinalists.a.abbr);
     }
+    var btn = document.querySelector('[data-section="bracket"]');
+    if (btn) btn.click();
     return;
   }
   
-  // Se já tem dois, reseta
   if (selectedFinalists.a && selectedFinalists.b) {
     selectedFinalists = { a: null, b: null };
     localStorage.removeItem('bracketFav');
     localStorage.removeItem('bracketFav2');
   }
   
-  // Escolhe o primeiro
   if (!selectedFinalists.a) {
     selectedFinalists.a = { abbr: abbr, name: name };
     localStorage.setItem('bracketFav', abbr);
     document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('active', 'blink'); });
     document.querySelector('.fav-btn[data-abbr="'+abbr+'"]')?.classList.add('active');
-    // Atualiza o diagrama com o primeiro time
-    if (window.standingsCache) {
-      renderBracket(allGames || [], standingsCache);
-    } else {
-      var btn = document.querySelector('[data-section="bracket"]');
-      if (btn) btn.click();
+    // Mostra rivais
+    document.querySelectorAll('.fav-btn').forEach(function(b) {
+      if (b.dataset.abbr && b.dataset.abbr !== abbr && !b.disabled) b.classList.add('blink');
+    });
+    var inst = document.getElementById('favInstruction');
+    if (!inst) {
+      inst = document.createElement('div');
+      inst.id = 'favInstruction';
+      inst.style.cssText = 'text-align:center;font-size:.75rem;color:#f59e0b;margin-top:8px;font-weight:600;';
+      var sec = document.getElementById('favSection');
+      if (sec) sec.appendChild(inst);
     }
-    // Depois mostra os rivais
-    setTimeout(function() { highlightRivals(abbr); }, 500);
+    inst.textContent = 'Agora escolha o adversário na final (times piscando)';
+    var btn = document.querySelector('[data-section="bracket"]');
+    if (btn) btn.click();
     return;
   }
   
-  // Escolhe o segundo
   if (!selectedFinalists.b) {
     selectedFinalists.b = { abbr: abbr, name: name };
     localStorage.setItem('bracketFav2', abbr);
     document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('blink'); });
     document.querySelectorAll('.fav-btn[data-abbr="'+selectedFinalists.a.abbr+'"]').forEach(function(b) { b.classList.add('active'); });
     document.querySelectorAll('.fav-btn[data-abbr="'+abbr+'"]').forEach(function(b) { b.classList.add('active'); });
-    // Re-renderiza o bracket com os dois finalistas
-    setTimeout(function() {
-      if (window.standingsCache) {
-        renderBracket(allGames || [], standingsCache);
-      } else {
-        var btn = document.querySelector('[data-section="bracket"]');
-        if (btn) btn.click();
-      }
-    }, 100);
+    var inst = document.getElementById('favInstruction');
+    if (inst) inst.textContent = '';
+    var btn = document.querySelector('[data-section="bracket"]');
+    if (btn) btn.click();
   }
-}
-
-
-function renderBracketWithFavs() {
-  // Tenta renderizar direto se tiver cache
-  if (window.standingsCache) {
-    renderBracket(allGames || [], standingsCache);
-    return;
-  }
-  // Força o carregamento dos dados chamando loadAll
-  if (typeof loadAll === 'function') {
-    loadAll();
-  }
-  // Tenta clicar no botão Mata-Mata para forçar a renderização
-  var btn = document.querySelector('[data-section="bracket"]');
-  if (btn) btn.click();
-  // Fica tentando até ter os dados
-  var attempts = 0;
-  var timer = setInterval(function() {
-    attempts++;
-    if (window.standingsCache) {
-      renderBracket(allGames || [], standingsCache);
-      clearInterval(timer);
-    } else if (attempts > 30) {
-      // Se não conseguir, tenta um hard refresh clicando de novo
-      var btn2 = document.querySelector('[data-section="bracket"]');
-      if (btn2) btn2.click();
-      clearInterval(timer);
-    }
-  }, 500);
-}
-
-function highlightRivals(chosenAbbr) {
-  var sm = window.__scoreMap || {};
-  var bd = window.__bracketCache || null;
-  
-  // Determina de que lado do bracket o time está usando o round32
-  // Lado esquerdo: oitavas 89,90,93,94 (pares 0,1,2,3,8,9,10,11)
-  // Lado direito: oitavas 91,92,95,96 (pares 4,5,6,7,12,13,14,15)
-  var leftPairs = [0,1,2,3,8,9,10,11];
-  var chosenPair = -1;
-  
-  if (bd && bd.round32) {
-    for (var i = 0; i < bd.round32.length; i++) {
-      var m = bd.round32[i];
-      if (m && (m.a && m.a.abbr === chosenAbbr || m.b && m.b.abbr === chosenAbbr)) {
-        chosenPair = Math.floor(i / 2);
-        break;
-      }
-    }
-  }
-  
-  var chosenSide = leftPairs.includes(chosenPair) ? 'left' : 'right';
-  var rivalPairs = chosenSide === 'left' ? [4,5,6,7,12,13,14,15] : leftPairs;
-  
-  // Pega todos os times dos pares rivais
-  var rivalTeams = [];
-  if (bd && bd.round32) {
-    bd.round32.forEach(function(m, i) {
-      var pair = Math.floor(i / 2);
-      if (rivalPairs.includes(pair)) {
-        if (m.a && m.a.abbr) rivalTeams.push(m.a.abbr);
-        if (m.b && m.b.abbr) rivalTeams.push(m.b.abbr);
-      }
-    });
-  }
-  
-  // Pisca apenas os times do lado oposto que não estão eliminados
-  document.querySelectorAll('.fav-btn').forEach(function(b) {
-    var ab = b.dataset.abbr;
-    if (!ab || ab === chosenAbbr || b.disabled) return;
-    var s = sm[ab];
-    if (s && s.lost) return;
-    if (rivalTeams.length > 0 && !rivalTeams.includes(ab)) return;
-    b.classList.add('blink');
-  });
-  
-  // Mostra instrução
-  var inst = document.getElementById('favInstruction');
-  if (!inst) {
-    inst = document.createElement('div');
-    inst.id = 'favInstruction';
-    inst.style.cssText = 'text-align:center;font-size:.75rem;color:#f59e0b;margin-top:8px;font-weight:600;';
-    var sec = document.getElementById('favSection');
-    if (sec) sec.appendChild(inst);
-  }
-  inst.textContent = 'Agora escolha o adversário na final (times piscando)';
 }
 
 function isMathematicallyEliminated(t, teamPosition, allThird, standingsData) {
@@ -2685,19 +2588,14 @@ function renderBracket(events, standingsData) {
     existingEvents[st].push(e);
   });
 
-  // Função que simula um match garantindo que os favoritos avancem
+  // Função para simular uma rodada (com favorito opcional)
   function simulateWithFavs(match, fav1, fav2) {
     if (!match || !match.a || !match.b) return null;
-    if (match.a.abbr === fav1 || match.b.abbr === fav1) {
-      return simulateWinnerFav(match, fav1, scoreMap);
-    }
-    if (match.a.abbr === fav2 || match.b.abbr === fav2) {
-      return simulateWinnerFav(match, fav2, scoreMap);
-    }
+    if (match.a.abbr === fav1 || match.b.abbr === fav1) return simulateWinnerFav(match, fav1, scoreMap);
+    if (match.a.abbr === fav2 || match.b.abbr === fav2) return simulateWinnerFav(match, fav2, scoreMap);
     return simulateWinner(match, scoreMap);
   }
-  
-  // Função para simular uma rodada (com favorito opcional)
+
   function simulateRound(matches, fav) {
     const winners = [];
     for (let i = 0; i < matches.length; i += 2) {
@@ -2717,72 +2615,23 @@ function renderBracket(events, standingsData) {
   const savedFav = localStorage.getItem('bracketFav') || '';
   const savedFav2 = localStorage.getItem('bracketFav2') || '';
 
-    // Simula os resultados
-  var r16raw, r16, qf, sf;
-  var r16Order = [0,1,4,5,2,3,6,7];
-  var qfOrder = [0,2,1,3];
-  
-  if (savedFav && savedFav2) {
-    // Detecta de que lado cada favorito está usando os pares do round32
-    var leftPairs = [0,1,2,3,8,9,10,11];
-    var fav1Pair = -1, fav2Pair = -1;
-    
-    for (var i = 0; i < round32.length; i++) {
-      var m = round32[i];
-      if (!m) continue;
-      var pair = Math.floor(i / 2);
-      if (m.a && m.a.abbr === savedFav) fav1Pair = pair;
-      if (m.b && m.b.abbr === savedFav) fav1Pair = pair;
-      if (m.a && m.a.abbr === savedFav2) fav2Pair = pair;
-      if (m.b && m.b.abbr === savedFav2) fav2Pair = pair;
-    }
-    
-    var fav1Side = leftPairs.includes(fav1Pair) ? 'left' : 'right';
-    var fav2Side = leftPairs.includes(fav2Pair) ? 'left' : 'right';
-    
-    // Simula a Segunda Fase com AMBOS os favoritos
-    var r32winners = [];
-    for (var i = 0; i < round32.length; i += 2) {
-      var m1 = round32[i];
-      var m2 = round32[i+1];
-      if (!m1 || !m2) break;
-      var w1 = simulateWithFavs(m1, savedFav, savedFav2);
-      var w2 = simulateWithFavs(m2, savedFav, savedFav2);
-      if (w1 && w2) r32winners.push({ a: w1, b: w2 });
-    }
-    
-    r16raw = r32winners;
-    r16 = r16Order.map(function(i) { return r16raw[i]; }).filter(Boolean);
-    
-    if (fav1Side === fav2Side) {
-      var qfRaw = simulateRound(r16, savedFav);
-      qf = qfOrder.map(function(i) { return qfRaw[i]; }).filter(Boolean);
-      sf = simulateRound(qf, savedFav);
-    } else {
-      var leftFav = fav1Side === 'left' ? savedFav : savedFav2;
-      var rightFav = fav2Side === 'right' ? savedFav2 : savedFav;
-      
-      var qfMatches = [];
-      if (r16[0] && r16[1]) qfMatches.push({ a: simulateWinnerFav(r16[0], leftFav, scoreMap), b: simulateWinnerFav(r16[1], leftFav, scoreMap) });
-      if (r16[4] && r16[5]) qfMatches.push({ a: simulateWinnerFav(r16[4], leftFav, scoreMap), b: simulateWinnerFav(r16[5], leftFav, scoreMap) });
-      if (r16[2] && r16[3]) qfMatches.push({ a: simulateWinnerFav(r16[2], rightFav, scoreMap), b: simulateWinnerFav(r16[3], rightFav, scoreMap) });
-      if (r16[6] && r16[7]) qfMatches.push({ a: simulateWinnerFav(r16[6], rightFav, scoreMap), b: simulateWinnerFav(r16[7], rightFav, scoreMap) });
-      
-      qf = qfOrder.map(function(i) { return qfMatches[i]; }).filter(Boolean);
-      
-      var sfMatches = [];
-      if (qf[0] && qf[2]) sfMatches.push({ a: simulateWinnerFav(qf[0], leftFav, scoreMap), b: simulateWinnerFav(qf[2], leftFav, scoreMap) });
-      if (qf[1] && qf[3]) sfMatches.push({ a: simulateWinnerFav(qf[1], rightFav, scoreMap), b: simulateWinnerFav(qf[3], rightFav, scoreMap) });
-      sf = sfMatches;
-    }
-  } else {} else {
-    r16raw = simulateRound(round32, savedFav);
-    r16 = r16Order.map(i => r16raw[i]).filter(Boolean);
-    var qfRaw = simulateRound(r16, savedFav);
-    qf = qfOrder.map(i => qfRaw[i]).filter(Boolean);
-    sf = simulateRound(qf, savedFav);
-  }
-  
+  // Simula os resultados
+  const r16raw = simulateRound(round32, savedFav);
+  // Reordena r16 para a ordem oficial das Oitavas: [89,90,93,94,91,92,95,96]
+  // (pares originais: 0-1=74+77→89, 2-3=73+75→90, 4-5=76+78→91, 6-7=79+80→92,
+  //  8-9=83+84→93, 10-11=81+82→94, 12-13=86+88→95, 14-15=85+87→96)
+  // Ordem oficial: 89(0), 90(1), 93(4), 94(5), 91(2), 92(3), 95(6), 96(7)
+  const r16Order = [0,1,4,5,2,3,6,7];
+  const r16 = r16Order.map(i => r16raw[i]).filter(Boolean);
+  const qfRaw = simulateRound(r16, savedFav);
+  // Reordena qf para ordem oficial: QF1(89x90), QF2(91x92), QF3(93x94), QF4(95x96)
+  // r16 ordem: [89,90,93,94,91,92,95,96]
+  // Pares do simulateRound: 0-1=89x90→QF1, 2-3=93x94→QF3, 4-5=91x92→QF2, 6-7=95x96→QF4
+  // Ordem oficial: QF1(0), QF2(2), QF3(1), QF4(3)
+  const qfOrder = [0,2,1,3];
+  const qf = qfOrder.map(i => qfRaw[i]).filter(Boolean);
+  const sf = simulateRound(qf, savedFav);
+
   // Final e 3º lugar
   let thirdPlace = null;
   let finalMatch = null;
@@ -2794,7 +2643,7 @@ function renderBracket(events, standingsData) {
     thirdPlace = { a: sf0Loser, b: sf1Loser };
     finalMatch = { a: sf0Winner, b: sf1Winner };
   }
-  
+
   // Renderiza diagrama
   window.__bracketCache = { round32: round32, r16raw: r16raw, r16: r16, qf: qf, sf: sf, finalMatch: finalMatch, thirdPlace: thirdPlace };
   renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events);
