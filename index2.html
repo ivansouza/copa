@@ -343,6 +343,7 @@
   .fav-btn.active{background:#d4a017;border-color:#d4a017;color:#0f1a0f;font-weight:700}
   .fav-btn .fl{width:14px;height:10px;border-radius:1.5px;flex:none}
   .fav-btn.blink { animation: blink-fav 0.8s ease-in-out infinite; }
+.fav-btn.same-side { border-color: #ef4444 !important; opacity: 0.5; cursor: not-allowed; }
 @keyframes blink-fav { 0%,100% { background: #f59e0b44; border-color: #f59e0b; } 50% { background: #f59e0b22; border-color: #f59e0b66; } }
 .fav-btn.clear{color:#64748b;font-size:10px}
   .fav-btn.clear:hover{color:#ef4444;border-color:#ef4444}
@@ -1720,7 +1721,7 @@ function setFavorite(abbr, name) {
     selectedFinalists = { a: null, b: null };
     localStorage.removeItem('bracketFav');
     localStorage.removeItem('bracketFav2');
-    document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('active', 'blink'); });
+    document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('active', 'blink', 'same-side'); b.disabled = false; });
     var btn = document.querySelector('[data-section="bracket"]');
     if (btn) btn.click();
     return;
@@ -1729,7 +1730,7 @@ function setFavorite(abbr, name) {
   if (selectedFinalists.a && selectedFinalists.a.abbr === abbr) {
     selectedFinalists.a = null;
     localStorage.removeItem('bracketFav');
-    document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('active', 'blink'); });
+    document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('active', 'blink', 'same-side'); b.disabled = false; });
     if (selectedFinalists.b) {
       selectedFinalists.a = selectedFinalists.b;
       selectedFinalists.b = null;
@@ -1744,7 +1745,7 @@ function setFavorite(abbr, name) {
   if (selectedFinalists.b && selectedFinalists.b.abbr === abbr) {
     selectedFinalists.b = null;
     localStorage.removeItem('bracketFav2');
-    document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('active', 'blink'); });
+    document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('active', 'blink', 'same-side'); b.disabled = false; });
     if (selectedFinalists.a) {
       document.querySelector('.fav-btn[data-abbr="'+selectedFinalists.a.abbr+'"]')?.classList.add('active');
     }
@@ -1762,17 +1763,21 @@ function setFavorite(abbr, name) {
   if (!selectedFinalists.a) {
     selectedFinalists.a = { abbr: abbr, name: name };
     localStorage.setItem('bracketFav', abbr);
-    document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('active', 'blink'); });
+    document.querySelectorAll('.fav-btn').forEach(function(b) { b.classList.remove('active', 'blink', 'same-side'); b.disabled = false; });
     document.querySelector('.fav-btn[data-abbr="'+abbr+'"]')?.classList.add('active');
     
-    // Mostra apenas rivais do lado OPOSTO
+    // Mostra rivais do lado OPOSTO (piscando) e mesmo lado (vermelho)
     var chosenSide = getTeamSide(abbr);
     document.querySelectorAll('.fav-btn').forEach(function(b) {
       var ba = b.dataset.abbr;
       if (!ba || ba === abbr || b.disabled) return;
       if (chosenSide >= 0) {
         var teamSide = getTeamSide(ba);
-        if (teamSide === chosenSide) return; // mesmo lado, não pode
+        if (teamSide === chosenSide) {
+          b.classList.add('same-side');
+          b.disabled = true;
+          return;
+        }
       }
       b.classList.add('blink');
     });
