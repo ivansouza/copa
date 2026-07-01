@@ -1774,38 +1774,73 @@ function highlightRivals(chosenAbbr) {
   var sm = window.__scoreMap || {};
   var bd = window.__bracketCache || null;
   
-  // Descobre de que lado do bracket o time escolhido está
-  var chosenSide = null;
-  if (bd && bd.r16) {
-    for (var i = 0; i < bd.r16.length; i++) {
-      var m = bd.r16[i];
+  // Calcula todos os times que o escolhido enfrentaria até a final
+  // (e portanto não podem ser o segundo finalista)
+  var facedTeams = [chosenAbbr]; // começa com ele mesmo
+  
+  if (bd && bd.round32 && bd.r16) {
+    // 1. Encontra em qual match da Segunda Fase (round32) o time está
+    var round32Idx = -1;
+    for (var i = 0; i < bd.round32.length; i++) {
+      var m = bd.round32[i];
       if (m && (m.a.abbr === chosenAbbr || m.b.abbr === chosenAbbr)) {
-        chosenSide = i < 4 ? 'left' : 'right';
+        round32Idx = i;
         break;
+      }
+    }
+    
+    if (round32Idx >= 0) {
+      // Adiciona o adversário da Segunda Fase
+      var m32 = bd.round32[round32Idx];
+      if (m32) {
+        if (m32.a.abbr !== chosenAbbr) facedTeams.push(m32.a.abbr);
+        if (m32.b.abbr !== chosenAbbr) facedTeams.push(m32.b.abbr);
+      }
+      
+      // 2. Descobre em qual match das Oitavas (r16) ele vai estar
+      // Pares do round32: (0,1)->r16[0], (2,3)->r16[1], (4,5)->r16[2], (6,7)->r16[3],
+      // (8,9)->r16[4], (10,11)->r16[5], (12,13)->r16[6], (14,15)->r16[7]
+      // Mas r16 é reordenado: [0,1,4,5,2,3,6,7]
+      var r16Order = [0,1,4,5,2,3,6,7];
+      var pairIdx = Math.floor(round32Idx / 2);
+      var r16Idx = r16Order.indexOf(pairIdx);
+      
+      if (r16Idx >= 0 && bd.r16[r16Idx]) {
+        var m16 = bd.r16[r16Idx];
+        // Adiciona o adversário das Oitavas
+        if (m16.a && m16.a.abbr !== chosenAbbr) facedTeams.push(m16.a.abbr);
+        if (m16.b && m16.b.abbr !== chosenAbbr) facedTeams.push(m16.b.abbr);
+        
+        // 3. Quartas: pares do r16: (0,1)->qf[0], (2,3)->qf[1], (4,5)->qf[2], (6,7)->qf[3]
+        // qf reordenado: [0,2,1,3]
+        var qfOrder = [0,2,1,3];
+        var qfPairIdx = Math.floor(r16Idx / 2);
+        var qfIdx = qfOrder.indexOf(qfPairIdx);
+        
+        if (qfIdx >= 0 && bd.qf && bd.qf[qfIdx]) {
+          var mQF = bd.qf[qfIdx];
+          if (mQF.a && mQF.a.abbr !== chosenAbbr) facedTeams.push(mQF.a.abbr);
+          if (mQF.b && mQF.b.abbr !== chosenAbbr) facedTeams.push(mQF.b.abbr);
+          
+          // 4. Semi: pares do qf: (0,1)->sf[0], (2,3)->sf[1]
+          var sfIdx = Math.floor(qfIdx / 2);
+          if (sfIdx >= 0 && bd.sf && bd.sf[sfIdx]) {
+            var mSF = bd.sf[sfIdx];
+            if (mSF.a && mSF.a.abbr !== chosenAbbr) facedTeams.push(mSF.a.abbr);
+            if (mSF.b && mSF.b.abbr !== chosenAbbr) facedTeams.push(mSF.b.abbr);
+          }
+        }
       }
     }
   }
   
-  // Pisca apenas os times do LADO OPOSTO que não estão eliminados
+  // Pisca apenas os times que NÃO estão na lista de enfrentados
   document.querySelectorAll('.fav-btn').forEach(function(b) {
     var ab = b.dataset.abbr;
-    if (!ab || ab === chosenAbbr || b.disabled) return;
+    if (!ab || b.disabled) return;
     var s = sm[ab];
     if (s && s.lost) return;
-    
-    // Se sabe o lado do escolhido, só mostra times do lado oposto
-    if (chosenSide && bd && bd.r16) {
-      var teamSide = null;
-      for (var i = 0; i < bd.r16.length; i++) {
-        var m = bd.r16[i];
-        if (m && (m.a.abbr === ab || m.b.abbr === ab)) {
-          teamSide = i < 4 ? 'left' : 'right';
-          break;
-        }
-      }
-      if (teamSide === chosenSide) return; // mesmo lado, não pisca
-    }
-    
+    if (facedTeams.includes(ab)) return; // já enfrentaria o escolhido
     b.classList.add('blink');
   });
   
