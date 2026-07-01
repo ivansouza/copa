@@ -1769,12 +1769,14 @@ function setFavorite(abbr, name) {
     document.querySelectorAll('.fav-btn[data-abbr="'+selectedFinalists.a.abbr+'"]').forEach(function(b) { b.classList.add('active'); });
     document.querySelectorAll('.fav-btn[data-abbr="'+abbr+'"]').forEach(function(b) { b.classList.add('active'); });
     // Re-renderiza o bracket com os dois finalistas
-    if (window.standingsCache) {
-      renderBracket(allGames || [], standingsCache);
-    } else {
-      var btn = document.querySelector('[data-section="bracket"]');
-      if (btn) btn.click();
-    }
+    setTimeout(function() {
+      if (window.standingsCache) {
+        renderBracket(allGames || [], standingsCache);
+      } else {
+        var btn = document.querySelector('[data-section="bracket"]');
+        if (btn) btn.click();
+      }
+    }, 100);
   }
 }
 
