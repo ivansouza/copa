@@ -2753,11 +2753,15 @@ function renderBracket(events, standingsData) {
   const finalVenue = 'Nova York';
 
   // Helper para renderizar time com (P) - sem score (score só na Segunda Fase)
+  function isTeamConfirmed(abbr) {
+    const s = scoreMap[abbr];
+    return s && s.status !== 'pre' && s.status !== 'scheduled';
+  }
   function teamHtml(t, showProb) {
     if (!t) return '<span class="name">A definir</span>';
-    // Para jogos simulados (oitavas, quartas, semi, 3o, final),
-    // o (P) aparece se showProb for true, independente do scoreMap
-    const probHtml = showProb ? ' <span class="bracket-probable">(P)</span>' : '';
+    // Só mostra (P) se showProb for true E o time NÃO estiver confirmado no scoreMap
+    const confirmed = isTeamConfirmed(t.abbr);
+    const probHtml = (showProb && !confirmed) ? ' <span class="bracket-probable">(P)</span>' : '';
     return '<img class="flag" src="'+flagUrl(t.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(t.name||'A definir')+'</span>'+probHtml;
   }
   function matchHtml(m, label, showProb, venue) {
