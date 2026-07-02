@@ -2755,7 +2755,8 @@ function renderBracket(events, standingsData) {
   // Helper para renderizar time com (P) - sem score (score só na Segunda Fase)
   function isTeamConfirmed(abbr) {
     const s = scoreMap[abbr];
-    return s && s.status !== 'pre' && s.status !== 'scheduled';
+    // Só considera confirmado se o jogo da Segunda Fase já terminou (final/completed/post)
+    return s && (s.status==='final'||s.status==='completed'||s.status==='3'||s.status==='post');
   }
   function teamHtml(t, showProb) {
     if (!t) return '<span class="name">A definir</span>';
