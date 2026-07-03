@@ -58,6 +58,9 @@
             <button onclick="startNewGame()" class="bg-white text-green-800 font-black py-5 px-14 rounded-full text-2xl shadow-xl hover:scale-110 active:scale-95 transition-all flex items-center justify-center gap-2 mx-auto">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg> JOGAR
             </button>
+            <button onclick="goBack()" class="mt-4 bg-white/20 text-white font-bold py-3 px-8 rounded-full text-lg hover:bg-white/30 active:scale-95 transition-all flex items-center justify-center gap-2 mx-auto backdrop-blur-sm">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg> Voltar
+            </button>
         </div>
     </div>
 
@@ -378,6 +381,10 @@
         function finishGame() {
             document.getElementById('final-score').innerText = `${score}/10`;
             showScreen('screen-final');
+        }
+
+        function goBack() {
+            window.location.href = 'index.html';
         }
 
         function toggleMute() {
