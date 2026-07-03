@@ -177,6 +177,19 @@
             { q: "O que significa 'natureza' no contexto do hino?", o: ["Floresta", "Caráter, essência, características naturais", "Clima"], c: 1, col: "from-green-500 to-emerald-700" }
         ];
 
+        // --- FUNÇÃO PARA EMBARALHAR OPÇÕES ---
+        function shuffleOptions(q) {
+            const correctAnswer = q.o[q.c];
+            const options = [...q.o];
+            // Embaralha Fisher-Yates
+            for (let i = options.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [options[i], options[j]] = [options[j], options[i]];
+            }
+            const newCorrectIdx = options.indexOf(correctAnswer);
+            return { o: options, c: newCorrectIdx };
+        }
+
         // --- VARIÁVEIS DE ESTADO ---
         let currentIdx = 0;
         let score = 0;
@@ -240,12 +253,19 @@
             playSound('click');
             score = 0;
             currentIdx = 0;
-            sessionQuestions = [...ALL_QUESTIONS].sort(() => 0.5 - Math.random()).slice(0, 10);
+            sessionQuestions = [...ALL_QUESTIONS].sort(() => 0.5 - Math.random()).slice(0, 10).map(q => {
+                const s = shuffleOptions(q);
+                return { q: q.q, o: s.o, c: s.c, col: q.col };
+            });
             showScreen('screen-game');
             loadQuestion();
         }
 
         function loadQuestion() {
+            // Embaralha opções novamente ao carregar cada pergunta
+            const rawQ = sessionQuestions[currentIdx];
+            const shuffled = shuffleOptions(rawQ);
+            sessionQuestions[currentIdx] = { ...rawQ, o: shuffled.o, c: shuffled.c };
             const question = sessionQuestions[currentIdx];
             timeLeft = 6;
             showCorrect = false;
