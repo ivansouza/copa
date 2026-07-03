@@ -267,6 +267,7 @@
             const shuffled = shuffleOptions(rawQ);
             sessionQuestions[currentIdx] = { ...rawQ, o: shuffled.o, c: shuffled.c };
             const question = sessionQuestions[currentIdx];
+            console.log('PERGUNTA ' + (currentIdx+1) + ': resposta certa no índice ' + question.c + ' | opções:', question.o);
             timeLeft = 6;
             showCorrect = false;
             selectedAnswer = null;
