@@ -2811,18 +2811,14 @@ function renderBracket(events, standingsData) {
     // Oitavas em diante: verifica se venceu na fase anterior
     const prevSlug = { 'r16':'round-of-32', 'qf':'round-of-16', 'sf':'quarterfinal', 'final':'semifinal', 'third':'semifinal' }[phase];
     if (!prevSlug) return false;
-    const game = (events||[]).find(e => {
-      if ((e.season?.slug||'') !== prevSlug) return false;
-      const cmp = e.competitions?.[0]?.competitors||[];
-      const abs = cmp.map(c => c.team?.abbreviation);
-      if (!abs.includes(abbr)) return false;
-      const st = e.competitions?.[0]?.status?.type||{};
-      const state = st.state||'';
-      if (state === 'pre' || state === 'scheduled') return false;
-      const winner = cmp.find(c => c.winner === true);
-      return winner && winner.team?.abbreviation === abbr;
-    });
-    return !!game;
+    // Busca no scoreMap: se o time tem resultado na fase anterior e é winner
+    const s = scoreMap[abbr];
+    if (!s) return false;
+    if (s.status === 'pre' || s.status === 'scheduled') return false;
+    // Verifica se o resultado é da fase anterior (não da fase de grupos)
+    // O scoreMap agora inclui round-of-16, então se o time tem resultado
+    // e é winner, está confirmado
+    return s.winner === true;
   }
   const slugMap = { r16:'round-of-16', qf:'quarterfinal', sf:'semifinal', final:'final', third:'third-place' };
   function getMatchGame(aAbbr, bAbbr, slug) {
