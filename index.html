@@ -2904,7 +2904,34 @@ function renderBracket(events, standingsData) {
     let matchClass = '';
     if (isLive) matchClass = ' live';
     else if (isProbable) matchClass = ' probable';
-    return '<div class="bracket-match'+matchClass+'"><div class="match-teams"><div class="team-row'+winnerClassA+'"><div class="team-info"><img class="flag" src="'+flagUrl(aAbbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+aName+'</span>'+aScoreHtml+(aProbable?'<span class="bracket-probable">(provável)</span>':'')+'</div></div><div class="match-vs">X'+clockHtml+'</div><div class="team-row'+winnerClassB+'"><div class="team-info"><img class="flag" src="'+flagUrl(bAbbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+bName+'</span>'+bScoreHtml+(bProbable?'<span class="bracket-probable">(provável)</span>':'')+'</div></div></div><div class="match-label">'+label+(isFinal?penaltiInfo:'')+'</div>'+(venue?'<div class="match-venue">📍 '+venue+'</div>':'')+'</div>';
+    let result = '<div class="bracket-match'+matchClass+'"><div class="match-teams"><div class="team-row'+winnerClassA+'"><div class="team-info"><img class="flag" src="'+flagUrl(aAbbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+aName+'</span>'+aScoreHtml+(aProbable?'<span class="bracket-probable">(provável)</span>':'')+'</div></div><div class="match-vs">X'+clockHtml+'</div><div class="team-row'+winnerClassB+'"><div class="team-info"><img class="flag" src="'+flagUrl(bAbbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+bName+'</span>'+bScoreHtml+(bProbable?'<span class="bracket-probable">(provável)</span>':'')+'</div></div></div><div class="match-label">'+label+(isFinal?penaltiInfo:'')+'</div>'+(venue?'<div class="match-venue">📍 '+venue+'</div>':'')+'</div>';
+    // Gols do jogo (se já aconteceu ou está ao vivo)
+    if (aAbbr && bAbbr && (aScore !== null || isLive)) {
+      var gameGoals = [];
+      (allGames||[]).forEach(function(g) {
+        var slug = (g.season?.slug || '');
+        if (slug !== 'round-of-32' && slug !== 'round-of-16' && slug !== 'quarterfinal' && slug !== 'semifinal' && slug !== 'final' && slug !== 'third-place') return;
+        var cmp = g.competitions?.[0]?.competitors||[];
+        var abs = cmp.map(function(c) { return c.team?.abbreviation; });
+        if (!abs.includes(aAbbr) || !abs.includes(bAbbr)) return;
+        gameGoals = extractGoals(g);
+      });
+      if (gameGoals.length > 0) {
+        result = result.slice(0,-6); // remove </div> final
+        result += '<div style="margin-top:4px;padding-top:4px;border-top:1px solid #1e293b;font-size:.6rem;line-height:1.4;">';
+        gameGoals.forEach(function(goal) {
+          var isA = goal.team === aAbbr;
+          var teamName = isA ? aName : bName;
+          result += '<div style="display:flex;align-items:center;gap:3px;padding:1px 0;">';
+          result += '<span style="color:#64748b;min-width:24px;">'+goal.minute+'</span>';
+          result += '<span style="color:'+(isA?'#f59e0b':'#94a3b8')+';font-weight:600;">'+teamName+'</span>';
+          result += '<span style="color:#e2e8f0;">'+goal.scorer+'</span>';
+          result += '</div>';
+        });
+        result += '</div></div>';
+      }
+    }
+    return result;
   }
 
   // Oitavas
