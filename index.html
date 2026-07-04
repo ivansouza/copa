@@ -691,7 +691,7 @@
     <div style="font-size:.7rem;color:#94a3b8;text-align:center;margin-bottom:6px;font-style:italic;">Simulação baseada em pontos dos Grupos</div>
     <div id="bracket-diagram" style="margin-bottom:1.5rem;"></div>
     <div class="fav-section" id="favSection">
-      <div class="fav-title">🌟 Qual time você quer na final?</div>
+      <div class="fav-title">🌟 Qual time você quer que ganhe a Copa?</div>
       <div class="fav-grid" id="favGrid"></div>
     </div>
     <div id="bracket-container"><div class="loading-state"><div class="spinner"></div><p>🏅 Montando chaveamento da fase final...</p></div></div>
@@ -2838,7 +2838,18 @@ function renderBracket(events, standingsData) {
 
   // Champion box
   let champTeam = null;
-  if (finalMatch && finalMatch.a && finalMatch.b) {
+  const savedFavAbbr = localStorage.getItem('bracketFav') || '';
+  if (savedFavAbbr && scoreMap[savedFavAbbr] && !scoreMap[savedFavAbbr].lost) {
+    // Se tem favorito salvo e não foi eliminado, usa ele
+    const allTeams = [];
+    round32.forEach(m => {
+      if (m.a && m.a.abbr && !allTeams.find(t => t.abbr === m.a.abbr)) allTeams.push(m.a);
+      if (m.b && m.b.abbr && !allTeams.find(t => t.abbr === m.b.abbr)) allTeams.push(m.b);
+    });
+    const favTeam = allTeams.find(t => t.abbr === savedFavAbbr);
+    if (favTeam) champTeam = favTeam;
+  }
+  if (!champTeam && finalMatch && finalMatch.a && finalMatch.b) {
     champTeam = simulateWinner(finalMatch, scoreMap);
   }
   h += '<div class="bracket-round"><div class="bracket-round-title">🏆 Campeão</div>';
