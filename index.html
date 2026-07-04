@@ -2740,7 +2740,7 @@ function renderBracket(events, standingsData) {
       var gameGoals = [];
       (allGames||[]).forEach(function(g) {
         var slug = (g.season?.slug || '');
-        if (slug !== 'round-of-32') return;
+        if (slug !== 'round-of-32' && slug !== 'round-of-16' && slug !== 'quarterfinal' && slug !== 'semifinal' && slug !== 'final' && slug !== 'third-place') return;
         var cmp = g.competitions?.[0]?.competitors||[];
         var abs = cmp.map(function(c) { return c.team?.abbreviation; });
         if (!abs.includes(aAbbr) || !abs.includes(bAbbr)) return;
