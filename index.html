@@ -2879,9 +2879,9 @@ function renderBracket(events, standingsData) {
       const clock = game.competitions?.[0]?.status?.displayClock || '';
       if (clock) clockHtml = '<span style="font-size:.6rem;color:#22c55e;font-weight:600;display:block;text-align:center;">🔴 '+clock+'</span>';
     }
-    // Provável
-    const confirmedA = isTeamConfirmedForPhase(aAbbr, phase);
-    const confirmedB = isTeamConfirmedForPhase(bAbbr, phase);
+    // Provável (usa mesma lógica do diagrama)
+    const confirmedA = typeof isConfirmed === 'function' ? isConfirmed(aAbbr, phase) : false;
+    const confirmedB = typeof isConfirmed === 'function' ? isConfirmed(bAbbr, phase) : false;
     const aProbable = !confirmedA;
     const bProbable = !confirmedB;
     const isProbable = aProbable || bProbable;
