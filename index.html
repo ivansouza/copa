@@ -2353,11 +2353,11 @@ function toggleSegundaFase() {
 function renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events) {
   const c = document.getElementById('bracket-diagram');
   if (!c) return;
-  // Mapa de placares
+  // Mapa de placares (segunda fase + oitavas)
   const scoreMap = {};
   (events||[]).forEach(e => {
     const slug = (e.season?.slug || '');
-    if (slug !== 'round-of-32') return;
+    if (slug !== 'round-of-32' && slug !== 'round-of-16') return;
     const comp = e.competitions?.[0]||{};
     const st = comp.status?.type||{};
     const state = st.state||'';
@@ -2504,11 +2504,11 @@ function renderBracket(events, standingsData) {
     return;
   }
 
-  // Mapa de placares: SÓ jogos da segunda fase (round-of-32)
+  // Mapa de placares: jogos da segunda fase (round-of-32) e oitavas (round-of-16)
   const scoreMap = {};
   (events||[]).forEach(e => {
     const slug = (e.season?.slug || '');
-    if (slug !== 'round-of-32') return;
+    if (slug !== 'round-of-32' && slug !== 'round-of-16') return;
     const comp = e.competitions?.[0]||{};
     const st = comp.status?.type||{};
     const state = st.state||'';
