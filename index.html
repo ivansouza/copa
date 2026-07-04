@@ -2793,6 +2793,7 @@ function renderBracket(events, standingsData) {
     if (!t) return '<span class="name">A definir</span>';
     const confirmed = isTeamConfirmedForPhase(t.abbr, phase);
     const probHtml = !confirmed ? ' <span class="bracket-probable">(P)</span>' : '';
+    console.log('teamHtml', t.name, t.abbr, 'phase:', phase, 'confirmed:', confirmed, 'probHtml:', probHtml);
     return '<img class="flag" src="'+flagUrl(t.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(t.name||'A definir')+'</span>'+probHtml;
   }
   function matchHtml(m, label, phase, venue) {
