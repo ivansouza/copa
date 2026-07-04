@@ -2772,68 +2772,63 @@ function renderBracket(events, standingsData) {
     const s = scoreMap[abbr];
     return s && (s.status==='final'||s.status==='completed'||s.status==='3'||s.status==='post');
   }
-  // Verifica se AMBOS os times de um match estão confirmados na Segunda Fase
-  function bothConfirmedR32(m) {
-    return m && m.a && m.b && isTeamConfirmed(m.a.abbr) && isTeamConfirmed(m.b.abbr);
+  // Verifica se o time está confirmado para uma fase específica
+  // phase: 'r32'=Segunda Fase, 'r16'=Oitavas, 'qf'=Quartas, 'sf'=Semifinais, 'third'=3o Lugar
+  function isTeamConfirmedForPhase(abbr, phase) {
+    if (phase === 'r32') {
+      // Segunda Fase: confirmado se tem resultado
+      return isTeamConfirmed(abbr);
+    }
+    // Oitavas em diante: só confirmado se o time passou da fase anterior
+    // Como as fases seguintes são simuladas, usamos o scoreMap da Segunda Fase
+    // Se o time tem resultado na Segunda Fase, ele está confirmado pra Oitavas
+    // Pra fases seguintes, sempre provável (fases simuladas)
+    if (phase === 'r16') {
+      return isTeamConfirmed(abbr);
+    }
+    // Quartas, Semifinais, 3o Lugar: sempre provável
+    return false;
   }
-  function teamHtml(t, showProb) {
+  function teamHtml(t, phase) {
     if (!t) return '<span class="name">A definir</span>';
-    // Só mostra (P) se showProb for true E o time NÃO estiver confirmado no scoreMap
-    const confirmed = isTeamConfirmed(t.abbr);
-    const probHtml = (showProb && !confirmed) ? ' <span class="bracket-probable">(P)</span>' : '';
+    const confirmed = isTeamConfirmedForPhase(t.abbr, phase);
+    const probHtml = !confirmed ? ' <span class="bracket-probable">(P)</span>' : '';
     return '<img class="flag" src="'+flagUrl(t.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(t.name||'A definir')+'</span>'+probHtml;
   }
-  function matchHtml(m, label, showProb, venue) {
+  function matchHtml(m, label, phase, venue) {
     if (!m || !m.a || !m.b) return '<div class="bracket-match probable"><div class="match-teams"><div class="team-row"><div class="team-info"><span class="name">A definir</span></div></div><div class="match-vs">X</div><div class="team-row"><div class="team-info"><span class="name">A definir</span></div></div></div><div class="match-label">'+label+'</div>'+(venue?'<div class="match-venue">📍 '+venue+'</div>':'')+'</div>';
-    return '<div class="bracket-match probable"><div class="match-teams"><div class="team-row"><div class="team-info">'+teamHtml(m.a, showProb)+'</div></div><div class="match-vs">X</div><div class="team-row"><div class="team-info">'+teamHtml(m.b, showProb)+'</div></div></div><div class="match-label">'+label+'</div>'+(venue?'<div class="match-venue">📍 '+venue+'</div>':'')+'</div>';
-  }
-
-  // Helper: verifica se os times de um match estão confirmados para a fase
-  // Para Oitavas: precisa estar confirmado na Segunda Fase
-  // Para Quartas/SF/3o: precisa estar confirmado na Segunda Fase (fase anterior simulada)
-  function isProbableForPhase(m, phase) {
-    if (!m || !m.a || !m.b) return true;
-    if (phase === 'r16') {
-      // Oitavas: provável se algum time não está confirmado na Segunda Fase
-      return !isTeamConfirmed(m.a.abbr) || !isTeamConfirmed(m.b.abbr);
-    }
-    // Quartas, Semifinais, 3o Lugar: sempre provável (fases simuladas)
-    return true;
+    return '<div class="bracket-match probable"><div class="match-teams"><div class="team-row"><div class="team-info">'+teamHtml(m.a, phase)+'</div></div><div class="match-vs">X</div><div class="team-row"><div class="team-info">'+teamHtml(m.b, phase)+'</div></div></div><div class="match-label">'+label+'</div>'+(venue?'<div class="match-venue">📍 '+venue+'</div>':'')+'</div>';
   }
 
   // Oitavas
   h += '<div class="bracket-round"><div class="bracket-round-title">Oitavas (16)</div>';
   r16.forEach((m,i) => {
-    const probLabel = isProbableForPhase(m, 'r16') ? ' — provável' : '';
-    h += matchHtml(m, (r16dates[i]||'') + probLabel, true, r16venues[i]);
+    h += matchHtml(m, r16dates[i]||'', 'r16', r16venues[i]);
   });
   h += '</div>';
 
   // Quartas
   h += '<div class="bracket-round"><div class="bracket-round-title">Quartas (8)</div>';
   qf.forEach((m,i) => {
-    const probLabel = isProbableForPhase(m, 'qf') ? ' — provável' : '';
-    h += matchHtml(m, (qfDates[i]||'') + probLabel, true, qfVenues[i]);
+    h += matchHtml(m, qfDates[i]||'', 'qf', qfVenues[i]);
   });
   h += '</div>';
 
   // Semifinais
   h += '<div class="bracket-round"><div class="bracket-round-title">Semifinais (4)</div>';
   sf.forEach((m,i) => {
-    const probLabel = isProbableForPhase(m, 'sf') ? ' — provável' : '';
-    h += matchHtml(m, (sfDates[i]||'') + probLabel, true, sfVenues[i]);
+    h += matchHtml(m, sfDates[i]||'', 'sf', sfVenues[i]);
   });
   h += '</div>';
 
   // 3º Lugar
   h += '<div class="bracket-round"><div class="bracket-round-title">3º Lugar</div>';
-  const thirdProbLabel = isProbableForPhase(thirdPlace, 'third') ? ' — provável' : '';
-  h += matchHtml(thirdPlace, thirdDate+thirdProbLabel, true, thirdVenue);
+  h += matchHtml(thirdPlace, thirdDate, 'third', thirdVenue);
   h += '</div>';
 
   // Final
   h += '<div class="bracket-round"><div class="bracket-round-title">Final</div>';
-  h += matchHtml(finalMatch, finalDate+' — Final', true, finalVenue);
+  h += matchHtml(finalMatch, finalDate+' — Final', 'final', finalVenue);
   h += '</div>';
 
   // Champion box
