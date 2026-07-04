@@ -2809,14 +2809,15 @@ function renderBracket(events, standingsData) {
       // Segunda Fase: confirmado se tem resultado
       return isTeamConfirmed(abbr);
     }
-    // Oitavas em diante: só confirmado se o time passou da fase anterior
-    // Como as fases seguintes são simuladas, usamos o scoreMap da Segunda Fase
-    // Se o time tem resultado na Segunda Fase, ele está confirmado pra Oitavas
-    // Pra fases seguintes, sempre provável (fases simuladas)
+    // Oitavas: confirmado se tem resultado na Segunda Fase ou Oitavas
     if (phase === 'r16') {
       return isTeamConfirmed(abbr);
     }
-    // Quartas, Semifinais, 3o Lugar: sempre provável
+    // Quartas: confirmado se tem resultado nas Oitavas (venceu e avançou)
+    if (phase === 'qf') {
+      return isTeamConfirmed(abbr);
+    }
+    // Semifinais, 3o Lugar: sempre provável (ainda não aconteceram)
     return false;
   }
   const slugMap = { r16:'round-of-16', qf:'quarterfinal', sf:'semifinal', final:'final', third:'third-place' };
