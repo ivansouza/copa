@@ -2806,19 +2806,23 @@ function renderBracket(events, standingsData) {
   // phase: 'r32'=Segunda Fase, 'r16'=Oitavas, 'qf'=Quartas, 'sf'=Semifinais, 'third'=3o Lugar
   function isTeamConfirmedForPhase(abbr, phase) {
     if (phase === 'r32') {
-      // Segunda Fase: confirmado se tem resultado
       return isTeamConfirmed(abbr);
     }
-    // Oitavas: confirmado se tem resultado na Segunda Fase ou Oitavas
-    if (phase === 'r16') {
-      return isTeamConfirmed(abbr);
-    }
-    // Quartas: confirmado se tem resultado nas Oitavas (venceu e avançou)
-    if (phase === 'qf') {
-      return isTeamConfirmed(abbr);
-    }
-    // Semifinais, 3o Lugar: sempre provável (ainda não aconteceram)
-    return false;
+    // Oitavas em diante: verifica se venceu na fase anterior
+    const prevSlug = { 'r16':'round-of-32', 'qf':'round-of-16', 'sf':'quarterfinal', 'final':'semifinal', 'third':'semifinal' }[phase];
+    if (!prevSlug) return false;
+    const game = (events||[]).find(e => {
+      if ((e.season?.slug||'') !== prevSlug) return false;
+      const cmp = e.competitions?.[0]?.competitors||[];
+      const abs = cmp.map(c => c.team?.abbreviation);
+      if (!abs.includes(abbr)) return false;
+      const st = e.competitions?.[0]?.status?.type||{};
+      const state = st.state||'';
+      if (state === 'pre' || state === 'scheduled') return false;
+      const winner = cmp.find(c => c.winner === true);
+      return winner && winner.team?.abbreviation === abbr;
+    });
+    return !!game;
   }
   const slugMap = { r16:'round-of-16', qf:'quarterfinal', sf:'semifinal', final:'final', third:'third-place' };
   function getMatchGame(aAbbr, bAbbr, slug) {
