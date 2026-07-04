@@ -2341,6 +2341,15 @@ function toggleClassified() {
   toggle.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(90deg)';
 }
 
+function toggleSegundaFase() {
+  const body = document.getElementById('segunda-fase-body');
+  const toggle = document.getElementById('segunda-fase-toggle');
+  if (!body || !toggle) return;
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  toggle.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(90deg)';
+}
+
 function renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events) {
   const c = document.getElementById('bracket-diagram');
   if (!c) return;
@@ -2595,7 +2604,11 @@ function renderBracket(events, standingsData) {
   let h = '<div class="bracket-section"><div class="bracket">';
 
   // Segunda Fase — ordenada por data crescente
-  h += '<div class="bracket-round"><div class="bracket-round-title">Segunda Fase (32)</div>';
+  h += '<div class="bracket-round">';
+  h += '<div class="bracket-round-title" onclick="toggleSegundaFase()" style="cursor:pointer;user-select:none;">';
+  h += '<span id="segunda-fase-toggle" style="display:inline-block;transition:transform .2s;margin-right:6px;">▶</span>';
+  h += '<span class="bracket-icon">[</span> SEGUNDA FASE (32) <span class="bracket-icon">]</span></div>';
+  h += '<div id="segunda-fase-body">';
   const round32Sorted = [...round32].sort((a, b) => {
     // Converte DD/MM HHh para string comparável MM/DD/HH
     function sortKey(s) {
@@ -2719,6 +2732,7 @@ function renderBracket(events, standingsData) {
     }
     h += '</div>';
   });
+  h += '</div>';
   h += '</div>';
 
   // Datas prováveis para fases seguintes
