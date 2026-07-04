@@ -2839,9 +2839,14 @@ function renderBracket(events, standingsData) {
   }
   h += '<div class="bracket-round"><div class="bracket-round-title">🏆 Campeão</div>';
   if (champTeam) {
-    const s = scoreMap[champTeam.abbr];
-    const confirmed = s && s.status !== 'pre' && s.status !== 'scheduled';
-    const probHtml = !confirmed ? ' (provável)' : '';
+    // Campeão só é confirmado se a final terminou (ambos os times têm resultado E placar diferente)
+    const sa = finalMatch && finalMatch.a ? scoreMap[finalMatch.a.abbr] : null;
+    const sb = finalMatch && finalMatch.b ? scoreMap[finalMatch.b.abbr] : null;
+    const finalFinished = sa && sb &&
+      (sa.status==='final'||sa.status==='completed'||sa.status==='3'||sa.status==='post') &&
+      (sb.status==='final'||sb.status==='completed'||sb.status==='3'||sb.status==='post') &&
+      sa.score !== undefined && sb.score !== undefined && sa.score !== sb.score;
+    const probHtml = !finalFinished ? ' <span class="bracket-probable">(P)</span>' : '';
     h += '<div class="champion-box"><div class="trophy">🏆</div><div class="champ-label">Campeão'+probHtml+'</div><div class="champ-team"><img class="flag" src="'+flagUrl(champTeam.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(champTeam.name||'?')+'</span></div></div>';
   } else {
     h += '<div class="champion-box"><div class="trophy">🏆</div><div class="champ-label">Campeão</div><div class="champ-empty">A definir</div></div>';
