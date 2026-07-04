@@ -2441,7 +2441,7 @@ function renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events) {
     if (st.state === 'pre' || st.state === 'scheduled') return null;
     const cmp = game.competitions?.[0]?.competitors||[];
     const team = cmp.find(c => c.team?.abbreviation === abbr);
-    if (!team) return null;
+    if (!team || team.score === undefined) return null;
     return parseInt(team.score)||0;
   }
   const slugMap = { r16:'round-of-16', qf:'quarterfinal', sf:'semifinal', final:'final', third:'third-place' };
@@ -2826,11 +2826,13 @@ function renderBracket(events, standingsData) {
     let aScore = null, bScore = null;
     let aWinner = false, bWinner = false;
     if (game) {
+      const st = game.competitions?.[0]?.status?.type||{};
+      const gameStarted = st.state !== 'pre' && st.state !== 'scheduled';
       const cmp = game.competitions?.[0]?.competitors||[];
       const aTeam = cmp.find(c => c.team?.abbreviation === aAbbr);
       const bTeam = cmp.find(c => c.team?.abbreviation === bAbbr);
-      if (aTeam) { aScore = parseInt(aTeam.score)||0; aWinner = aTeam.winner === true; }
-      if (bTeam) { bScore = parseInt(bTeam.score)||0; bWinner = bTeam.winner === true; }
+      if (aTeam && gameStarted && aTeam.score !== undefined) { aScore = parseInt(aTeam.score)||0; aWinner = aTeam.winner === true; }
+      if (bTeam && gameStarted && bTeam.score !== undefined) { bScore = parseInt(bTeam.score)||0; bWinner = bTeam.winner === true; }
     }
     const aScoreHtml = aScore !== null ? '<span class="score-display">'+aScore+'</span>' : '';
     const bScoreHtml = bScore !== null ? '<span class="score-display">'+bScore+'</span>' : '';
