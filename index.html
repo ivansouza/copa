@@ -2804,6 +2804,7 @@ function renderBracket(events, standingsData) {
     // Quartas, Semifinais, 3o Lugar: sempre provável
     return false;
   }
+  const slugMap = { r16:'round-of-16', qf:'quarterfinal', sf:'semifinal', final:'final', third:'third-place' };
   function getMatchGame(aAbbr, bAbbr, slug) {
     return (events||[]).find(g => {
       if ((g.season?.slug||'') !== slug) return false;
