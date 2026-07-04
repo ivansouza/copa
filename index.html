@@ -2879,9 +2879,25 @@ function renderBracket(events, standingsData) {
       const clock = game.competitions?.[0]?.status?.displayClock || '';
       if (clock) clockHtml = '<span style="font-size:.6rem;color:#22c55e;font-weight:600;display:block;text-align:center;">🔴 '+clock+'</span>';
     }
-    // Provável (usa mesma lógica do diagrama)
-    const confirmedA = typeof isConfirmed === 'function' ? isConfirmed(aAbbr, phase) : false;
-    const confirmedB = typeof isConfirmed === 'function' ? isConfirmed(bAbbr, phase) : false;
+    // Provável (mesma lógica do diagrama: venceu na fase anterior?)
+    const prevSlug = { 'r16':'round-of-32', 'qf':'round-of-16', 'sf':'quarterfinal', 'final':'semifinal', 'third':'semifinal' }[phase];
+    function isTeamConfirmed(abbr) {
+      if (!prevSlug) return false;
+      const g = (events||[]).find(e => {
+        if ((e.season?.slug||'') !== prevSlug) return false;
+        const cmp = e.competitions?.[0]?.competitors||[];
+        const abs = cmp.map(c => c.team?.abbreviation);
+        if (!abs.includes(abbr)) return false;
+        const st = e.competitions?.[0]?.status?.type||{};
+        const state = st.state||'';
+        if (state === 'pre' || state === 'scheduled') return false;
+        const winner = cmp.find(c => c.winner === true);
+        return winner && winner.team?.abbreviation === abbr;
+      });
+      return !!g;
+    }
+    const confirmedA = isTeamConfirmed(aAbbr);
+    const confirmedB = isTeamConfirmed(bAbbr);
     const aProbable = !confirmedA;
     const bProbable = !confirmedB;
     const isProbable = aProbable || bProbable;
