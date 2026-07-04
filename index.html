@@ -2839,13 +2839,11 @@ function renderBracket(events, standingsData) {
   }
   h += '<div class="bracket-round"><div class="bracket-round-title">🏆 Campeão</div>';
   if (champTeam) {
-    // Campeão só é confirmado se a final terminou (ambos os times têm resultado E placar diferente)
-    const sa = finalMatch && finalMatch.a ? scoreMap[finalMatch.a.abbr] : null;
-    const sb = finalMatch && finalMatch.b ? scoreMap[finalMatch.b.abbr] : null;
-    const finalFinished = sa && sb &&
-      (sa.status==='final'||sa.status==='completed'||sa.status==='3'||sa.status==='post') &&
-      (sb.status==='final'||sb.status==='completed'||sb.status==='3'||sb.status==='post') &&
-      sa.score !== undefined && sb.score !== undefined && sa.score !== sb.score;
+    // Campeão só é confirmado se a data da final já passou (19/07 16h BRT)
+    // Antes disso, o campeão é simulado = provável
+    const finalDate = new Date('2026-07-19T16:00:00-03:00');
+    const now = new Date();
+    const finalFinished = now >= finalDate;
     const probHtml = !finalFinished ? ' <span class="bracket-probable">(P)</span>' : '';
     h += '<div class="champion-box"><div class="trophy">🏆</div><div class="champ-label">Campeão'+probHtml+'</div><div class="champ-team"><img class="flag" src="'+flagUrl(champTeam.abbr)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="name">'+(champTeam.name||'?')+'</span></div></div>';
   } else {
