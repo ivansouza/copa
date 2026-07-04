@@ -321,7 +321,7 @@
   .bd-rt{text-align:center;font-size:7px;font-family:ui-monospace,monospace;color:#d4a017;letter-spacing:2px;text-transform:uppercase;padding:1px 0 2px;font-weight:600}
   .bd-m{background:#1e293b;border:1px solid #334155;border-radius:4px;padding:2px 4px}
   .bd-m .t{display:flex;align-items:center;gap:3px;padding:1.5px 0;font-size:8px;font-weight:600;color:#e2e8f0}
-  .bd-m .t .fl{width:14px;height:10px;border-radius:1.5px;flex:none}
+  .bd-m .t .fl{width:18px;height:13px;border-radius:2px;flex:none}
   .bd-m .t .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .bd-m .t .sc{font-family:ui-monospace,monospace;font-size:8px;font-weight:700;color:#f0d060;margin-left:2px;flex:none}
   .bd-m .v{text-align:center;font-size:6px;color:#64748b;border-top:1px solid #334155;padding-top:1px;margin-top:1px;line-height:1}
@@ -2938,6 +2938,15 @@ function renderBracket(events, standingsData) {
 
   h += '</div></div>';
   c.innerHTML = h;
+  // Scrolla o diagrama pra começar nas Oitavas
+  const bdWrap = c.querySelector('.bd-wrap');
+  if (bdWrap) {
+    // A 3ª coluna (index 2) é Oitavas (depois de duas Segunda Fase)
+    const thirdCol = bdWrap.querySelector('.bd-r:nth-child(3)');
+    if (thirdCol) {
+      bdWrap.scrollLeft = thirdCol.offsetLeft - 10;
+    }
+  }
 }
 
 // Navegação
