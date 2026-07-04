@@ -2447,8 +2447,6 @@ function renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events) {
   const slugMap = { r16:'round-of-16', qf:'quarterfinal', sf:'semifinal', final:'final', third:'third-place' };
   function mc(a,b,phase){if(!a||!b)return '<div class="bd-m bd-ph"><div class="t"><span class="nm">─</span></div></div>';const slug=slugMap[phase];const sa=slug?getMatchScore(a.abbr,slug):null,sb=slug?getMatchScore(b.abbr,slug):null;const ca=isConfirmed(a.abbr,phase),cb=isConfirmed(b.abbr,phase);const pa=ca?'':' <span class="pr">(P)</span>',pb=cb?'':' <span class="pr">(P)</span>';const sha=sa!==null?'<span class="sc">'+sa+'</span>':'',shb=sb!==null?'<span class="sc">'+sb+'</span>':'';return '<div class="bd-m"><div class="t"><img class="fl" src="'+flagUrl(a.abbr)+'" alt="" loading="lazy"><span class="nm">'+(a.name||'?')+'</span>'+sha+pa+'</div><div class="v">✕</div><div class="t"><img class="fl" src="'+flagUrl(b.abbr)+'" alt="" loading="lazy"><span class="nm">'+(b.name||'?')+'</span>'+shb+pb+'</div></div>'}
   let h='<div class="bd-wrap"><div class="bd">';
-  h+='<div class="bd-r"><div class="bd-rt">Segunda Fase (32)</div>';for(let i=0;i<PARES.length;i++){const g=PARES[i][0];h+=cd(g[0],g[1],g[2],g[3])}h+='</div>';
-  h+='<div class="bd-r"><div class="bd-rt">Segunda Fase (32)</div>';for(let i=0;i<PARES.length;i++){const g=PARES[i][1];h+=cd(g[0],g[1],g[2],g[3])}h+='</div>';
   h+='<div class="bd-r"><div class="bd-rt">Oitavas</div>';
   if(r16&&r16.length){for(let i=0;i<4;i++){const m=r16[i];h+=m?mc(m.a,m.b,'r16'):tm()} }else{for(let i=0;i<4;i++)h+=tm()}
   h+='</div>';
@@ -2938,15 +2936,6 @@ function renderBracket(events, standingsData) {
 
   h += '</div></div>';
   c.innerHTML = h;
-  // Scrolla o diagrama pra começar nas Oitavas
-  const bdWrap = c.querySelector('.bd-wrap');
-  if (bdWrap) {
-    // A 3ª coluna (index 2) é Oitavas (depois de duas Segunda Fase)
-    const thirdCol = bdWrap.querySelector('.bd-r:nth-child(3)');
-    if (thirdCol) {
-      bdWrap.scrollLeft = thirdCol.offsetLeft - 10;
-    }
-  }
 }
 
 // Navegação
