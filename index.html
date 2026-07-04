@@ -2353,11 +2353,11 @@ function toggleSegundaFase() {
 function renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events) {
   const c = document.getElementById('bracket-diagram');
   if (!c) return;
-  // Mapa de placares (segunda fase + oitavas)
+  // Mapa de placares (só segunda fase, para o diagrama)
   const scoreMap = {};
   (events||[]).forEach(e => {
     const slug = (e.season?.slug || '');
-    if (slug !== 'round-of-32' && slug !== 'round-of-16') return;
+    if (slug !== 'round-of-32') return;
     const comp = e.competitions?.[0]||{};
     const st = comp.status?.type||{};
     const state = st.state||'';
@@ -2505,6 +2505,9 @@ function renderBracket(events, standingsData) {
   }
 
   // Mapa de placares: jogos da segunda fase (round-of-32) e oitavas (round-of-16)
+  // NOTA: round-of-16 pode sobrescrever scores da round-of-32 (ex: FRA 3→0)
+  // Usamos scoreMapR32 para placares visuais (só r32) e scoreMap para simulação
+  const scoreMapR32 = {};
   const scoreMap = {};
   (events||[]).forEach(e => {
     const slug = (e.season?.slug || '');
@@ -2523,6 +2526,13 @@ function renderBracket(events, standingsData) {
       scoreMap[ab].score = sc;
       scoreMap[ab].status = state;
       if (c.winner) scoreMap[ab].winner = true;
+      // scoreMapR32: só round-of-32 (para placares visuais)
+      if (slug === 'round-of-32') {
+        if (!scoreMapR32[ab]) scoreMapR32[ab] = {};
+        scoreMapR32[ab].score = sc;
+        scoreMapR32[ab].status = state;
+        if (c.winner) scoreMapR32[ab].winner = true;
+      }
     });
     // Marca perdedor SÓ se o jogo já terminou (final/encerrado)
     if (cmp.length >= 2 && (st.completed || st.id === '3' || (st.description||'').toLowerCase().includes('final'))) {
@@ -2681,16 +2691,16 @@ function renderBracket(events, standingsData) {
     if (isLive) matchClass = ' live';
     else if (isProbable) matchClass = ' probable';
     h += '<div class="bracket-match'+matchClass+'"><div class="match-teams">';
-    const aScore = aAbbr && scoreMap[aAbbr] ? scoreMap[aAbbr].score : null;
-    const bScore = bAbbr && scoreMap[bAbbr] ? scoreMap[bAbbr].score : null;
+    const aScore = aAbbr && scoreMapR32[aAbbr] ? scoreMapR32[aAbbr].score : null;
+    const bScore = bAbbr && scoreMapR32[bAbbr] ? scoreMapR32[bAbbr].score : null;
     const aScoreHtml = aScore !== null ? '<span class="score-display">'+aScore+'</span>' : '';
     const bScoreHtml = bScore !== null ? '<span class="score-display">'+bScore+'</span>' : '';
     // Verifica se houve pênaltis (placar empatado mas com winner)
     let penaltiInfo = '';
     let winnerClassA = '', winnerClassB = '';
     if (aScore !== null && bScore !== null && aScore === bScore && aAbbr && bAbbr) {
-      const sa = scoreMap[aAbbr];
-      const sb = scoreMap[bAbbr];
+      const sa = scoreMapR32[aAbbr];
+      const sb = scoreMapR32[bAbbr];
       if (sa && sb && (sa.winner || sb.winner)) {
         if (sa.winner) winnerClassA = ' winner-pen';
         if (sb.winner) winnerClassB = ' winner-pen';
