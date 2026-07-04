@@ -2608,7 +2608,7 @@ function renderBracket(events, standingsData) {
   h += '<div class="bracket-round-title" onclick="toggleSegundaFase()" style="cursor:pointer;user-select:none;">';
   h += '<span id="segunda-fase-toggle" style="display:inline-block;transition:transform .2s;margin-right:6px;">▶</span>';
   h += '<span class="bracket-icon">[</span> SEGUNDA FASE (32) <span class="bracket-icon">]</span></div>';
-  h += '<div id="segunda-fase-body">';
+  h += '<div id="segunda-fase-body" style="display:none">';
   const round32Sorted = [...round32].sort((a, b) => {
     // Converte DD/MM HHh para string comparável MM/DD/HH
     function sortKey(s) {
