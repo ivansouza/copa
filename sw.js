@@ -1,4 +1,4 @@
-const CACHE = 'copa2026-v17';
+const CACHE = 'copa2026-v18';
 const ASSETS = [
   '/copa/',
   '/copa/index.html',
