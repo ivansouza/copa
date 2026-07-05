@@ -2768,7 +2768,7 @@ function renderBracket(events, standingsData) {
   const r16Order = [1,0,4,5,2,3,6,7];
   let r16 = r16Order.map(i => r16raw[i]).filter(Boolean);
   
-  // Se existem dados reais de oitavas (round-of-16), SUBSTITUI os confrontos simulados
+  // Se existem dados reais de oitavas (round-of-16), SUBSTITUI COMPLETAMENTE o r16
   const r16Real = (events||[]).filter(g => {
     const slug = g.season?.slug || '';
     if (slug !== 'round-of-16') return false;
@@ -2776,8 +2776,8 @@ function renderBracket(events, standingsData) {
     return st !== 'pre' && st !== 'scheduled';
   });
   if (r16Real.length > 0) {
-    // Para cada jogo real de oitavas, encontra o confronto correspondente no r16
-    // e substitui os times pelos times reais
+    // Substitui o r16 inteiro pelos confrontos reais
+    const newR16 = [];
     r16Real.forEach(g => {
       const cmp = g.competitions?.[0]?.competitors || [];
       if (cmp.length < 2) return;
@@ -2788,24 +2788,29 @@ function renderBracket(events, standingsData) {
       if (!ha || !aa) return;
       const hs = parseInt(home.score) || 0;
       const as_ = parseInt(away.score) || 0;
-      
-      // Encontra o confronto no r16 que tem um dos times
-      for (let i = 0; i < r16.length; i++) {
-        const m = r16[i];
-        if (!m || !m.a || !m.b) continue;
-        if (m.a.abbr === ha || m.a.abbr === aa || m.b.abbr === ha || m.b.abbr === aa) {
-          // Substitui o confronto pelos times reais
-          const winner = hs > as_ ? ha : (as_ > hs ? aa : null);
-          r16[i] = {
-            a: { abbr: ha, name: home.team?.displayName || ha, pts: 0, gd: 0, gf: 0 },
-            b: { abbr: aa, name: away.team?.displayName || aa, pts: 0, gd: 0, gf: 0 },
-            _winner: winner ? { abbr: winner } : null,
-            _real: true
-          };
-          break;
+      const winner = hs > as_ ? ha : (as_ > hs ? aa : null);
+      newR16.push({
+        a: { abbr: ha, name: home.team?.displayName || ha, pts: 0, gd: 0, gf: 0 },
+        b: { abbr: aa, name: away.team?.displayName || aa, pts: 0, gd: 0, gf: 0 },
+        _winner: winner ? { abbr: winner } : null,
+        _real: true
+      });
+    });
+    // Preenche o resto com confrontos simulados (se houver menos jogos reais que 8)
+    for (let i = 0; i < r16.length && newR16.length < 8; i++) {
+      const m = r16[i];
+      if (m && m.a && m.b) {
+        // Verifica se este confronto ja nao foi adicionado
+        const alreadyAdded = newR16.some(n => 
+          (n.a.abbr === m.a.abbr || n.a.abbr === m.b.abbr ||
+           n.b.abbr === m.a.abbr || n.b.abbr === m.b.abbr)
+        );
+        if (!alreadyAdded) {
+          newR16.push(m);
         }
       }
-    });
+    }
+    r16 = newR16;
   }
   const qfRaw = simulateRound(r16, savedFav);
   // Reordena qf para ordem oficial: QF1(90x89), QF2(91x92), QF3(93x94), QF4(95x96)
