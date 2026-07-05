@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz do Hino Nacional Brasileiro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .option-btn {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .timer-circle {
+            transition: stroke-dashoffset 1s linear;
+        }
+
+        .animate-bounce-slow {
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(-5%); animation-timing-function: cubic-bezier(0.8, 0, 1, 1); }
+            50% { transform: translateY(0); animation-timing-function: cubic-bezier(0, 0, 0.2, 1); }
+        }
+
+        .screen {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .screen.active {
+            display: flex;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-white">
+
+    <!-- Ecrã de Início -->
+    <div id="screen-start" class="screen active min-h-screen flex-col items-center justify-center p-6 bg-gradient-to-b from-green-800 to-yellow-700">
+        <div class="bg-gradient-to-br from-green-600 to-yellow-500 p-10 rounded-[2.5rem] shadow-2xl text-center max-w-sm w-full border-4 border-white/20">
+            <div class="flex justify-center mb-6">
+                <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="animate-pulse text-white"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+            </div>
+            <h1 class="text-4xl font-black mb-2 uppercase tracking-tight">Hino Nacional</h1>
+            <p class="text-white/80 mb-6 font-medium">Quiz de Significados</p>
+            <p class="text-white/60 text-sm mb-8">Você sabe o que significam as palavras difíceis do Hino Nacional Brasileiro?</p>
+            <button onclick="startNewGame()" class="bg-white text-green-800 font-black py-5 px-14 rounded-full text-2xl shadow-xl hover:scale-110 active:scale-95 transition-all flex items-center justify-center gap-2 mx-auto">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg> JOGAR
+            </button>
+            <button onclick="goBack()" class="mt-4 bg-white/20 text-white font-bold py-3 px-8 rounded-full text-lg hover:bg-white/30 active:scale-95 transition-all flex items-center justify-center gap-2 mx-auto backdrop-blur-sm">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg> Voltar
+            </button>
+        </div>
+    </div>
+
+    <!-- Ecrã de Jogo -->
+    <div id="screen-game" class="screen min-h-screen flex-col items-center p-4 relative overflow-hidden">
+        <!-- Botão Voltar (sempre visível) -->
+        <button onclick="goBack()" class="absolute top-4 left-4 z-50 bg-black/20 p-3 rounded-full text-white backdrop-blur-md hover:bg-black/40 transition-all">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <!-- Botão Mudo -->
+        <button id="mute-btn" onclick="toggleMute()" class="absolute top-4 right-4 z-50 bg-black/20 p-4 rounded-full text-white backdrop-blur-md">
+            <svg id="volume-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+        </button>
+
+        <div class="w-full max-w-md flex flex-col h-full items-center justify-center gap-8 relative z-10 py-10">
+            <!-- Pergunta -->
+            <div id="question-box" class="bg-white rounded-[2rem] p-8 w-full shadow-2xl border-4 border-slate-900 relative">
+                <h2 id="question-text" class="text-2xl md:text-3xl font-black text-slate-900 text-center leading-[1.1]"></h2>
+                <div id="question-number" class="absolute -top-5 -right-5 bg-yellow-400 text-slate-900 w-12 h-12 rounded-full flex items-center justify-center font-black border-4 border-slate-900 shadow-xl text-xl">1</div>
+            </div>
+
+            <!-- Timer -->
+            <div class="relative w-32 h-32 flex items-center justify-center">
+                <svg class="absolute w-full h-full -rotate-90">
+                    <circle cx="64" cy="64" r="56" fill="transparent" stroke="rgba(0,0,0,0.15)" strokeWidth="12" />
+                    <circle id="timer-progress" cx="64" cy="64" r="56" fill="transparent" stroke="white" strokeWidth="12" stroke-dasharray="351.8" stroke-dashoffset="0" class="timer-circle" />
+                </svg>
+                <span id="timer-text" class="text-6xl font-black drop-shadow-md">6</span>
+            </div>
+
+            <!-- Opções -->
+            <div id="options-container" class="w-full flex flex-col gap-4">
+                <!-- Inserido via JS -->
+            </div>
+
+            <!-- Botão Próximo -->
+            <div class="h-20 flex items-center justify-center">
+                <button id="next-btn" onclick="nextQuestion()" class="hidden bg-slate-900 text-white font-black py-4 px-12 rounded-full flex items-center gap-2 shadow-2xl border-4 border-white/20 active:scale-95 animate-bounce">
+                    PRÓXIMO <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ecrã Final -->
+    <div id="screen-final" class="screen min-h-screen flex-col items-center justify-center p-6 bg-gradient-to-b from-green-800 to-yellow-700">
+        <!-- Botão Voltar -->
+        <button onclick="goBack()" class="absolute top-4 left-4 z-50 bg-black/20 p-3 rounded-full text-white backdrop-blur-md hover:bg-black/40 transition-all">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <div class="bg-white text-slate-900 p-10 rounded-[2.5rem] shadow-2xl text-center max-w-sm w-full border-b-8 border-slate-200">
+            <svg width="90" height="90" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto mb-4 drop-shadow-lg"><circle cx="12" cy="12" r="10"/><path d="M8 12l2 2 4-4"/></svg>
+            <h2 class="text-4xl font-black mb-2 uppercase tracking-tighter">Fim de Jogo!</h2>
+            <div id="final-score" class="text-6xl font-black text-green-600 mb-8">0/10</div>
+            <button onclick="startNewGame()" class="bg-green-600 text-white font-black py-5 px-12 rounded-2xl text-xl w-full flex items-center justify-center gap-3 hover:bg-green-700 transition-all shadow-xl">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path><polyline points="21 3 21 8 16 8"></polyline></svg> NOVA RODADA
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- BASE DE DADOS: 50 QUESTÕES SOBRE O HINO NACIONAL BRASILEIRO ---
+        const ALL_QUESTIONS = [
+            // --- PRIMEIRA PARTE ---
+            { q: "O que significa 'plácidas' em 'Ouviram do Ipiranga as margens plácidas'?", o: ["Agitadas", "Calmas, serenas", "Profundas"], c: 1, col: "from-green-700 to-yellow-600" },
+            { q: "O que significa 'Ipiranga' no hino?", o: ["Um rio de São Paulo", "Uma montanha", "Uma cidade"], c: 0, col: "from-blue-800 to-green-600" },
+            { q: "O que significa 'brado' em 'brado retumbante'?", o: ["Sussurro", "Grito forte, clamor", "Silêncio"], c: 1, col: "from-red-700 to-yellow-600" },
+            { q: "O que significa 'retumbante'?", o: ["Que ecoa forte, estrondoso", "Suave", "Rápido"], c: 0, col: "from-orange-700 to-red-600" },
+            { q: "O que significa 'garrida' em 'brisa garrida'?", o: ["Triste", "Enfeitada, vistosa, alegre", "Fria"], c: 1, col: "from-green-500 to-yellow-400" },
+            { q: "O que significa 'fulguras' em 'fulguras, ó Brasil'?", o: ["Definhas", "Brilhas, resplandeces", "Cresces"], c: 1, col: "from-yellow-500 to-orange-600" },
+            { q: "O que significa 'florão' em 'florão da América'?", o: ["Flor pequena", "Ornamento em forma de flor; destaque, joia", "Espinho"], c: 1, col: "from-green-600 to-blue-700" },
+            { q: "O que significa 'claro' em 'claro sol da liberdade'?", o: ["Transparente", "Brilhante, radiante, ilustre", "Claro (cor)"], c: 1, col: "from-yellow-400 to-amber-600" },
+            { q: "O que significa 'raios' em 'raios fúlgidos'?", o: ["Relâmpagos", "Brilhos intensos, resplendores", "Raio-X"], c: 1, col: "from-yellow-300 to-orange-500" },
+            { q: "O que significa 'fúlgidos'?", o: ["Escuros", "Brilhantes, reluzentes", "Frios"], c: 1, col: "from-amber-400 to-yellow-600" },
+            { q: "O que significa 'penhor' em 'penhor dessa igualdade'?", o: ["Prenda", "Garantia, sinal, compromisso", "Medo"], c: 1, col: "from-blue-600 to-green-500" },
+            { q: "O que significa 'lábaro' em 'lábaro estrelado'?", o: ["Navio", "Bandeira, estandarte", "Templo"], c: 1, col: "from-green-700 to-blue-800" },
+            { q: "O que significa 'ostentas' em 'o lábaro que ostentas estrelado'?", o: ["Escondes", "Exibes com orgulho, mostras", "Perdes"], c: 1, col: "from-yellow-500 to-green-600" },
+            { q: "O que significa 'idolatrada'?", o: ["Esquecida", "Amada com devoção, adorada", "Desprezada"], c: 1, col: "from-purple-600 to-pink-500" },
+
+            // --- SEGUNDA PARTE ---
+            { q: "O que significa 'maternal' em 'gigante pela própria natureza'?", o: ["De mãe", "Que acolhe, protetora, generosa", "Fraca"], c: 1, col: "from-green-600 to-teal-500" },
+            { q: "O que significa 'formoso' em 'formoso e forte'?", o: ["Feio", "Belo, bonito", "Grande"], c: 1, col: "from-amber-500 to-green-600" },
+            { q: "O que significa 'impávido' em 'impávido colosso'?", o: ["Medroso", "Corajoso, destemido, que não teme", "Ingênuo"], c: 1, col: "from-red-700 to-orange-600" },
+            { q: "O que significa 'colosso'?", o: ["Pequenez", "Algo enorme, gigantesco", "Coluna"], c: 1, col: "from-blue-700 to-slate-800" },
+            { q: "O que significa 'fulgente' em 'fulgente, formoso'?", o: ["Opaco", "Brilhante, resplandecente", "Pesado"], c: 1, col: "from-yellow-400 to-amber-500" },
+            { q: "O que significa 'risonho' em 'risonho e límpido'?", o: ["Sério", "Alegre, que sorri", "Barulhento"], c: 1, col: "from-green-400 to-yellow-400" },
+            { q: "O que significa 'límpido'?", o: ["Sujo", "Claro, puro, transparente", "Turvo"], c: 1, col: "from-sky-300 to-blue-400" },
+            { q: "O que significa 'profundo' em 'profundo, infinito'?", o: ["Raso", "Intenso, que vai além da superfície", "Estreito"], c: 1, col: "from-blue-800 to-indigo-900" },
+            { q: "O que significa 'etéreo' em 'céu eterno, etéreo'?", o: ["Pesado", "Celestial, divino, do éter", "Terrestre"], c: 1, col: "from-sky-200 to-blue-300" },
+            { q: "O que significa 'lábaro' (repetido) no hino?", o: ["Escudo", "Bandeira, estandarte", "Cajado"], c: 1, col: "from-green-700 to-yellow-600" },
+
+            // --- TERCEIRA PARTE ---
+            { q: "O que significa 'deitado' em 'deitado eternamente'?", o: ["Dormindo", "Situado, localizado, posto", "Caído"], c: 1, col: "from-green-600 to-blue-700" },
+            { q: "O que significa 'berço' em 'berço esplêndido'?", o: ["Cama", "Lugar de origem, terra natal", "Berço de bebê"], c: 1, col: "from-amber-600 to-green-500" },
+            { q: "O que significa 'esplêndido'?", o: ["Simples", "Magnífico, deslumbrante", "Escuro"], c: 1, col: "from-yellow-500 to-orange-600" },
+            { q: "O que significa 'girassol' em 'à imagem do cruzeiro'?", o: ["Flor que segue o sol", "Constelação do Cruzeiro do Sul", "Sol"], c: 1, col: "from-yellow-400 to-green-600" },
+            { q: "O que significa 'fulguração' em 'fulguração do Cruzeiro'?", o: ["Escuridão", "Brilho intenso, resplendor", "Tempestade"], c: 1, col: "from-yellow-300 to-amber-500" },
+            { q: "O que significa 'mórbida' em 'mórbida ilusão'?", o: ["Saudável", "Doentia, triste, malsã", "Alegre"], c: 1, col: "from-gray-600 to-slate-800" },
+            { q: "O que significa 'ilusão' no contexto do hino?", o: ["Festa", "Engano, sonho irrealizável", "Visão"], c: 1, col: "from-purple-500 to-indigo-600" },
+            { q: "O que significa 'veemente' em 'veemente amor'?", o: ["Fraco", "Intenso, ardente, apaixonado", "Calmo"], c: 1, col: "from-red-500 to-pink-600" },
+            { q: "O que significa 'amor' no contexto 'veemente amor'?", o: ["Amor romântico", "Amor à pátria, devoção patriótica", "Amizade"], c: 1, col: "from-green-600 to-red-500" },
+            { q: "O que significa 'lírio' em 'lírio do amor'?", o: ["Flor que simboliza pureza e paz", "Arma", "Pássaro"], c: 0, col: "from-white to-green-500" },
+
+            // --- QUARTA PARTE ---
+            { q: "O que significa 'inalterável' em 'inalterável juramento'?", o: ["Mutável", "Que não muda, imutável, permanente", "Falso"], c: 1, col: "from-blue-600 to-indigo-700" },
+            { q: "O que significa 'juramento' no hino?", o: ["Promessa solene, compromisso sagrado", "Mentira", "Brincadeira"], c: 0, col: "from-green-700 to-yellow-600" },
+            { q: "O que significa 'benção' em 'benção, ó Brasil'?", o: ["Maldição", "Graça divina, proteção, dádiva", "Castigo"], c: 1, col: "from-yellow-400 to-green-500" },
+            { q: "O que significa 'eterno' em 'eterno amor'?", o: ["Temporário", "Que dura para sempre, perpétuo", "Curto"], c: 1, col: "from-blue-800 to-purple-700" },
+            { q: "O que significa 'fúlgido' (repetido) no hino?", o: ["Apagado", "Brilhante, resplandecente", "Pálido"], c: 1, col: "from-amber-400 to-yellow-600" },
+            { q: "O que significa 'auriverde' em 'auriverde pendão'?", o: ["Azul e branco", "Verde e amarelo (ouro)", "Vermelho e branco"], c: 1, col: "from-green-500 to-yellow-400" },
+            { q: "O que significa 'pendão'?", o: ["Bandeira, estandarte", "Pêndulo", "Portão"], c: 0, col: "from-green-700 to-blue-800" },
+            { q: "O que significa 'clava' em 'da paz, não da clava'?", o: ["Chave", "Arma, porrete, maça", "Nuvem"], c: 1, col: "from-stone-500 to-slate-700" },
+            { q: "O que significa 'garbo' em 'garbo varonil'?", o: ["Desleixo", "Elegância, distinção, porte nobre", "Medo"], c: 1, col: "from-blue-600 to-green-500" },
+            { q: "O que significa 'varonil'?", o: ["Feminino", "Viril, másculo, forte, corajoso", "Infantil"], c: 1, col: "from-red-700 to-orange-600" },
+
+            // --- EXTRAS ---
+            { q: "O que significa 'manto' em 'manto de luz'?", o: ["Cobertura, capa que envolve", "Manto de rei", "Tapete"], c: 0, col: "from-purple-600 to-blue-700" },
+            { q: "O que significa 'caminho' em 'caminho do progresso'?", o: ["Estrada de terra", "Direção, rumo, trajetória", "Atalho"], c: 1, col: "from-amber-600 to-green-700" },
+            { q: "O que significa 'progresso' no hino?", o: ["Retrocesso", "Desenvolvimento, avanço, melhoria", "Paralisia"], c: 1, col: "from-green-500 to-teal-600" },
+            { q: "O que significa 'pátria' em 'pátria amada'?", o: ["Cidade", "Terra natal, nação", "Família"], c: 1, col: "from-green-700 to-yellow-500" },
+            { q: "O que significa 'idolatrada' (repetido) no hino?", o: ["Desprezada", "Adorada, venerada", "Ignorada"], c: 1, col: "from-red-600 to-pink-500" },
+            { q: "O que significa 'salve' em 'salve, salve!'?", o: ["Despedida", "Saudação de respeito e admiração", "Grito de guerra"], c: 1, col: "from-green-600 to-yellow-400" },
+            { q: "O que significa 'gigante' em 'gigante pela própria natureza'?", o: ["Pessoa alta", "Algo grandioso, imenso, poderoso", "Monstro"], c: 1, col: "from-blue-700 to-green-600" },
+            { q: "O que significa 'natureza' no contexto do hino?", o: ["Floresta", "Caráter, essência, características naturais", "Clima"], c: 1, col: "from-green-500 to-emerald-700" }
+        ];
+
+        // --- FUNÇÃO PARA EMBARALHAR OPÇÕES ---
+        function shuffleOptions(q) {
+            const correctAnswer = q.o[q.c];
+            const options = [...q.o];
+            // Embaralha Fisher-Yates
+            for (let i = options.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [options[i], options[j]] = [options[j], options[i]];
+            }
+            const newCorrectIdx = options.indexOf(correctAnswer);
+            return { o: options, c: newCorrectIdx };
+        }
+
+        // --- VARIÁVEIS DE ESTADO ---
+        let currentIdx = 0;
+        let score = 0;
+        let timeLeft = 6;
+        let timerInterval;
+        let sessionQuestions = [];
+        let selectedAnswer = null;
+        let isMuted = false;
+        let showCorrect = false;
+        let audioCtx = null;
+
+        // --- SISTEMA DE ÁUDIO ---
+        function playSound(type) {
+            if (isMuted) return;
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+
+            switch(type) {
+                case 'tick':
+                    osc.frequency.setValueAtTime(880, now);
+                    gain.gain.setValueAtTime(0.05, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+                    osc.start(now); osc.stop(now + 0.05);
+                    break;
+                case 'correct':
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523, now);
+                    osc.frequency.exponentialRampToValueAtTime(1046, now + 0.4);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                    osc.start(now); osc.stop(now + 0.5);
+                    break;
+                case 'wrong':
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(120, now);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                    osc.start(now); osc.stop(now + 0.4);
+                    break;
+                case 'click':
+                    osc.frequency.setValueAtTime(400, now);
+                    gain.gain.setValueAtTime(0.1, now);
+                    osc.start(now); osc.stop(now + 0.1);
+                    break;
+            }
+        }
+
+        // --- LÓGICA DO JOGO ---
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function startNewGame() {
+            playSound('click');
+            score = 0;
+            currentIdx = 0;
+            sessionQuestions = [...ALL_QUESTIONS].sort(() => 0.5 - Math.random()).slice(0, 10).map(q => {
+                const s = shuffleOptions(q);
+                return { q: q.q, o: s.o, c: s.c, col: q.col };
+            });
+            showScreen('screen-game');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            // Embaralha opções novamente ao carregar cada pergunta
+            const rawQ = sessionQuestions[currentIdx];
+            const shuffled = shuffleOptions(rawQ);
+            sessionQuestions[currentIdx] = { ...rawQ, o: shuffled.o, c: shuffled.c };
+            const question = sessionQuestions[currentIdx];
+            console.log('PERGUNTA ' + (currentIdx+1) + ': resposta certa no índice ' + question.c + ' | opções:', question.o);
+            timeLeft = 6;
+            showCorrect = false;
+            selectedAnswer = null;
+
+            // Atualizar UI
+            document.getElementById('screen-game').className = `screen active min-h-screen flex-col items-center p-4 relative overflow-hidden bg-gradient-to-b ${question.col}`;
+            document.getElementById('question-text').innerText = question.q;
+            document.getElementById('question-number').innerText = currentIdx + 1;
+            document.getElementById('timer-text').innerText = timeLeft;
+            document.getElementById('timer-text').classList.remove('text-red-500', 'animate-ping');
+            document.getElementById('next-btn').classList.add('hidden');
+            
+            // Renderizar opções
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            question.o.forEach((opt, i) => {
+                const letter = ["A", "B", "C"][i];
+                const btn = document.createElement('button');
+                btn.className = "option-btn flex items-center gap-5 p-5 rounded-2xl shadow-xl text-left font-black text-xl border-b-8 bg-white text-slate-900 border-slate-200 w-full";
+                btn.innerHTML = `
+                    <div class="w-12 h-12 flex items-center justify-center rounded-xl text-white shadow-inner font-black bg-green-600">${letter}</div>
+                    <div class="flex-1 uppercase tracking-tight leading-tight">${opt}</div>
+                `;
+                btn.onclick = () => selectOption(i);
+                container.appendChild(btn);
+            });
+
+            startTimer();
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            updateTimerCircle();
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer-text').innerText = timeLeft;
+                updateTimerCircle();
+
+                if (timeLeft > 0) playSound('tick');
+                
+                if (timeLeft <= 2) {
+                    document.getElementById('timer-text').classList.add('text-red-500', 'animate-ping');
+                }
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    revealCorrect(null);
+                }
+            }, 1000);
+        }
+
+        function updateTimerCircle() {
+            const offset = 351.8 - (351.8 * timeLeft) / 6;
+            document.getElementById('timer-progress').style.strokeDashoffset = offset;
+        }
+
+        function selectOption(index) {
+            if (showCorrect) return;
+            clearInterval(timerInterval);
+            selectedAnswer = index;
+            revealCorrect(index);
+        }
+
+        function revealCorrect(userIndex) {
+            showCorrect = true;
+            const question = sessionQuestions[currentIdx];
+            const isCorrect = userIndex === question.c;
+
+            if (isCorrect) {
+                score++;
+                playSound('correct');
+            } else {
+                playSound('wrong');
+            }
+
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach((btn, i) => {
+                btn.disabled = true;
+                if (i === question.c) {
+                    btn.classList.replace('bg-white', 'bg-green-500');
+                    btn.classList.replace('text-slate-900', 'text-white');
+                    btn.classList.replace('border-slate-200', 'border-green-300');
+                    btn.classList.add('ring-4', 'ring-green-400/50', 'animate-bounce');
+                    btn.querySelector('div').classList.replace('bg-green-600', 'bg-green-700');
+                } else if (i === userIndex) {
+                    btn.classList.replace('bg-white', 'bg-red-500');
+                    btn.classList.replace('text-slate-900', 'text-white');
+                    btn.classList.replace('border-slate-200', 'border-red-700');
+                    btn.classList.add('opacity-80', 'scale-95');
+                } else {
+                    btn.classList.add('bg-white/40', 'text-slate-400', 'scale-90', 'grayscale', 'opacity-50');
+                }
+            });
+
+            document.getElementById('next-btn').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            playSound('click');
+            if (currentIdx < sessionQuestions.length - 1) {
+                currentIdx++;
+                loadQuestion();
+            } else {
+                finishGame();
+            }
+        }
+
+        function finishGame() {
+            document.getElementById('final-score').innerText = `${score}/10`;
+            showScreen('screen-final');
+        }
+
+        function goBack() {
+            window.location.href = 'index.html';
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            const icon = document.getElementById('volume-icon');
+            if (isMuted) {
+                icon.innerHTML = '<line x1="1" y1="1" x2="23" y2="23"></line><path d="M9 9l-2 2h-2v4h2l2 2v-8z"></path>';
+            } else {
+                icon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>';
+            }
+        }
+    </script>
+</body>
+</html>

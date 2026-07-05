@@ -1,0 +1,26 @@
+{
+  "name": "Copa do Mundo 2026",
+  "short_name": "Copa 2026",
+  "description": "Tabela de grupos, fase final e jogos ao vivo da Copa do Mundo 2026",
+  "start_url": "/copa/",
+  "scope": "/copa/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "orientation": "portrait",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
