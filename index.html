@@ -2766,7 +2766,47 @@ function renderBracket(events, standingsData) {
   //  8-9=83+84→93, 10-11=81+82→94, 12-13=86+88→95, 14-15=85+87→96)
   // Ordem oficial: 90(0), 89(1), 93(4), 94(5), 91(2), 92(3), 95(6), 96(7)
   const r16Order = [1,0,4,5,2,3,6,7];
-  const r16 = r16Order.map(i => r16raw[i]).filter(Boolean);
+  let r16 = r16Order.map(i => r16raw[i]).filter(Boolean);
+  
+  // Se existem dados reais de oitavas (round-of-16), SUBSTITUI os confrontos simulados
+  const r16Real = (events||[]).filter(g => {
+    const slug = g.season?.slug || '';
+    if (slug !== 'round-of-16') return false;
+    const st = g.competitions?.[0]?.status?.type?.state || '';
+    return st !== 'pre' && st !== 'scheduled';
+  });
+  if (r16Real.length > 0) {
+    // Para cada jogo real de oitavas, encontra o confronto correspondente no r16
+    // e substitui os times pelos times reais
+    r16Real.forEach(g => {
+      const cmp = g.competitions?.[0]?.competitors || [];
+      if (cmp.length < 2) return;
+      const home = cmp.find(c => c.homeAway === 'home') || cmp[0] || {};
+      const away = cmp.find(c => c.homeAway === 'away') || cmp[1] || {};
+      const ha = home.team?.abbreviation || '';
+      const aa = away.team?.abbreviation || '';
+      if (!ha || !aa) return;
+      const hs = parseInt(home.score) || 0;
+      const as_ = parseInt(away.score) || 0;
+      
+      // Encontra o confronto no r16 que tem um dos times
+      for (let i = 0; i < r16.length; i++) {
+        const m = r16[i];
+        if (!m || !m.a || !m.b) continue;
+        if (m.a.abbr === ha || m.a.abbr === aa || m.b.abbr === ha || m.b.abbr === aa) {
+          // Substitui o confronto pelos times reais
+          const winner = hs > as_ ? ha : (as_ > hs ? aa : null);
+          r16[i] = {
+            a: { abbr: ha, name: home.team?.displayName || ha, pts: 0, gd: 0, gf: 0 },
+            b: { abbr: aa, name: away.team?.displayName || aa, pts: 0, gd: 0, gf: 0 },
+            _winner: winner ? { abbr: winner } : null,
+            _real: true
+          };
+          break;
+        }
+      }
+    });
+  }
   const qfRaw = simulateRound(r16, savedFav);
   // Reordena qf para ordem oficial: QF1(90x89), QF2(91x92), QF3(93x94), QF4(95x96)
   // r16 ordem: [90,89,93,94,91,92,95,96]
