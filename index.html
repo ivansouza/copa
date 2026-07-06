@@ -2776,7 +2776,8 @@ function renderBracket(events, standingsData) {
     return st !== 'pre' && st !== 'scheduled';
   });
   if (r16Real.length > 0) {
-    // Marca os perdedores das oitavas no scoreMap para a simulacao
+    // Para cada jogo real de oitavas, encontra o confronto correspondente no r16
+    // e substitui os times pelos times reais
     r16Real.forEach(g => {
       const cmp = g.competitions?.[0]?.competitors || [];
       if (cmp.length < 2) return;
@@ -2787,9 +2788,22 @@ function renderBracket(events, standingsData) {
       if (!ha || !aa) return;
       const hs = parseInt(home.score) || 0;
       const as_ = parseInt(away.score) || 0;
-      if (hs !== as_) {
-        const loser = hs < as_ ? ha : aa;
-        if (scoreMap[loser]) scoreMap[loser].lost = true;
+      
+      // Encontra o confronto no r16 que tem um dos times
+      for (let i = 0; i < r16.length; i++) {
+        const m = r16[i];
+        if (!m || !m.a || !m.b) continue;
+        if (m.a.abbr === ha || m.a.abbr === aa || m.b.abbr === ha || m.b.abbr === aa) {
+          // Substitui o confronto pelos times reais
+          const winner = hs > as_ ? ha : (as_ > hs ? aa : null);
+          r16[i] = {
+            a: { abbr: ha, name: home.team?.displayName || ha, pts: 0, gd: 0, gf: 0 },
+            b: { abbr: aa, name: away.team?.displayName || aa, pts: 0, gd: 0, gf: 0 },
+            _winner: winner ? { abbr: winner } : null,
+            _real: true
+          };
+          break;
+        }
       }
     });
   }
