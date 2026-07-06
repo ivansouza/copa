@@ -2776,8 +2776,10 @@ function renderBracket(events, standingsData) {
     return st !== 'pre' && st !== 'scheduled';
   });
   if (r16Real.length > 0) {
-    // Para cada jogo real de oitavas, encontra o confronto correspondente no r16
-    // e substitui os times pelos times reais
+    // CONSTRUI o r16 a partir dos dados reais + simulados para o resto
+    // Mapa de times que ja jogaram as oitavas
+    const r16Played = new Set();
+    const r16RealMatches = [];
     r16Real.forEach(g => {
       const cmp = g.competitions?.[0]?.competitors || [];
       if (cmp.length < 2) return;
@@ -2786,26 +2788,26 @@ function renderBracket(events, standingsData) {
       const ha = home.team?.abbreviation || '';
       const aa = away.team?.abbreviation || '';
       if (!ha || !aa) return;
+      r16Played.add(ha);
+      r16Played.add(aa);
       const hs = parseInt(home.score) || 0;
       const as_ = parseInt(away.score) || 0;
-      
-      // Encontra o confronto no r16 que tem um dos times
-      for (let i = 0; i < r16.length; i++) {
-        const m = r16[i];
-        if (!m || !m.a || !m.b) continue;
-        if (m.a.abbr === ha || m.a.abbr === aa || m.b.abbr === ha || m.b.abbr === aa) {
-          // Substitui o confronto pelos times reais
-          const winner = hs > as_ ? ha : (as_ > hs ? aa : null);
-          r16[i] = {
-            a: { abbr: ha, name: home.team?.displayName || ha, pts: 0, gd: 0, gf: 0 },
-            b: { abbr: aa, name: away.team?.displayName || aa, pts: 0, gd: 0, gf: 0 },
-            _winner: winner ? { abbr: winner } : null,
-            _real: true
-          };
-          break;
-        }
+      const winner = hs > as_ ? ha : (as_ > hs ? aa : null);
+      r16RealMatches.push({
+        a: { abbr: ha, name: home.team?.displayName || ha, pts: 0, gd: 0, gf: 0 },
+        b: { abbr: aa, name: away.team?.displayName || aa, pts: 0, gd: 0, gf: 0 },
+        _winner: winner ? { abbr: winner } : null,
+        _real: true
+      });
+    });
+    // Adiciona confrontos simulados que NAO envolvem times que ja jogaram
+    r16.forEach(m => {
+      if (!m || !m.a || !m.b) return;
+      if (!r16Played.has(m.a.abbr) && !r16Played.has(m.b.abbr)) {
+        r16RealMatches.push(m);
       }
     });
+    r16 = r16RealMatches;
   }
   const qfRaw = simulateRound(r16, savedFav);
   // Reordena qf para ordem oficial: QF1(90x89), QF2(91x92), QF3(93x94), QF4(95x96)
