@@ -2607,9 +2607,59 @@ function renderBracket(events, standingsData) {
     finalMatch = { a: sf0Winner, b: sf1Winner };
   }
 
-  // Renderiza diagrama
-  window.__bracketCache = { round32: round32, r16raw: r16raw, r16: r16, qf: qf, sf: sf, finalMatch: finalMatch, thirdPlace: thirdPlace };
-  renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events);
+  // Substitui confrontos das oitavas por dados reais (se disponiveis)
+  const r16Real = (events||[]).filter(g => {
+    if ((g.season?.slug||'') !== 'round-of-16') return false;
+    const st = g.competitions?.[0]?.status?.type?.state || '';
+    return st !== 'pre' && st !== 'scheduled';
+  });
+  if (r16Real.length > 0) {
+    r16Real.forEach(g => {
+      const cmp = g.competitions?.[0]?.competitors || [];
+      if (cmp.length < 2) return;
+      const ha = cmp[0]?.team?.abbreviation || '';
+      const aa = cmp[1]?.team?.abbreviation || '';
+      if (!ha || !aa) return;
+      const hn = cmp[0]?.team?.displayName || ha;
+      const an = cmp[1]?.team?.displayName || aa;
+      const hs = parseInt(cmp[0]?.score) || 0;
+      const as_ = parseInt(cmp[1]?.score) || 0;
+      const winner = hs > as_ ? ha : (as_ > hs ? aa : null);
+      // Encontra no r16 um confronto que tenha UM desses times
+      for (let i = 0; i < r16.length; i++) {
+        const m = r16[i];
+        if (!m || !m.a || !m.b) continue;
+        if (m.a.abbr === ha || m.a.abbr === aa || m.b.abbr === ha || m.b.abbr === aa) {
+          r16[i] = {
+            a: { abbr: ha, name: hn, pts: 0, gd: 0, gf: 0 },
+            b: { abbr: aa, name: an, pts: 0, gd: 0, gf: 0 },
+            _winner: winner ? { abbr: winner } : null,
+            _real: true
+          };
+          break;
+        }
+      }
+    });
+    // Recalcula qf, sf, final com base no r16 atualizado
+    const qfRaw2 = simulateRound(r16, savedFav);
+    const qf2 = qfOrder.map(i => qfRaw2[i]).filter(Boolean);
+    const sf2 = simulateRound(qf2, savedFav);
+    let thirdPlace2 = null;
+    let finalMatch2 = null;
+    if (sf2.length >= 2) {
+      const sf0Winner = savedFav ? simulateWinnerFav(sf2[0], savedFav, scoreMap) : simulateWinner(sf2[0], scoreMap);
+      const sf1Winner = savedFav ? simulateWinnerFav(sf2[1], savedFav, scoreMap) : simulateWinner(sf2[1], scoreMap);
+      const sf0Loser = sf0Winner === sf2[0].a ? sf2[0].b : sf2[0].a;
+      const sf1Loser = sf1Winner === sf2[1].a ? sf2[1].b : sf2[1].a;
+      thirdPlace2 = { a: sf0Loser, b: sf1Loser };
+      finalMatch2 = { a: sf0Winner, b: sf1Winner };
+    }
+    window.__bracketCache = { round32: round32, r16raw: r16raw, r16: r16, qf: qf2, sf: sf2, finalMatch: finalMatch2, thirdPlace: thirdPlace2 };
+    renderBracketDiagram(r16, qf2, sf2, finalMatch2, thirdPlace2, events);
+  } else {
+    window.__bracketCache = { round32: round32, r16raw: r16raw, r16: r16, qf: qf, sf: sf, finalMatch: finalMatch, thirdPlace: thirdPlace };
+    renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events);
+  }
 
   // Renderiza botões de favoritos (sempre, pra garantir que atualiza)
   const fg = document.getElementById('favGrid');
