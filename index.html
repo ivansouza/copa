@@ -19,7 +19,7 @@
 <meta name="twitter:image" content="https://ivansouza.github.io/copa/icon-512.png">
 <link rel="manifest" href="/copa/manifest.json">
 <link rel="apple-touch-icon" href="/copa/icon-192.png">
-<title>Copa do Mundo 2026 — v2 — ESPN API</title>
+<title>Copa do Mundo 2026 — ESPN API</title>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-388XRVLPVJ"></script>
 <script>
@@ -761,21 +761,6 @@
 
 <script>const ESPN_SB = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard';
 const ESPN_ST = 'https://site.api.espn.com/apis/v2/sports/soccer/fifa.world/standings';
-const CORS_PROXY = 'https://corsproxy.io/?';
-
-// Tenta fetch direto, depois com proxy CORS
-async function fetchWithFallback(url) {
-  try {
-    const res = await fetch(url);
-    if (res.ok) return res;
-    throw new Error('not ok');
-  } catch(e) {
-    // Tenta com proxy CORS
-    const proxyRes = await fetch(CORS_PROXY + encodeURIComponent(url));
-    if (proxyRes.ok) return proxyRes;
-    throw e;
-  }
-}
 const REFRESH_MS = 180000;
 
 // Mapa de tradução inglês → português
@@ -898,96 +883,6 @@ const COPA_END = new Date('2026-07-19T23:59:00-03:00');
 let allGames = [];
 let selectedDate = null;
 
-// Dados estaticos de fallback para quando a API da ESPN falhar (CORS)
-const FALLBACK_GAMES = [
-  // === SEGUNDA FASE (round-of-32) ===
-  // 28/jun
-  {id:'fb-r32-73',date:'2026-06-28T19:00:00Z',season:{slug:'round-of-32'},status:{type:{id:'3',completed:true,description:'Final',state:'post'}},competitions:[{competitors:[
-    {team:{abbreviation:'RSA',displayName:'Africa do Sul'},score:'0',winner:false,homeAway:'home'},
-    {team:{abbreviation:'CAN',displayName:'Canada'},score:'1',winner:true,homeAway:'away'}
-  ]}]},
-  {id:'fb-r32-74',date:'2026-06-28T21:30:00Z',season:{slug:'round-of-32'},status:{type:{id:'3',completed:true,description:'Final',state:'post'}},competitions:[{competitors:[
-    {team:{abbreviation:'GER',displayName:'Alemanha'},score:'1',winner:false,homeAway:'home'},
-    {team:{abbreviation:'PAR',displayName:'Paraguai'},score:'1',winner:true,homeAway:'away'}
-  ]}]},
-  // 29/jun
-  {id:'fb-r32-75',date:'2026-06-29T17:00:00Z',season:{slug:'round-of-32'},status:{type:{id:'3',completed:true,description:'Final',state:'post'}},competitions:[{competitors:[
-    {team:{abbreviation:'NED',displayName:'Holanda'},score:'1',winner:false,homeAway:'home'},
-    {team:{abbreviation:'MAR',displayName:'Marrocos'},score:'1',winner:true,homeAway:'away'}
-  ]}]},
-  {id:'fb-r32-76',date:'2026-06-29T20:30:00Z',season:{slug:'round-of-32'},status:{type:{id:'3',completed:true,description:'Final',state:'post'}},competitions:[{competitors:[
-    {team:{abbreviation:'BRA',displayName:'Brasil'},score:'2',winner:true,homeAway:'home'},
-    {team:{abbreviation:'JPN',displayName:'Japao'},score:'1',winner:false,homeAway:'away'}
-  ]}]},
-  {id:'fb-r32-77',date:'2026-06-30T01:00:00Z',season:{slug:'round-of-32'},status:{type:{id:'3',completed:true,description:'Final',state:'post'}},competitions:[{competitors:[
-    {team:{abbreviation:'FRA',displayName:'Franca'},score:'3',winner:true,homeAway:'home'},
-    {team:{abbreviation:'SWE',displayName:'Suecia'},score:'0',winner:false,homeAway:'away'}
-  ]}]},
-  {id:'fb-r32-78',date:'2026-06-30T01:00:00Z',season:{slug:'round-of-32'},status:{type:{id:'3',completed:true,description:'Final',state:'post'}},competitions:[{competitors:[
-    {team:{abbreviation:'CIV',displayName:'Costa do Marfim'},score:'1',winner:false,homeAway:'home'},
-    {team:{abbreviation:'NOR',displayName:'Noruega'},score:'2',winner:true,homeAway:'away'}
-  ]}]},
-  // 30/jun
-  {id:'fb-r32-79',date:'2026-06-30T22:00:00Z',season:{slug:'round-of-32'},status:{type:{id:'3',completed:true,description:'Final',state:'post'}},competitions:[{competitors:[
-    {team:{abbreviation:'MEX',displayName:'Mexico'},score:'2',winner:true,homeAway:'home'},
-    {team:{abbreviation:'ECU',displayName:'Equador'},score:'0',winner:false,homeAway:'away'}
-  ]}]},
-  {id:'fb-r32-80',date:'2026-07-01T01:00:00Z',season:{slug:'round-of-32'},status:{type:{id:'3',completed:true,description:'Final',state:'post'}},competitions:[{competitors:[
-    {team:{abbreviation:'ENG',displayName:'Inglaterra'},score:'2',winner:true,homeAway:'home'},
-    {team:{abbreviation:'COD',displayName:'RD Congo'},score:'1',winner:false,homeAway:'away'}
-  ]}]},
-  // 01/jul
-  {id:'fb-r32-81',date:'2026-07-01T22:00:00Z',season:{slug:'round-of-32'},status:{type:{id:'3',completed:true,description:'Final',state:'post'}},competitions:[{competitors:[
-    {team:{abbreviation:'USA',displayName:'Estados Unidos'},score:'2',winner:true,homeAway:'home'},
-    {team:{abbreviation:'BIH',displayName:'Bosnia'},score:'0',winner:false,homeAway:'away'}
-  ]}]},
-  {id:'fb-r32-82',date:'2026-07-02T01:00:00Z',season:{slug:'round-of-32'},status:{type:{id:'3',completed:true,description:'Final',state:'post'}},competitions:[{competitors:[
-    {team:{abbreviation:'BEL',displayName:'Belgica'},score:'3',winner:true,homeAway:'home'},
-    {team:{abbreviation:'SEN',displayName:'Senegal'},score:'2',winner:false,homeAway:'away'}
-  ]}]},
-  // 02/jul
-  {id:'fb-r32-83',date:'2026-07-02T22:00:00Z',season:{slug:'round-of-32'},status:{type:{id:'3',completed:true,description:'Final',state:'post'}},competitions:[{competitors:[
-    {team:{abbreviation:'POR',displayName:'Portugal'},score:'2',winner:true,homeAway:'home'},
-    {team:{abbreviation:'CRO',displayName:'Croacia'},score:'1',winner:false,homeAway:'away'}
-  ]}]},
-  {id:'fb-r32-84',date:'2026-07-03T01:00:00Z',season:{slug:'round-of-32'},status:{type:{id:'3',completed:true,description:'Final',state:'post'}},competitions:[{competitors:[
-    {team:{abbreviation:'ESP',displayName:'Espanha'},score:'3',winner:true,homeAway:'home'},
-    {team:{abbreviation:'AUT',displayName:'Austria'},score:'0',winner:false,homeAway:'away'}
-  ]}]},
-  // 03/jul
-  {id:'fb-r32-85',date:'2026-07-03T18:00:00Z',season:{slug:'round-of-32'},status:{type:{id:'3',completed:true,description:'Final',state:'post'}},competitions:[{competitors:[
-    {team:{abbreviation:'SUI',displayName:'Suica'},score:'2',winner:true,homeAway:'home'},
-    {team:{abbreviation:'ALG',displayName:'Argelia'},score:'0',winner:false,homeAway:'away'}
-  ]}]},
-  {id:'fb-r32-86',date:'2026-07-03T20:30:00Z',season:{slug:'round-of-32'},status:{type:{id:'3',completed:true,description:'Final',state:'post'}},competitions:[{competitors:[
-    {team:{abbreviation:'ARG',displayName:'Argentina'},score:'3',winner:true,homeAway:'home'},
-    {team:{abbreviation:'CPV',displayName:'Cabo Verde'},score:'2',winner:false,homeAway:'away'}
-  ]}]},
-  {id:'fb-r32-87',date:'2026-07-04T01:00:00Z',season:{slug:'round-of-32'},status:{type:{id:'3',completed:true,description:'Final',state:'post'}},competitions:[{competitors:[
-    {team:{abbreviation:'COL',displayName:'Colombia'},score:'1',winner:true,homeAway:'home'},
-    {team:{abbreviation:'GHA',displayName:'Gana'},score:'0',winner:false,homeAway:'away'}
-  ]}]},
-  {id:'fb-r32-88',date:'2026-07-04T01:00:00Z',season:{slug:'round-of-32'},status:{type:{id:'3',completed:true,description:'Final',state:'post'}},competitions:[{competitors:[
-    {team:{abbreviation:'EGY',displayName:'Egito'},score:'1',winner:true,homeAway:'home'},
-    {team:{abbreviation:'AUS',displayName:'Australia'},score:'1',winner:false,homeAway:'away'}
-  ]}]},
-  // === OITAVAS (round-of-16) ===
-  // 04/jul
-  {id:'fb-r16-89',date:'2026-07-04T19:00:00Z',season:{slug:'round-of-16'},status:{type:{id:'3',completed:true,description:'Final',state:'post'}},competitions:[{competitors:[
-    {team:{abbreviation:'CAN',displayName:'Canada'},score:'0',winner:false,homeAway:'home'},
-    {team:{abbreviation:'MAR',displayName:'Marrocos'},score:'3',winner:true,homeAway:'away'}
-  ]}]},
-  {id:'fb-r16-90',date:'2026-07-04T21:30:00Z',season:{slug:'round-of-16'},status:{type:{id:'3',completed:true,description:'Final',state:'post'}},competitions:[{competitors:[
-    {team:{abbreviation:'PAR',displayName:'Paraguai'},score:'0',winner:false,homeAway:'home'},
-    {team:{abbreviation:'FRA',displayName:'Franca'},score:'1',winner:true,homeAway:'away'}
-  ]}]},
-  // 05/jul
-  {id:'fb-r16-91',date:'2026-07-05T19:00:00Z',season:{slug:'round-of-16'},status:{type:{id:'3',completed:true,description:'Final',state:'post'}},competitions:[{competitors:[
-    {team:{abbreviation:'BRA',displayName:'Brasil'},score:'1',winner:false,homeAway:'home'},
-    {team:{abbreviation:'NOR',displayName:'Noruega'},score:'2',winner:true,homeAway:'away'}
-  ]}]},
-];
-
 function fmtDate(s) { return new Date(s).toLocaleDateString('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit'}); }
 function fmtDateFull(s) { return new Date(s).toLocaleDateString('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'long'}); }
 function fmtTime(s) { return new Date(s).toLocaleTimeString('pt-BR',{timeZone:'America/Sao_Paulo',hour:'2-digit',minute:'2-digit'}); }
@@ -1022,13 +917,10 @@ function getDatesArray() {
 
 async function fetchDateGames(dateStr) {
   const url = ESPN_SB + '?dates=' + dateStr + '&limit=50&_=' + Date.now();
-  try {
-    const res = await fetchWithFallback(url);
-    const data = await res.json();
-    return data.events || [];
-  } catch(e) {
-    return [];
-  }
+  const res = await fetch(url);
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.events || [];
 }
 
 function extractGoals(gameData) {
@@ -1063,82 +955,42 @@ function extractGoals(gameData) {
 
 let standingsCache = null;
 
-// Fallback de classificacao (standings) para quando a API da ESPN falhar (CORS)
-const FALLBACK_STANDINGS = {"children":[
-  {"name":"Group A","standings":{"entries":[{"team":{"abbreviation":"MEX","displayName":"Mexico","id":"660"}},{"team":{"abbreviation":"CZE","displayName":"Czechia","id":"668"}},{"team":{"abbreviation":"KOR","displayName":"South Korea","id":"669"}},{"team":{"abbreviation":"RSA","displayName":"South Africa","id":"671"}}]}},
-  {"name":"Group B","standings":{"entries":[{"team":{"abbreviation":"CAN","displayName":"Canada","id":"672"}},{"team":{"abbreviation":"BIH","displayName":"Bosnia-Herzegovina","id":"673"}},{"team":{"abbreviation":"SUI","displayName":"Switzerland","id":"674"}},{"team":{"abbreviation":"QAT","displayName":"Qatar","id":"675"}}]}},
-  {"name":"Group C","standings":{"entries":[{"team":{"abbreviation":"BRA","displayName":"Brazil","id":"676"}},{"team":{"abbreviation":"SCO","displayName":"Scotland","id":"677"}},{"team":{"abbreviation":"HAI","displayName":"Haiti","id":"678"}},{"team":{"abbreviation":"MAR","displayName":"Morocco","id":"679"}}]}},
-  {"name":"Group D","standings":{"entries":[{"team":{"abbreviation":"PAR","displayName":"Paraguay","id":"680"}},{"team":{"abbreviation":"TUR","displayName":"Turkiye","id":"681"}},{"team":{"abbreviation":"AUS","displayName":"Australia","id":"682"}},{"team":{"abbreviation":"USA","displayName":"United States","id":"683"}}]}},
-  {"name":"Group E","standings":{"entries":[{"team":{"abbreviation":"ECU","displayName":"Ecuador","id":"684"}},{"team":{"abbreviation":"GER","displayName":"Germany","id":"685"}},{"team":{"abbreviation":"CIV","displayName":"Ivory Coast","id":"686"}},{"team":{"abbreviation":"CUW","displayName":"Curacao","id":"687"}}]}},
-  {"name":"Group F","standings":{"entries":[{"team":{"abbreviation":"NED","displayName":"Netherlands","id":"688"}},{"team":{"abbreviation":"SWE","displayName":"Sweden","id":"689"}},{"team":{"abbreviation":"JPN","displayName":"Japan","id":"690"}},{"team":{"abbreviation":"TUN","displayName":"Tunisia","id":"691"}}]}},
-  {"name":"Group G","standings":{"entries":[{"team":{"abbreviation":"BEL","displayName":"Belgium","id":"692"}},{"team":{"abbreviation":"IRN","displayName":"Iran","id":"693"}},{"team":{"abbreviation":"EGY","displayName":"Egypt","id":"694"}},{"team":{"abbreviation":"NZL","displayName":"New Zealand","id":"695"}}]}},
-  {"name":"Group H","standings":{"entries":[{"team":{"abbreviation":"ESP","displayName":"Spain","id":"696"}},{"team":{"abbreviation":"URU","displayName":"Uruguay","id":"697"}},{"team":{"abbreviation":"KSA","displayName":"Saudi Arabia","id":"698"}},{"team":{"abbreviation":"CPV","displayName":"Cape Verde","id":"699"}}]}},
-  {"name":"Group I","standings":{"entries":[{"team":{"abbreviation":"NOR","displayName":"Norway","id":"700"}},{"team":{"abbreviation":"FRA","displayName":"France","id":"701"}},{"team":{"abbreviation":"SEN","displayName":"Senegal","id":"702"}},{"team":{"abbreviation":"IRQ","displayName":"Iraq","id":"703"}}]}},
-  {"name":"Group J","standings":{"entries":[{"team":{"abbreviation":"ARG","displayName":"Argentina","id":"704"}},{"team":{"abbreviation":"AUT","displayName":"Austria","id":"705"}},{"team":{"abbreviation":"ALG","displayName":"Algeria","id":"706"}},{"team":{"abbreviation":"JOR","displayName":"Jordan","id":"707"}}]}},
-  {"name":"Group K","standings":{"entries":[{"team":{"abbreviation":"COL","displayName":"Colombia","id":"708"}},{"team":{"abbreviation":"POR","displayName":"Portugal","id":"709"}},{"team":{"abbreviation":"UZB","displayName":"Uzbekistan","id":"710"}},{"team":{"abbreviation":"COD","displayName":"Congo DR","id":"711"}}]}},
-  {"name":"Group L","standings":{"entries":[{"team":{"abbreviation":"ENG","displayName":"England","id":"712"}},{"team":{"abbreviation":"CRO","displayName":"Croatia","id":"713"}},{"team":{"abbreviation":"PAN","displayName":"Panama","id":"714"}},{"team":{"abbreviation":"GHA","displayName":"Ghana","id":"715"}}]}}
-]};
-
 async function loadAll() {
   const now = new Date();
   const dia = now.toLocaleDateString('pt-BR', {timeZone:'America/Sao_Paulo'});
   const hora = now.toLocaleTimeString('pt-BR', {timeZone:'America/Sao_Paulo'});
   document.getElementById('updateTime').textContent = dia + ' às ' + hora;
-  // USA FALLBACK PRIMEIRO (imediato), depois tenta API em segundo plano
-  standingsCache = FALLBACK_STANDINGS;
-  allGames = [...FALLBACK_GAMES];
-  
-  try { renderGroups(standingsCache); } catch(e) { console.error('renderGroups:', e); }
-  try { renderClassifiedPanel(standingsCache); } catch(e) { console.error('renderClassified:', e); }
-  try { renderBracket(allGames, standingsCache); } catch(e) { console.error('renderBracket:', e); }
-  
-  // Tenta API em segundo plano (não bloqueia)
-  setTimeout(async () => {
-    try {
-      const stRes = await fetchWithFallback(ESPN_ST + '?_=' + Date.now());
-      if (stRes.ok) {
-        const apiStandings = await stRes.json();
-        if (apiStandings && apiStandings.children && apiStandings.children.length) {
-          standingsCache = apiStandings;
-        }
-      }
-    } catch(e) {}
-    
-    try {
-      const dates = getDatesArray();
-      const dateStrs = dates.map(d => toDateStr(d));
-      const results = await Promise.all(dateStrs.map(ds => fetchDateGames(ds)));
-      const all = results.flat();
-      const seen = new Set();
-      const apiGames = all.filter(e => { if (seen.has(e.id)) return false; seen.add(e.id); return true; });
-      
-      // Mescla com fallback
-      const apiIds = new Set(apiGames.map(g => g.id));
-      FALLBACK_GAMES.forEach(fg => {
-        if (!apiIds.has(fg.id)) {
-          apiGames.push(fg);
-        }
-      });
-      apiGames.sort((a,b) => new Date(a.date) - new Date(b.date));
-      
-      allGames = apiGames;
-    } catch(e) {}
-    
-    // Re-renderiza com dados atualizados
-    renderGroups(standingsCache);
+  try {
+    // Standings
+    const stRes = await fetch(ESPN_ST + '?_=' + Date.now());
+    if (stRes.ok) {
+      standingsCache = await stRes.json();
+      renderGroups(standingsCache);
+    }
+
+    // Scoreboard: busca múltiplas datas
+    const dates = getDatesArray();
+    const dateStrs = dates.map(d => toDateStr(d));
+    const results = await Promise.all(dateStrs.map(ds => fetchDateGames(ds)));
+    const all = results.flat();
+    // Deduplica por ID
+    const seen = new Set();
+    allGames = all.filter(e => { if (seen.has(e.id)) return false; seen.add(e.id); return true; });
+    // Ordena por data
+    allGames.sort((a,b) => new Date(a.date) - new Date(b.date));
+
+    renderGroups(standingsCache); // re-renderiza com allGames populado
     renderClassifiedPanel(standingsCache);
     renderBracket(allGames, standingsCache);
-    renderDateNav(getDatesArray());
+    renderDateNav(dates);
     renderGames();
     renderStats();
     renderLiveCards();
-  }, 100);
-  
-  // Renderiza navegação de datas e jogos com fallback
-  renderDateNav(getDatesArray());
-  renderGames();
-  renderStats();
-  renderLiveCards();
+  } catch(e) {
+    document.querySelectorAll('.loading-state').forEach(el=>{
+      el.innerHTML='<div class="error-state"><p>❌ Erro: '+e+'</p><button class="retry-btn" onclick="loadAll()">Tentar novamente</button></div>';
+    });
+  }
 }
 
 function renderLiveCards() {
@@ -1573,17 +1425,13 @@ function buildRound32(standingsData) {
       const pts = local && local.gp > 0 ? local.pts : parseInt(espnSt.points?.value||espnSt.points?.displayValue||0);
       const gf = local && local.gp > 0 ? local.gf : parseInt(espnSt.pointsFor?.value||espnSt.goalsFor?.value||0);
       const ga = local && local.gp > 0 ? local.ga : parseInt(espnSt.pointsAgainst?.value||espnSt.goalsAgainst?.value||0);
-      // Fallback: se nao tem stats (API offline), usa a posicao do time no grupo
-      const fallbackPts = pts || (3 - pos);
-      const fallbackGf = gf || (3 - pos) * 2;
-      const fallbackGa = ga || pos;
       return {
         pos: pos + 1,
         abbr: ab,
         name: pt(tm.displayName || tm.name || '?'),
-        pts: pts || fallbackPts,
-        gd: (gf || fallbackGf) - (ga || fallbackGa),
-        gf: gf || fallbackGf
+        pts: pts,
+        gd: gf - ga,
+        gf: gf
       };
     });
     // Ordena por pontos > saldo > gols pró (igual ao renderGroups)
@@ -1646,36 +1494,10 @@ function buildRound32(standingsData) {
   // Valor = [1A, 1B, 1D, 1E, 1G, 1I, 1K, 1L] com o grupo do 3º que cada 1º enfrenta
   const C = ANNEX_C[thirdGroups.join('')];
 
-  // Fallback: se ANNEX_C nao tem a combinacao, usa ordem alfabetica dos grupos
-  const thirdByGroup = {};
-  bestThird.forEach(t => { thirdByGroup[t.group] = t; });
-  const thirdOrder = ['A','B','C','D','E','F','G','H','I','J','K','L'];
-  const thirdIdx = { '1A':0,'1B':1,'1D':2,'1E':3,'1G':4,'1I':5,'1K':6,'1L':7 };
-
   function t3group(key) {
-    if (C) {
-      const g = C[key];
-      if (g && thirdByGroup[g]) return thirdByGroup[g];
-    }
-    // Fallback: pega o 3o colocado do grupo na ordem
-    const idx = thirdIdx[key];
-    if (idx !== undefined && idx < bestThird.length) {
-      return bestThird[idx];
-    }
-    // Fallback final: retorna um objeto dummy pra nao quebrar
-    return { abbr: 'TBD', name: 'TBD', pts: 0, gd: 0, gf: 0 };
-  }
-
-  function t3label(key) {
-    if (C) {
-      const g = C[key];
-      return g ? '3o '+g : '3o';
-    }
-    const idx = thirdIdx[key];
-    if (idx !== undefined && idx < bestThird.length) {
-      return '3o '+bestThird[idx].group;
-    }
-    return '3o';
+    if (!C) return null;
+    const g = C[key];
+    return bestThird.find(x => x.group === g) || null;
   }
 
   const round32 = [];
@@ -1754,7 +1576,13 @@ function buildRound32(standingsData) {
   };
   const r32venues = r32meta.map(m => venueMap[m.city] || m.city);
 
-    // Mapa: número do match FIFA → índice no r32dates
+  function t3label(key) {
+    if (!C) return '3º';
+    const g = C[key];
+    return g ? '3º '+g : '3º';
+  }
+
+  // Mapa: número do match FIFA → índice no r32dates
   // r32meta ordem: [73, 76, 74, 75, 78, 77, 79, 80, 82, 81, 84, 83, 85, 88, 86, 87]
   // round32.push ordem: [73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88]
   // Corrigindo os índices:
@@ -1787,27 +1615,18 @@ function buildRound32(standingsData) {
   // Oitavas: 89(74+77), 90(73+75), 93(83+84), 94(81+82), 91(76+78), 92(79+80), 95(86+88), 96(85+87)
   // Quartas: QF1(89x90), QF3(93x94), QF2(91x92), QF4(95x96)
   // Semis: SF1(QF1xQF3), SF2(QF2xQF4)
-  // Ordem correta dos 16 matches para simulateRound (pares 0-1, 2-3, 4-5...):
-  // Par 0-1: 74+77 → Oitavas 89 (Alemanha/Parag x França/Suécia)
-  // Par 2-3: 73+75 → Oitavas 90 (Áfr.Sul/Canadá x Holanda/Marrocos)
-  // Par 4-5: 76+78 → Oitavas 91 (Brasil/Japão x C.Marfim/Noruega)
-  // Par 6-7: 79+80 → Oitavas 92 (México/Equador x Inglaterra/RD Congo)
-  // Par 8-9: 83+84 → Oitavas 93 (Portugal/Croácia x Espanha/Áustria)
-  // Par 10-11: 81+82 → Oitavas 94 (EUA/Bósnia x Bélgica/Senegal)
-  // Par 12-13: 86+88 → Oitavas 95 (Argentina/C.Verde x Austrália/Egito)
-  // Par 14-15: 85+87 → Oitavas 96 (Suíça/Argélia x Colômbia/Gana)
   round32.push({ a: g('E',0), b: t3group('1E'), label: '1º E vs '+t3label('1E'), date: r32dates[2], venue: r32venues[2] });  // 74
   round32.push({ a: g('I',0), b: t3group('1I'), label: '1º I vs '+t3label('1I'), date: r32dates[5], venue: r32venues[5] });  // 77
   round32.push({ a: g('A',1), b: g('B',1), label: '2º A vs 2º B', date: r32dates[0], venue: r32venues[0] });                // 73
   round32.push({ a: g('F',0), b: g('C',1), label: '1º F vs 2º C', date: r32dates[3], venue: r32venues[3] });                // 75
-  round32.push({ a: g('C',0), b: g('F',1), label: '1º C vs 2º F', date: r32dates[1], venue: r32venues[1] });                // 76
-  round32.push({ a: g('E',1), b: g('I',1), label: '2º E vs 2º I', date: r32dates[4], venue: r32venues[4] });                // 78
-  round32.push({ a: g('A',0), b: t3group('1A'), label: '1º A vs '+t3label('1A'), date: r32dates[6], venue: r32venues[6] });  // 79
-  round32.push({ a: g('L',0), b: t3group('1L'), label: '1º L vs '+t3label('1L'), date: r32dates[7], venue: r32venues[7] });  // 80
   round32.push({ a: g('K',1), b: g('L',1), label: '2º K vs 2º L', date: r32dates[11], venue: r32venues[11] });               // 83
   round32.push({ a: g('H',0), b: g('J',1), label: '1º H vs 2º J', date: r32dates[10], venue: r32venues[10] });               // 84
   round32.push({ a: g('D',0), b: t3group('1D'), label: '1º D vs '+t3label('1D'), date: r32dates[9], venue: r32venues[9] });  // 81
   round32.push({ a: g('G',0), b: t3group('1G'), label: '1º G vs '+t3label('1G'), date: r32dates[8], venue: r32venues[8] });  // 82
+  round32.push({ a: g('C',0), b: g('F',1), label: '1º C vs 2º F', date: r32dates[1], venue: r32venues[1] });                // 76
+  round32.push({ a: g('E',1), b: g('I',1), label: '2º E vs 2º I', date: r32dates[4], venue: r32venues[4] });                // 78
+  round32.push({ a: g('A',0), b: t3group('1A'), label: '1º A vs '+t3label('1A'), date: r32dates[6], venue: r32venues[6] });  // 79
+  round32.push({ a: g('L',0), b: t3group('1L'), label: '1º L vs '+t3label('1L'), date: r32dates[7], venue: r32venues[7] });  // 80
   round32.push({ a: g('J',0), b: g('H',1), label: '1º J vs 2º H', date: r32dates[14], venue: r32venues[14] });               // 86
   round32.push({ a: g('D',1), b: g('G',1), label: '2º D vs 2º G', date: r32dates[13], venue: r32venues[13] });               // 88
   round32.push({ a: g('B',0), b: t3group('1B'), label: '1º B vs '+t3label('1B'), date: r32dates[12], venue: r32venues[12] }); // 85
@@ -2746,7 +2565,7 @@ function renderBracket(events, standingsData) {
     for (let i = 0; i < matches.length; i += 2) {
       const m1 = matches[i];
       const m2 = matches[i+1];
-      if (!m1 || !m2) continue;
+      if (!m1 || !m2) break;
       const w1 = fav ? simulateWinnerFav(m1, fav, scoreMap) : simulateWinner(m1, scoreMap);
       const w2 = fav ? simulateWinnerFav(m2, fav, scoreMap) : simulateWinner(m2, scoreMap);
       if (w1 && w2) {
@@ -2766,44 +2585,7 @@ function renderBracket(events, standingsData) {
   //  8-9=83+84→93, 10-11=81+82→94, 12-13=86+88→95, 14-15=85+87→96)
   // Ordem oficial: 90(0), 89(1), 93(4), 94(5), 91(2), 92(3), 95(6), 96(7)
   const r16Order = [1,0,4,5,2,3,6,7];
-  let r16 = r16Order.map(i => r16raw[i]).filter(Boolean);
-  
-  // Se existem dados reais de oitavas (round-of-16), SUBSTITUI os confrontos simulados
-  const r16Real = (events||[]).filter(g => {
-    const slug = g.season?.slug || '';
-    if (slug !== 'round-of-16') return false;
-    const st = g.competitions?.[0]?.status?.type?.state || '';
-    return st !== 'pre' && st !== 'scheduled';
-  });
-  // SUBSTITUI DIRETAMENTE: encontra Brasil no r16 e troca por Brasil x Noruega
-  for (let i = 0; i < r16.length; i++) {
-    const m = r16[i];
-    if (!m || !m.a || !m.b) continue;
-    if (m.a.abbr === 'BRA' || m.b.abbr === 'BRA') {
-      r16[i] = {
-        a: { abbr: 'BRA', name: 'Brasil', pts: 0, gd: 0, gf: 0 },
-        b: { abbr: 'NOR', name: 'Noruega', pts: 0, gd: 0, gf: 0 },
-        _winner: { abbr: 'NOR' },
-        _real: true
-      };
-    }
-    if (m.a.abbr === 'PAR' || m.b.abbr === 'PAR') {
-      r16[i] = {
-        a: { abbr: 'PAR', name: 'Paraguai', pts: 0, gd: 0, gf: 0 },
-        b: { abbr: 'FRA', name: 'França', pts: 0, gd: 0, gf: 0 },
-        _winner: { abbr: 'FRA' },
-        _real: true
-      };
-    }
-    if (m.a.abbr === 'CAN' || m.b.abbr === 'CAN') {
-      r16[i] = {
-        a: { abbr: 'CAN', name: 'Canadá', pts: 0, gd: 0, gf: 0 },
-        b: { abbr: 'MAR', name: 'Marrocos', pts: 0, gd: 0, gf: 0 },
-        _winner: { abbr: 'MAR' },
-        _real: true
-      };
-    }
-  }
+  const r16 = r16Order.map(i => r16raw[i]).filter(Boolean);
   const qfRaw = simulateRound(r16, savedFav);
   // Reordena qf para ordem oficial: QF1(90x89), QF2(91x92), QF3(93x94), QF4(95x96)
   // r16 ordem: [90,89,93,94,91,92,95,96]
