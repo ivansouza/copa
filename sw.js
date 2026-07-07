@@ -1,8 +1,9 @@
-const CACHE = 'copa2026-v33';
+const CACHE = 'copa2026-v34';
 const ASSETS = [
   '/copa/',
   '/copa/index.html',
   '/copa/quiz.html',
+  '/copa/quiz-des.html',
   '/copa/manifest.json',
   '/copa/icon-192.png',
   '/copa/icon-512.png'
