@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz da Desclassificação</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .option-btn {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .screen {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .screen.active {
+            display: flex;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-white">
+
+    <!-- Ecrã de Início -->
+    <div id="screen-start" class="screen active min-h-screen flex-col items-center justify-center p-6 bg-gradient-to-b from-red-900 to-yellow-800">
+        <div class="bg-gradient-to-br from-red-700 to-yellow-600 p-10 rounded-[2.5rem] shadow-2xl text-center max-w-sm w-full border-4 border-white/20">
+            <div class="flex justify-center mb-6">
+                <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="animate-pulse text-white"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+            </div>
+            <h1 class="text-4xl font-black mb-2 uppercase tracking-tight">Quiz da</h1>
+            <h1 class="text-5xl font-black mb-2 uppercase tracking-tight text-red-300">Desclassificação</h1>
+            <p class="text-white/80 mb-6 font-medium">🇧🇷 Brasil na Copa 2026</p>
+            <p class="text-white/60 text-sm mb-8">Todas as respostas estão certas. Porque a verdade é uma só.</p>
+            <button onclick="startNewGame()" class="bg-white text-red-800 font-black py-5 px-14 rounded-full text-2xl shadow-xl hover:scale-110 active:scale-95 transition-all flex items-center justify-center gap-2 mx-auto">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg> JOGAR
+            </button>
+            <button onclick="goBack()" class="mt-4 bg-white/20 text-white font-bold py-3 px-8 rounded-full text-lg hover:bg-white/30 active:scale-95 transition-all flex items-center justify-center gap-2 mx-auto backdrop-blur-sm">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg> Voltar
+            </button>
+        </div>
+    </div>
+
+    <!-- Ecrã de Jogo -->
+    <div id="screen-game" class="screen min-h-screen flex-col items-center p-4 relative overflow-hidden bg-gradient-to-b from-red-800 to-yellow-700">
+        <!-- Botão Voltar -->
+        <button onclick="goBack()" class="absolute top-4 left-4 z-50 bg-black/20 p-3 rounded-full text-white backdrop-blur-md hover:bg-black/40 transition-all">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+
+        <div class="w-full max-w-md flex flex-col h-full items-center justify-center gap-8 relative z-10 py-10">
+            <!-- Pergunta fixa -->
+            <div id="question-box" class="bg-white rounded-[2rem] p-8 w-full shadow-2xl border-4 border-slate-900 relative">
+                <h2 id="question-text" class="text-2xl md:text-3xl font-black text-slate-900 text-center leading-[1.1]">Porque o Brasil foi desclassificado na Copa?</h2>
+                <div id="round-number" class="absolute -top-5 -right-5 bg-red-500 text-white w-12 h-12 rounded-full flex items-center justify-center font-black border-4 border-slate-900 shadow-xl text-xl">1</div>
+            </div>
+
+            <!-- Opções -->
+            <div id="options-container" class="w-full flex flex-col gap-4">
+                <!-- Inserido via JS -->
+            </div>
+
+            <!-- Botão Próximo -->
+            <div class="h-20 flex items-center justify-center">
+                <button id="next-btn" onclick="nextRound()" class="hidden bg-slate-900 text-white font-black py-4 px-12 rounded-full flex items-center gap-2 shadow-2xl border-4 border-white/20 active:scale-95 animate-bounce">
+                    PRÓXIMA <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ecrã Final -->
+    <div id="screen-final" class="screen min-h-screen flex-col items-center justify-center p-6 bg-gradient-to-b from-red-900 to-yellow-800">
+        <button onclick="goBack()" class="absolute top-4 left-4 z-50 bg-black/20 p-3 rounded-full text-white backdrop-blur-md hover:bg-black/40 transition-all">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <div class="bg-white text-slate-900 p-10 rounded-[2.5rem] shadow-2xl text-center max-w-sm w-full border-b-8 border-slate-200">
+            <svg width="90" height="90" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto mb-4 drop-shadow-lg"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+            <h2 class="text-4xl font-black mb-2 uppercase tracking-tighter">Fim de Jogo!</h2>
+            <p class="text-2xl font-bold text-red-600 mb-4">Você acertou todas! 🎉</p>
+            <p class="text-slate-500 mb-8">Porque a verdade sobre o Brasil na Copa é uma só.</p>
+            <button onclick="startNewGame()" class="bg-red-600 text-white font-black py-5 px-12 rounded-2xl text-xl w-full flex items-center justify-center gap-3 hover:bg-red-700 transition-all shadow-xl">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path><polyline points="21 3 21 8 16 8"></polyline></svg> NOVA RODADA
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- BASE DE RESPOSTAS (63 opções) ---
+        const ALL_ANSWERS = [
+            "Porque Noruega 2x1 e o pênalti pra rir!",
+            "Porque pênalti fraco como o moral do time, ué!",
+            "O motivo é óbvio: Noruega 2x1 e muita chororô.",
+            "Porque o pênalti foi de presente pro goleiro e pronto.",
+            "Porque gol feito virando piada!",
+            "Simples: pênalti mal batido e gol aberto perdido.",
+            "Porque errou gol aberto como iniciante, ué!",
+            "Porque pênalti batido com o calcanhar e pronto.",
+            "Porque time com alergia a gol, ué!",
+            "gol aberto? Que piada e acabou a festa.",
+            "Porque Noruega humilhou o Brasil!",
+            "Porque o time inteiro Noruega 2 x Brasil 1, clássico dos erros.",
+            "Foi desclassificado porque 2x1 e memes infinitos.",
+            "Porque gol aberto perdido na neve, ué!",
+            "Simples: pênalti mole como desculpa.",
+            "Porque o time inteiro pênalti mais fraco que café de hospital.",
+            "A razão? errou gol aberto e tomou virada.",
+            "Porque pênalti batido como se fosse pro adversário!",
+            "Porque o time inteiro Brasil errou o que nem criança erra.",
+            "Porque o Brasil chutou pro lado errado no pênalti e pronto.",
+            "gol perdido e virada sofrida e acabou a festa.",
+            "errou gol feito e pênalti fraco e acabou a festa.",
+            "Simples: pênalti pro goleiro norueguês agradecer.",
+            "Simples: pênalti mal batido pro histórico.",
+            "Foi desclassificado porque virada da Noruega com erros brasileiros.",
+            "A razão? Noruega 2 Brasil 1 e muita risada.",
+            "A razão? o time inteiro falhou no pênalti.",
+            "Porque gol aberto perdido no frio, ué!",
+            "Simples: 2x1 com direito a erro clássico.",
+            "Porque pênalti mais mole que gelatina e pronto.",
+            "O motivo é óbvio: Noruega ganhou com ajuda do pênalti ruim.",
+            "Porque o time inteiro errou gol feito com categoria.",
+            "A razão? pênalti saiu mais alto que o estádio.",
+            "Porque gol feito virando meme de erro, ué!",
+            "A razão? Noruega humilhou com 2x1.",
+            "Foi desclassificado porque Brasil 1, Noruega 2, vergonha eterna.",
+            "Porque errou o gol aberto como se fosse impedimento, ué!",
+            "A razão? gol feito? Não hoje.",
+            "Desclassificado por virada norueguesa com ajuda brasileira.",
+            "Desclassificado por gol perdido e pênalti horrível.",
+            "Foi desclassificado porque erro no gol feito e pênalti horroroso.",
+            "Porque Noruega humilhando com 2 a 1, ué!",
+            "Porque 2x1 com pênalti ruim e pronto.",
+            "pênalti batido como se fosse pro adversário e acabou a festa.",
+            "pênalti batido pro goleiro e acabou a festa.",
+            "A razão? Brasil 1, Noruega 2, vergonha eterna.",
+            "O motivo é óbvio: pênalti saiu mais alto que o estádio.",
+            "Desclassificado por gol feito virando lenda de erro.",
+            "Porque pênalti mais fraco que café de hospital!",
+            "O motivo é óbvio: Noruega 2x1 e o pênalti pra rir.",
+            "Porque o time inteiro Noruega 2 x Brasil 1, clássico dos erros.",
+            "Porque o time inteiro errou o que era impossível errar.",
+            "Foi desclassificado porque Noruega 2x1, clássico do vexame.",
+            "Porque gol aberto virando propaganda de erro e pronto.",
+            "A razão? 2x1 com direito a erro clássico.",
+            "Foi desclassificado porque Noruega 2x1 e o pênalti pra rir.",
+            "Porque Noruega 2 Brasil 1 e muita risada!",
+            "Porque pênalti batido como se fosse pro adversário e pronto.",
+            "Porque gol aberto? Mais parecia gol fechado e pronto.",
+            "O motivo é óbvio: pênalti batido com o calcanhar.",
+            "O motivo é óbvio: o gol feito virou meme.",
+            "Porque pênalti batido errado e pronto.",
+            "o Brasil errou um gol feito contra a Noruega e acabou a festa.",
+            "Desclassificado por pênalti batido pro céu.",
+            "Simples: o pênalti saiu mais fraco que chute de vovô.",
+            "Foi desclassificado porque errou gol feito e pênalti fraco.",
+            "Simples: o Brasil chutou pro lado errado no pênalti.",
+            "Desclassificado por virada da Noruega com direito a pênalti ruim.",
+            "O motivo é óbvio: errou gol feito como amador.",
+            "Porque pênalti batido como se fosse pro adversário e pronto.",
+            "Porque gol feito virando piada, ué!",
+            "Porque pênalti batido errado, ué!",
+            "Porque o time inteiro pênalti mais ruim que o resultado.",
+            "Desclassificado por o gol feito virou meme.",
+            "Desclassificado por virada com ajuda do pênalti.",
+            "Porque pênalti mal batido como novela ruim, ué!",
+            "Simples: Noruega 2x1 e muita chororô.",
+            "Porque pênalti mole como desculpa!",
+            "o Brasil deu o jogo de presente e acabou a festa.",
+            "Porque pênalti saiu mais alto que o estádio!",
+            "Simples: o Brasil deu o jogo de presente.",
+            "A razão? Noruega humilhou com 2x1.",
+            "Foi desclassificado porque gol feito perdido na tradução.",
+            "Porque o atacante decidiu errar, ué!",
+            "O motivo é óbvio: pênalti batido errado.",
+            "pênalti pro histórico e acabou a festa.",
+            "Porque gol perdido na Noruega, ué!",
+            "Porque o time inteiro errou gol aberto e tomou virada.",
+            "Porque o time inteiro gol aberto perdido no frio.",
+            "Desclassificado por pênalti lento como o jogo.",
+            "Simples: o pênalti parecia passe pro goleiro.",
+            "Porque errou o gol e o pênalti, ué!",
+            "O motivo é óbvio: gol aberto? Que piada.",
+            "O motivo é óbvio: gol feito virando piada.",
+            "Desclassificado por Noruega humilhou o Brasil.",
+            "Simples: errou o gol e o pênalti.",
+            "Porque virada norueguesa épica e pronto.",
+            "Porque Brasil 1, Noruega 2, vergonha 10!",
+            "Porque pênalti batido errado!",
+            "Porque pênalti mais fraco que café de hospital, ué!",
+            "Porque o time inteiro errou gol feito e ainda perdeu.",
+            "Porque o time inteiro virada norueguesa com ajuda brasileira.",
+            "Porque virada da Noruega com erros brasileiros!",
+            "Foi desclassificado porque pênalti pro histórico de vexames.",
+            "Foi desclassificado porque Noruega 2 Brasil 1 e muita risada.",
+            "Porque gol feito virando piada e pronto.",
+            "Porque errou gol aberto como iniciante!",
+            "Porque gol feito virando meme de erro!",
+            "Desclassificado por pênalti fraco.",
+            "Porque pênalti mais alto que o Morumbi e pronto.",
+            "Porque Noruega 2 x Brasil 1, clássico dos erros!",
+            "Simples: gol feito virando lenda de erro.",
+            "Simples: Noruega rindo do pênalti brasileiro.",
+            "Porque o time inteiro gol feito perdido na tradução.",
+            "pênalti mal batido como novela ruim e acabou a festa.",
+            "errou o gol e o pênalti e acabou a festa.",
+            "Porque o time inteiro o Brasil chutou pro lado errado no pênalti.",
+            "pênalti fraco e acabou a festa.",
+            "A razão? errou o impossível.",
+            "Porque gol aberto virando piada nacional, ué!",
+            "Porque Brasil perdeu de virada pra Noruega, ué!",
+            "Porque o time inteiro pênalti batido como se fosse pro adversário.",
+            "Foi desclassificado porque o atacante decidiu dar de presente o gol.",
+            "Porque virada norueguesa com ajuda brasileira e pronto.",
+            "O motivo é óbvio: pênalti batido como se fosse pro adversário.",
+            "Simples: pênalti pro álbum de erros.",
+            "A razão? Noruega ganhou com ajuda do pênalti ruim.",
+            "O motivo é óbvio: erro no gol feito e pênalti pra esquecer.",
+            "Porque pênalti mais mole que sorvete e pronto.",
+            "o pênalti foi de presente e acabou a festa.",
+            "Porque Noruega 2x1, clássico do vexame!",
+            "Foi desclassificado porque pênalti mole.",
+            "O motivo é óbvio: o pênalti foi de presente pro goleiro.",
+            "Foi desclassificado porque gol aberto perdido na neve.",
+            "erro no gol feito e pênalti pra esquecer e acabou a festa.",
+            "A razão? pênalti fraco como o ataque brasileiro.",
+            "Foi desclassificado porque o gol feito virou gol perdido.",
+            "Porque pênalti mais lento que VAR!",
+            "Porque o time inteiro pênalti mais fraco que café de hospital.",
+            "Porque pênalti fraco como o moral do time!",
+            "A razão? o Brasil errou um gol feito contra a Noruega.",
+            "Foi desclassificado porque o atacante decidiu dar de presente o gol.",
+            "Desclassificado por o time inteiro falhou no pênalti.",
+            "Porque o time inteiro pênalti mole.",
+            "Porque 2x1 com pênalti ruim!",
+            "Simples: Noruega 2x1 e o pênalti pra rir.",
+            "Porque pênalti batido pro mato e pronto.",
+            "Porque pênalti fraco e pronto.",
+            "Porque virada da Noruega com direito a pênalti ruim!",
+            "A razão? errou gol aberto como se fosse treino.",
+            "A razão? pênalti foi pro céu em vez do gol.",
+            "Porque pênalti fraco como o ataque brasileiro, ué!",
+            "A razão? o pênalti foi de presente pro goleiro.",
+            "Porque o time inteiro 2x1 com pênalti ruim.",
+            "Porque gol aberto perdido na neve, ué!",
+            "O motivo é óbvio: o time inteiro falhou no pênalti."
+        ];
+
+        // --- VARIÁVEIS DE ESTADO ---
+        let currentRound = 0;
+        const TOTAL_ROUNDS = 10;
+
+        // --- FUNÇÕES ---
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function startNewGame() {
+            currentRound = 0;
+            showScreen('screen-game');
+            loadRound();
+        }
+
+        function loadRound() {
+            // Pega 3 respostas aleatórias diferentes
+            const shuffled = [...ALL_ANSWERS].sort(() => 0.5 - Math.random());
+            const options = shuffled.slice(0, 3);
+
+            document.getElementById('round-number').innerText = currentRound + 1;
+
+            // Renderizar opções
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            options.forEach((opt, i) => {
+                const letter = ["A", "B", "C"][i];
+                const btn = document.createElement('button');
+                btn.className = "option-btn flex items-center gap-5 p-5 rounded-2xl shadow-xl text-left font-black text-xl border-b-8 bg-white text-slate-900 border-slate-200 w-full";
+                btn.innerHTML = `
+                    <div class="w-12 h-12 flex items-center justify-center rounded-xl text-white shadow-inner font-black bg-red-600">${letter}</div>
+                    <div class="flex-1 uppercase tracking-tight leading-tight">${opt}</div>
+                `;
+                btn.onclick = () => selectOption(btn, container);
+                container.appendChild(btn);
+            });
+
+            document.getElementById('next-btn').classList.add('hidden');
+        }
+
+        function selectOption(selectedBtn, container) {
+            // Desabilita todos os botões
+            const buttons = container.querySelectorAll('.option-btn');
+            buttons.forEach(btn => btn.disabled = true);
+
+            // Marca o selecionado como correto (sempre acerta!)
+            selectedBtn.classList.replace('bg-white', 'bg-green-500');
+            selectedBtn.classList.replace('text-slate-900', 'text-white');
+            selectedBtn.classList.replace('border-slate-200', 'border-green-300');
+            selectedBtn.classList.add('ring-4', 'ring-green-400/50', 'animate-bounce');
+            selectedBtn.querySelector('div:first-child').classList.replace('bg-red-600', 'bg-green-700');
+
+            // Escurece os não selecionados
+            buttons.forEach(btn => {
+                if (btn !== selectedBtn) {
+                    btn.classList.add('bg-white/40', 'text-slate-400', 'scale-90', 'grayscale', 'opacity-50');
+                }
+            });
+
+            document.getElementById('next-btn').classList.remove('hidden');
+        }
+
+        function nextRound() {
+            currentRound++;
+            if (currentRound < TOTAL_ROUNDS) {
+                loadRound();
+            } else {
+                finishGame();
+            }
+        }
+
+        function finishGame() {
+            showScreen('screen-final');
+        }
+
+        function goBack() {
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
