@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brasil na Copa 2026 — Data Portraits</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+  :root {
+    --bg: #17102e;
+    --ink: #f1eff8;
+    --ink-2: #cfcbe4;
+    --dim: #8f89ad;
+    --faint: #5b5686;
+    --fainter: #2b2550;
+    --accent: #6f8cff;
+    --accent-2: #a9b8ff;
+    --bra-green: #2b9217;
+    --bra-yellow: #ffdf00;
+    --bra-blue: #002776;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: radial-gradient(140% 90% at 82% -6%, rgba(111,140,255,.16) 0%, transparent 46%),
+                radial-gradient(120% 100% at 50% -8%, #221a49 0%, var(--bg) 52%, #100a20 100%);
+    background-attachment: fixed;
+    color: var(--ink);
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  ::selection { background: rgba(111,140,255,.28); color: #fff; }
+
+  .wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 clamp(16px, 4vw, 48px);
+  }
+
+  /* ── HEADER ── */
+  header {
+    padding: clamp(32px, 6vw, 80px) 0 clamp(20px, 3vw, 36px);
+    text-align: center;
+  }
+
+  .edition {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    letter-spacing: .28em;
+    text-transform: uppercase;
+    color: var(--dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin-bottom: clamp(12px, 2vw, 24px);
+  }
+  .edition .tick { width: 34px; height: 1px; background: var(--faint); }
+
+  h1 {
+    font-weight: 700;
+    font-size: clamp(24px, 5vw, 56px);
+    line-height: .92;
+    letter-spacing: -.028em;
+  }
+  h1 .l1 { color: var(--ink); }
+  h1 .l2 {
+    background: linear-gradient(135deg, var(--bra-green), var(--bra-yellow), var(--bra-blue));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    color: var(--ink-2);
+    font-size: clamp(13px, 1.1vw, 16px);
+    margin-top: 12px;
+    font-weight: 400;
+  }
+  .subtitle b { color: #fff; font-weight: 600; }
+
+  /* ── MATCH SELECTOR ── */
+  .match-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 24px;
+    padding: 0 4px;
+  }
+  .match-tab {
+    padding: 8px 16px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid var(--fainter);
+    border-radius: 10px;
+    color: var(--dim);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .match-tab:hover {
+    background: rgba(255,255,255,.08);
+    border-color: var(--faint);
+    color: var(--ink-2);
+  }
+  .match-tab.active {
+    background: rgba(111,140,255,.12);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  .match-tab .tab-score {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--faint);
+  }
+  .match-tab.active .tab-score { color: var(--accent-2); }
+  .match-tab .tab-flag { width: 20px; height: 14px; border-radius: 2px; object-fit: cover; }
+
+  /* ── IFRAME VIEWER ── */
+  .viewer-wrap {
+    position: relative;
+    width: 100%;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #0a0720;
+    border: 1px solid var(--fainter);
+    margin-bottom: 20px;
+  }
+  .viewer-wrap iframe {
+    width: 100%;
+    height: 85vh;
+    min-height: 500px;
+    max-height: 900px;
+    border: none;
+    display: block;
+  }
+
+  .viewer-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    background: #0a0720;
+    z-index: 1;
+    transition: opacity .4s;
+    pointer-events: none;
+  }
+  .viewer-loading.hidden { opacity: 0; }
+  .viewer-loading .spinner {
+    width: 32px; height: 32px;
+    border: 2px solid var(--fainter);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .viewer-loading span {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--dim);
+    letter-spacing: .1em;
+  }
+
+  /* ── MATCH INFO BAR ── */
+  .match-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: rgba(255,255,255,.03);
+    border-top: 1px solid var(--fainter);
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .match-info .phase {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--accent-2);
+    padding: 3px 10px;
+    background: rgba(111,140,255,.1);
+    border-radius: 20px;
+    border: 1px solid rgba(111,140,255,.2);
+  }
+  .match-info .date {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--dim);
+  }
+  .match-info .stats {
+    display: flex;
+    gap: 16px;
+    font-size: 13px;
+    color: var(--ink-2);
+  }
+  .match-info .stats strong { color: #fff; }
+
+  /* ── NAVIGATION ── */
+  .nav-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    gap: 12px;
+  }
+  .nav-btn {
+    padding: 8px 18px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid var(--fainter);
+    border-radius: 10px;
+    color: var(--dim);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .nav-btn:hover {
+    background: rgba(255,255,255,.08);
+    border-color: var(--faint);
+    color: var(--ink-2);
+  }
+  .nav-btn:disabled {
+    opacity: .3;
+    cursor: default;
+    pointer-events: none;
+  }
+  .nav-counter {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--dim);
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center;
+    padding: 32px 0 48px;
+    border-top: 1px solid var(--fainter);
+    margin-top: 32px;
+  }
+  footer p {
+    color: var(--dim);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  footer a {
+    color: var(--accent-2);
+    text-decoration: none;
+  }
+  footer a:hover { text-decoration: underline; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 700px) {
+    .viewer-wrap iframe { height: 60vh; min-height: 360px; }
+    .match-tab { font-size: 12px; padding: 6px 12px; }
+    .match-tab .tab-flag { width: 16px; height: 11px; }
+    .match-info { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="edition">
+      <span class="tick"></span>
+      COPA 2026
+      <span class="tick"></span>
+    </div>
+    <h1>
+      <span class="l1">Brasil na</span>
+      <span class="l2">Copa do Mundo</span>
+    </h1>
+    <p class="subtitle">
+      <b>5 jogos</b> &middot; Visualizacoes 3D interativas por <b>Alexander Bogachev</b>
+    </p>
+  </header>
+
+  <!-- Match tabs -->
+  <div class="match-tabs" id="matchTabs"></div>
+
+  <!-- Navigation -->
+  <div class="nav-row">
+    <button class="nav-btn" id="prevBtn">&larr; Anterior</button>
+    <span class="nav-counter" id="navCounter"></span>
+    <button class="nav-btn" id="nextBtn">Pr&oacute;ximo &rarr;</button>
+  </div>
+
+  <!-- Viewer -->
+  <div class="viewer-wrap">
+    <div class="viewer-loading" id="viewerLoading">
+      <div class="spinner"></div>
+      <span>CARREGANDO DATA PORTRAIT&hellip;</span>
+    </div>
+    <iframe id="matchFrame" loading="lazy" sandbox="allow-scripts allow-same-origin allow-popups" allow="autoplay"></iframe>
+    <div class="match-info" id="matchInfo"></div>
+  </div>
+
+  <footer>
+    <p>
+      Data Portraits por <a href="https://wc26.bogachev.fr/" target="_blank">Alexander Bogachev</a>
+      &nbsp;&middot;&nbsp; Dados: Opta via WhoScored + FotMob
+      &nbsp;&middot;&nbsp; Ze Pequeno &#x1f436;
+    </p>
+  </footer>
+</div>
+
+<script>
+const MATCHES = [
+  { slug: 'bra-mor', date: '2026-06-13', phase: 'Grupo C &mdash; 1&ordf; rodada',
+    home: { name: 'Brasil', abbr: 'BRA', score: 1 },
+    away: { name: 'Marrocos', abbr: 'MOR', score: 1 },
+    shotCount: 26, xgHome: 1.26, xgAway: 1.37 },
+  { slug: 'bra-hai', date: '2026-06-20', phase: 'Grupo C &mdash; 2&ordf; rodada',
+    home: { name: 'Brasil', abbr: 'BRA', score: 3 },
+    away: { name: 'Haiti', abbr: 'HAI', score: 0 },
+    shotCount: 15, xgHome: 1.80, xgAway: 0.24 },
+  { slug: 'sco-bra', date: '2026-06-24', phase: 'Grupo C &mdash; 3&ordf; rodada',
+    home: { name: 'Escocia', abbr: 'SCO', score: 0 },
+    away: { name: 'Brasil', abbr: 'BRA', score: 3 },
+    shotCount: 35, xgHome: 1.04, xgAway: 4.33 },
+  { slug: 'bra-jap', date: '2026-06-29', phase: 'Segunda Fase (32)',
+    home: { name: 'Brasil', abbr: 'BRA', score: 2 },
+    away: { name: 'Japao', abbr: 'JAP', score: 1 },
+    shotCount: 24, xgHome: 2.10, xgAway: 0.33 },
+  { slug: 'bra-nor', date: '2026-07-05', phase: 'Oitavas de Final',
+    home: { name: 'Brasil', abbr: 'BRA', score: 1 },
+    away: { name: 'Noruega', abbr: 'NOR', score: 2 },
+    shotCount: 23, xgHome: 2.61, xgAway: 1.05 }
+];
+
+const FLAG_MAP = { BRA:'br', MOR:'ma', HAI:'ht', SCO:'gb-sct', JAP:'jp', NOR:'no' };
+
+let currentIdx = 0;
+const frame = document.getElementById('matchFrame');
+const loading = document.getElementById('viewerLoading');
+const matchInfo = document.getElementById('matchInfo');
+const tabs = document.getElementById('matchTabs');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const navCounter = document.getElementById('navCounter');
+
+function flagUrl(abbr) {
+  return 'https://flagcdn.com/48x36/' + (FLAG_MAP[abbr] || abbr.toLowerCase()) + '.svg';
+}
+
+function fmtDate(iso) {
+  const d = new Date(iso + 'T12:00:00');
+  const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  return d.getDate() + ' ' + meses[d.getMonth()] + ' ' + d.getFullYear();
+}
+
+function loadMatch(idx) {
+  currentIdx = idx;
+  const m = MATCHES[idx];
+
+  // Show loading
+  loading.classList.remove('hidden');
+
+  // Update iframe
+  frame.src = 'https://wc26.bogachev.fr/m/' + m.slug;
+
+  // Update info bar
+  const bra = m.home.abbr === 'BRA' ? m.home : m.away;
+  const opp = m.home.abbr === 'BRA' ? m.away : m.home;
+  const braXg = m.home.abbr === 'BRA' ? m.xgHome : m.xgAway;
+  const oppXg = m.home.abbr === 'BRA' ? m.xgAway : m.xgHome;
+
+  matchInfo.innerHTML =
+    '<span class="phase">' + m.phase + '</span>' +
+    '<span class="date">' + fmtDate(m.date) + '</span>' +
+    '<span class="stats">' +
+      '<span>Finalizacoes: <strong>' + m.shotCount + '</strong></span>' +
+      '<span>xG: <strong>' + braXg.toFixed(2) + '</strong> &times; <strong>' + oppXg.toFixed(2) + '</strong></span>' +
+    '</span>';
+
+  // Update tabs
+  document.querySelectorAll('.match-tab').forEach((tab, i) => {
+    tab.classList.toggle('active', i === idx);
+  });
+
+  // Update nav
+  prevBtn.disabled = idx === 0;
+  nextBtn.disabled = idx === MATCHES.length - 1;
+  navCounter.textContent = (idx + 1) + ' / ' + MATCHES.length;
+
+  // Scroll to viewer
+  document.querySelector('.viewer-wrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// Build tabs
+MATCHES.forEach((m, i) => {
+  const tab = document.createElement('button');
+  tab.className = 'match-tab' + (i === 0 ? ' active' : '');
+  const bra = m.home.abbr === 'BRA' ? m.home : m.away;
+  const opp = m.home.abbr === 'BRA' ? m.away : m.home;
+  tab.innerHTML =
+    '<img class="tab-flag" src="' + flagUrl(bra.abbr) + '" alt="' + bra.abbr + '">' +
+    '<span class="tab-score">' + bra.score + '&times;' + opp.score + '</span>' +
+    '<img class="tab-flag" src="' + flagUrl(opp.abbr) + '" alt="' + opp.abbr + '">';
+  tab.addEventListener('click', () => loadMatch(i));
+  tabs.appendChild(tab);
+});
+
+// Nav buttons
+prevBtn.addEventListener('click', () => {
+  if (currentIdx > 0) loadMatch(currentIdx - 1);
+});
+nextBtn.addEventListener('click', () => {
+  if (currentIdx < MATCHES.length - 1) loadMatch(currentIdx + 1);
+});
+
+// Hide loading when iframe loads
+frame.addEventListener('load', () => {
+  loading.classList.add('hidden');
+});
+
+// Keyboard navigation
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowLeft' && currentIdx > 0) loadMatch(currentIdx - 1);
+  if (e.key === 'ArrowRight' && currentIdx < MATCHES.length - 1) loadMatch(currentIdx + 1);
+});
+
+// Load first match
+loadMatch(0);
+</script>
+</body>
+</html>
