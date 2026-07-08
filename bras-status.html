@@ -62,6 +62,15 @@
     margin-bottom: clamp(12px, 2vw, 24px);
   }
   .edition .tick { width: 34px; height: 1px; background: var(--faint); }
+  .edition .back-link {
+    color: var(--dim);
+    text-decoration: none;
+    transition: color .2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .edition .back-link:hover { color: var(--accent-2); }
 
   h1 {
     font-weight: 700;
@@ -282,7 +291,7 @@
   <header>
     <div class="edition">
       <span class="tick"></span>
-      COPA 2026
+      <a href="/copa/" class="back-link">&larr; COPA 2026</a>
       <span class="tick"></span>
     </div>
     <h1>
