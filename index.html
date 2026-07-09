@@ -2633,8 +2633,8 @@ function renderBracket(events, standingsData) {
       const ha = cmp[0]?.team?.abbreviation || '';
       const aa = cmp[1]?.team?.abbreviation || '';
       if (!ha || !aa) return;
-      const hn = cmp[0]?.team?.displayName || ha;
-      const an = cmp[1]?.team?.displayName || aa;
+      const hn = pt(cmp[0]?.team?.displayName) || ha;
+      const an = pt(cmp[1]?.team?.displayName) || aa;
       const hs = parseInt(cmp[0]?.score) || 0;
       const as_ = parseInt(cmp[1]?.score) || 0;
       const winner = hs > as_ ? ha : (as_ > hs ? aa : null);
@@ -2676,8 +2676,8 @@ function renderBracket(events, standingsData) {
         const ha = cmp[0]?.team?.abbreviation || '';
         const aa = cmp[1]?.team?.abbreviation || '';
         if (!ha || !aa) return;
-        const hn = cmp[0]?.team?.displayName || ha;
-        const an = cmp[1]?.team?.displayName || aa;
+        const hn = pt(cmp[0]?.team?.displayName) || ha;
+        const an = pt(cmp[1]?.team?.displayName) || aa;
         const hs = parseInt(cmp[0]?.score) || 0;
         const as_ = parseInt(cmp[1]?.score) || 0;
         const winner = hs > as_ ? ha : (as_ > hs ? aa : null);
@@ -2971,8 +2971,7 @@ function renderBracket(events, standingsData) {
         const opts = { timeZone:'America/Sao_Paulo', day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit', hour12: false };
         const parts = gameDate.toLocaleDateString('pt-BR', opts).split(', ');
         if (parts.length >= 2) {
-          const dParts = parts[0].split('/');
-          label = dParts[1]+'/'+dParts[0]+' '+parts[1];
+          label = parts[0]+' '+parts[1];
         }
       }
       const gameVenue = game.competitions?.[0]?.venue?.fullName || '';
