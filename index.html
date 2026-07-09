@@ -2616,6 +2616,10 @@ function renderBracket(events, standingsData) {
     return cmp.length >= 2 && cmp[0]?.team?.abbreviation && cmp[1]?.team?.abbreviation;
   });
   if (r16Real.length > 0) {
+    // Ordena os jogos reais por data crescente
+    r16Real.sort((a, b) => new Date(a.date) - new Date(b.date));
+    // Reconstrói r16 na ordem cronológica
+    r16.length = 0;
     r16Real.forEach(g => {
       const cmp = g.competitions?.[0]?.competitors || [];
       if (cmp.length < 2) return;
@@ -2627,20 +2631,12 @@ function renderBracket(events, standingsData) {
       const hs = parseInt(cmp[0]?.score) || 0;
       const as_ = parseInt(cmp[1]?.score) || 0;
       const winner = hs > as_ ? ha : (as_ > hs ? aa : null);
-      // Encontra no r16 um confronto que tenha UM desses times
-      for (let i = 0; i < r16.length; i++) {
-        const m = r16[i];
-        if (!m || !m.a || !m.b) continue;
-        if (m.a.abbr === ha || m.a.abbr === aa || m.b.abbr === ha || m.b.abbr === aa) {
-          r16[i] = {
-            a: { abbr: ha, name: hn, pts: 0, gd: 0, gf: 0 },
-            b: { abbr: aa, name: an, pts: 0, gd: 0, gf: 0 },
-            _winner: winner ? { abbr: winner } : null,
-            _real: true
-          };
-          break;
-        }
-      }
+      r16.push({
+        a: { abbr: ha, name: hn, pts: 0, gd: 0, gf: 0 },
+        b: { abbr: aa, name: an, pts: 0, gd: 0, gf: 0 },
+        _winner: winner ? { abbr: winner } : null,
+        _real: true
+      });
     });
     // Recalcula qf, sf, final com base no r16 atualizado
     const qfRaw2 = simulateRound(r16, savedFav);
@@ -2663,6 +2659,10 @@ function renderBracket(events, standingsData) {
       return cmp.length >= 2 && cmp[0]?.team?.abbreviation && cmp[1]?.team?.abbreviation;
     });
     if (qfReal.length > 0) {
+      // Ordena os jogos reais por data crescente
+      qfReal.sort((a, b) => new Date(a.date) - new Date(b.date));
+      // Reconstrói qf2 na ordem cronológica
+      qf2.length = 0;
       qfReal.forEach(g => {
         const cmp = g.competitions?.[0]?.competitors || [];
         if (cmp.length < 2) return;
@@ -2674,19 +2674,12 @@ function renderBracket(events, standingsData) {
         const hs = parseInt(cmp[0]?.score) || 0;
         const as_ = parseInt(cmp[1]?.score) || 0;
         const winner = hs > as_ ? ha : (as_ > hs ? aa : null);
-        for (let i = 0; i < qf2.length; i++) {
-          const m = qf2[i];
-          if (!m || !m.a || !m.b) continue;
-          if (m.a.abbr === ha || m.a.abbr === aa || m.b.abbr === ha || m.b.abbr === aa) {
-            qf2[i] = {
-              a: { abbr: ha, name: hn, pts: 0, gd: 0, gf: 0 },
-              b: { abbr: aa, name: an, pts: 0, gd: 0, gf: 0 },
-              _winner: winner ? { abbr: winner } : null,
-              _real: true
-            };
-            break;
-          }
-        }
+        qf2.push({
+          a: { abbr: ha, name: hn, pts: 0, gd: 0, gf: 0 },
+          b: { abbr: aa, name: an, pts: 0, gd: 0, gf: 0 },
+          _winner: winner ? { abbr: winner } : null,
+          _real: true
+        });
       });
       // Recalcula sf, final com base no qf atualizado
       const sf3 = simulateRound(qf2, savedFav);
@@ -3065,9 +3058,17 @@ function renderBracket(events, standingsData) {
   });
   h += '</div>';
 
-  // Quartas
+  // Quartas — ordenadas por data
   h += '<div class="bracket-round"><div class="bracket-round-title">Quartas (8)</div>';
-  qf.forEach((m,i) => {
+  var qfSorted = [...qf].sort(function(a, b) {
+    function getGameDate(m) {
+      if (!m || !m.a || !m.b) return '2099';
+      var g = getMatchGame(m.a.abbr, m.b.abbr, 'quarterfinals');
+      return g ? g.date : '2099';
+    }
+    return getGameDate(a).localeCompare(getGameDate(b));
+  });
+  qfSorted.forEach(function(m, i) {
     h += renderMatchCard(m, qfDates[i]||'', 'qf', qfVenues[i]);
   });
   h += '</div>';
