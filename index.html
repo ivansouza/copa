@@ -1641,7 +1641,12 @@ function simulateWinner(match, sm) {
   // Se o jogo já aconteceu, usa o placar real do scoreMap
   if (!match.a || !match.b) return match.a || match.b;
   // Se o match já tem vencedor definido (dados reais), usa ele
-  if (match._winner) return match._winner;
+  if (match._winner) {
+    // Retorna o objeto completo do time (a ou b) que venceu
+    if (match.a && match._winner.abbr === match.a.abbr) return match.a;
+    if (match.b && match._winner.abbr === match.b.abbr) return match.b;
+    return match._winner;
+  }
   if (sm) {
     const sa = sm[match.a.abbr];
     const sb = sm[match.b.abbr];
