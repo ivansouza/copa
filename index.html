@@ -2946,6 +2946,20 @@ function renderBracket(events, standingsData) {
     const aName = m.a.name||'?', bName = m.b.name||'?';
     // Busca o jogo no allGames
     const game = slug ? getMatchGame(aAbbr, bAbbr, slug) : null;
+    // Usa data e local reais da ESPN quando disponível
+    if (game) {
+      const gameDate = game.date ? new Date(game.date) : null;
+      if (gameDate) {
+        const opts = { timeZone:'America/Sao_Paulo', day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit', hour12: false };
+        const parts = gameDate.toLocaleDateString('pt-BR', opts).split(', ');
+        if (parts.length >= 2) {
+          const dParts = parts[0].split('/');
+          label = dParts[1]+'/'+dParts[0]+' '+parts[1];
+        }
+      }
+      const gameVenue = game.competitions?.[0]?.venue?.fullName || '';
+      if (gameVenue) venue = gameVenue;
+    }
     const isLive = game && getStatus(game) === 'live';
     const isFinal = game && getStatus(game) === 'final';
     // Placar
