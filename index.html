@@ -3098,21 +3098,24 @@ function renderBracket(events, standingsData) {
   });
   h += '</div>';
 
-  // Semifinais
+  // Semifinais — usa dados do cache (que tem resultados reais)
   h += '<div class="bracket-round"><div class="bracket-round-title">Semifinais (4)</div>';
-  sf.forEach((m,i) => {
+  var sfForCards = (window.__bracketCache && window.__bracketCache.sf) || sf;
+  sfForCards.forEach(function(m, i) {
     h += renderMatchCard(m, sfDates[i]||'', 'sf', sfVenues[i]);
   });
   h += '</div>';
 
   // 3º Lugar
   h += '<div class="bracket-round"><div class="bracket-round-title">3º Lugar</div>';
-  h += renderMatchCard(thirdPlace, thirdDate, 'third', thirdVenue);
+  var tpForCards = (window.__bracketCache && window.__bracketCache.thirdPlace) || thirdPlace;
+  h += renderMatchCard(tpForCards, thirdDate, 'third', thirdVenue);
   h += '</div>';
 
   // Final
   h += '<div class="bracket-round"><div class="bracket-round-title">Final</div>';
-  h += renderMatchCard(finalMatch, finalDate+' — Final', 'final', finalVenue);
+  var fmForCards = (window.__bracketCache && window.__bracketCache.finalMatch) || finalMatch;
+  h += renderMatchCard(fmForCards, finalDate+' — Final', 'final', finalVenue);
   h += '</div>';
 
   // Champion box
