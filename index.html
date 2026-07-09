@@ -3060,16 +3060,17 @@ function renderBracket(events, standingsData) {
 
   // Quartas — ordenadas por data
   h += '<div class="bracket-round"><div class="bracket-round-title">Quartas (8)</div>';
-  var qfSorted = [...qf].sort(function(a, b) {
+  var qfForCards = (window.__bracketCache && window.__bracketCache.qf) || qf;
+  var qfSorted = [...qfForCards].sort(function(a, b) {
     function getGameDate(m) {
-      if (!m || !m.a || !m.b) return '2099';
+      if (!m || !m.a || !m.b) return '2099-12-31';
       var g = getMatchGame(m.a.abbr, m.b.abbr, 'quarterfinals');
-      return g ? g.date : '2099';
+      return g ? g.date : '2099-12-31';
     }
     return getGameDate(a).localeCompare(getGameDate(b));
   });
-  qfSorted.forEach(function(m, i) {
-    h += renderMatchCard(m, qfDates[i]||'', 'qf', qfVenues[i]);
+  qfSorted.forEach(function(m) {
+    h += renderMatchCard(m, '', 'qf', '');
   });
   h += '</div>';
 
