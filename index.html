@@ -1640,6 +1640,8 @@ function buildRound32(standingsData) {
 function simulateWinner(match, sm) {
   // Se o jogo já aconteceu, usa o placar real do scoreMap
   if (!match.a || !match.b) return match.a || match.b;
+  // Se o match já tem vencedor definido (dados reais), usa ele
+  if (match._winner) return match._winner;
   if (sm) {
     const sa = sm[match.a.abbr];
     const sb = sm[match.b.abbr];
@@ -2513,7 +2515,7 @@ function renderBracket(events, standingsData) {
   const scoreMap = {};
   (events||[]).forEach(e => {
     const slug = (e.season?.slug || '');
-    if (slug !== 'round-of-32' && slug !== 'round-of-16') return;
+    if (slug !== 'round-of-32' && slug !== 'round-of-16' && slug !== 'quarterfinals') return;
     const comp = e.competitions?.[0]||{};
     const st = comp.status?.type||{};
     const state = st.state||'';
