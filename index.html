@@ -2695,8 +2695,26 @@ function renderBracket(events, standingsData) {
       if (sf3.length >= 2) {
         const sf0Winner = savedFav ? simulateWinnerFav(sf3[0], savedFav, scoreMap) : simulateWinner(sf3[0], scoreMap);
         const sf1Winner = savedFav ? simulateWinnerFav(sf3[1], savedFav, scoreMap) : simulateWinner(sf3[1], scoreMap);
+        // Garante que os objetos tenham name
+        function ensureName(t) {
+          if (!t) return t;
+          if (!t.name && t.abbr) {
+            // Busca o nome completo no round32
+            const found = round32.find(m => (m.a && m.a.abbr === t.abbr) || (m.b && m.b.abbr === t.abbr));
+            if (found) {
+              if (found.a && found.a.abbr === t.abbr) t.name = found.a.name;
+              else if (found.b && found.b.abbr === t.abbr) t.name = found.b.name;
+            }
+          }
+          if (!t.name) t.name = t.abbr;
+          return t;
+        }
+        ensureName(sf0Winner);
+        ensureName(sf1Winner);
         const sf0Loser = sf0Winner === sf3[0].a ? sf3[0].b : sf3[0].a;
         const sf1Loser = sf1Winner === sf3[1].a ? sf3[1].b : sf3[1].a;
+        ensureName(sf0Loser);
+        ensureName(sf1Loser);
         thirdPlace3 = { a: sf0Loser, b: sf1Loser };
         finalMatch3 = { a: sf0Winner, b: sf1Winner };
       }
