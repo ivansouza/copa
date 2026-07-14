@@ -2520,7 +2520,7 @@ function renderBracket(events, standingsData) {
   const scoreMap = {};
   (events||[]).forEach(e => {
     const slug = (e.season?.slug || '');
-    if (slug !== 'round-of-32' && slug !== 'round-of-16' && slug !== 'quarterfinals') return;
+    if (slug !== 'round-of-32' && slug !== 'round-of-16' && slug !== 'quarterfinals' && slug !== 'semifinals' && slug !== 'final' && slug !== 'third-place') return;
     const comp = e.competitions?.[0]||{};
     const st = comp.status?.type||{};
     const state = st.state||'';
@@ -2659,7 +2659,7 @@ function renderBracket(events, standingsData) {
       thirdPlace2 = { a: sf0Loser, b: sf1Loser };
       finalMatch2 = { a: sf0Winner, b: sf1Winner };
     }
-    // Substitui confrontos das quartas por dados reais (sempre que a ESPN tiver)
+    // Substitui confrontos das quartas, semis e final por dados reais (sempre que a ESPN tiver)
     const qfReal = (events||[]).filter(g => {
       if ((g.season?.slug||'') !== 'quarterfinals') return false;
       const cmp = g.competitions?.[0]?.competitors || [];
@@ -2723,6 +2723,65 @@ function renderBracket(events, standingsData) {
     } else {
       window.__bracketCache = { round32: round32, r16raw: r16raw, r16: r16, qf: qf2, sf: sf2, finalMatch: finalMatch2, thirdPlace: thirdPlace2 };
       renderBracketDiagram(r16, qf2, sf2, finalMatch2, thirdPlace2, events);
+    }
+    // Substitui confrontos das semis por dados reais
+    const sfReal = (events||[]).filter(g => {
+      if ((g.season?.slug||'') !== 'semifinals') return false;
+      const cmp = g.competitions?.[0]?.competitors || [];
+      return cmp.length >= 2 && cmp[0]?.team?.abbreviation && cmp[1]?.team?.abbreviation;
+    });
+    if (sfReal.length > 0) {
+      sfReal.sort((a, b) => new Date(a.date) - new Date(b.date));
+      const sfAtual = window.__bracketCache?.sf || sf2;
+      sfAtual.length = 0;
+      sfReal.forEach(g => {
+        const cmp = g.competitions?.[0]?.competitors || [];
+        if (cmp.length < 2) return;
+        const ha = cmp[0]?.team?.abbreviation || '';
+        const aa = cmp[1]?.team?.abbreviation || '';
+        if (!ha || !aa) return;
+        const hn = pt(cmp[0]?.team?.displayName) || ha;
+        const an = pt(cmp[1]?.team?.displayName) || aa;
+        const hs = parseInt(cmp[0]?.score) || 0;
+        const as_ = parseInt(cmp[1]?.score) || 0;
+        const winner = hs > as_ ? ha : (as_ > hs ? aa : null);
+        sfAtual.push({
+          a: { abbr: ha, name: hn, pts: 0, gd: 0, gf: 0 },
+          b: { abbr: aa, name: an, pts: 0, gd: 0, gf: 0 },
+          _winner: winner ? { abbr: winner } : null,
+          _real: true
+        });
+      });
+      // Recalcula final com base nas semis atualizadas
+      const sf4 = sfAtual;
+      let thirdPlace4 = null;
+      let finalMatch4 = null;
+      if (sf4.length >= 2) {
+        const sf0Winner = savedFav ? simulateWinnerFav(sf4[0], savedFav, scoreMap) : simulateWinner(sf4[0], scoreMap);
+        const sf1Winner = savedFav ? simulateWinnerFav(sf4[1], savedFav, scoreMap) : simulateWinner(sf4[1], scoreMap);
+        function ensureName(t) {
+          if (!t) return t;
+          if (!t.name && t.abbr) {
+            const found = round32.find(m => (m.a && m.a.abbr === t.abbr) || (m.b && m.b.abbr === t.abbr));
+            if (found) {
+              if (found.a && found.a.abbr === t.abbr) t.name = found.a.name;
+              else if (found.b && found.b.abbr === t.abbr) t.name = found.b.name;
+            }
+          }
+          if (!t.name) t.name = t.abbr;
+          return t;
+        }
+        ensureName(sf0Winner);
+        ensureName(sf1Winner);
+        const sf0Loser = sf0Winner === sf4[0].a ? sf4[0].b : sf4[0].a;
+        const sf1Loser = sf1Winner === sf4[1].a ? sf4[1].b : sf4[1].a;
+        ensureName(sf0Loser);
+        ensureName(sf1Loser);
+        thirdPlace4 = { a: sf0Loser, b: sf1Loser };
+        finalMatch4 = { a: sf0Winner, b: sf1Winner };
+      }
+      window.__bracketCache = { ...window.__bracketCache, sf: sf4, finalMatch: finalMatch4, thirdPlace: thirdPlace4 };
+      renderBracketDiagram(r16, window.__bracketCache.qf, sf4, finalMatch4, thirdPlace4, events);
     }
   } else {
     window.__bracketCache = { round32: round32, r16raw: r16raw, r16: r16, qf: qf, sf: sf, finalMatch: finalMatch, thirdPlace: thirdPlace };
