@@ -3080,6 +3080,7 @@ function renderBracket(events, standingsData) {
       if (clock) clockHtml = '<span style="font-size:.6rem;color:#22c55e;font-weight:600;display:block;text-align:center;">🔴 '+clock+'</span>';
     }
     // Provável (mesma lógica do diagrama: venceu na fase anterior?)
+    // Para 3º lugar: o time é confirmado se PERDEU a semi (não se venceu)
     const prevSlug = { 'r16':'round-of-32', 'qf':'round-of-16', 'sf':'quarterfinals', 'final':'semifinals', 'third':'semifinals' }[phase];
     function isTeamConfirmed(abbr) {
       if (!prevSlug) return false;
@@ -3091,6 +3092,11 @@ function renderBracket(events, standingsData) {
         const st = e.competitions?.[0]?.status?.type||{};
         const state = st.state||'';
         if (state === 'pre' || state === 'scheduled') return false;
+        // Para 3º lugar: time é confirmado se PERDEU (não se venceu)
+        if (phase === 'third') {
+          const loser = cmp.find(c => c.winner === false);
+          return loser && loser.team?.abbreviation === abbr;
+        }
         const winner = cmp.find(c => c.winner === true);
         return winner && winner.team?.abbreviation === abbr;
       });
