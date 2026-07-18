@@ -1,4 +1,4 @@
-const CACHE = 'copa2026-v37';
+const CACHE = 'copa2026-v38';
 const ASSETS = [
   '/copa/',
   '/copa/index.html',
@@ -27,8 +27,10 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
+  const url = e.request.url;
+
   // API externa (ESPN): sempre busca da rede (não cachear)
-  if (e.request.url.includes('espn.com')) {
+  if (url.includes('espn.com')) {
     e.respondWith(fetch(e.request).catch(() => new Response(
       JSON.stringify({ error: 'offline' }),
       { status: 503, headers: { 'Content-Type': 'application/json' } }
@@ -36,13 +38,21 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // Caminho da Copa, indexbkp: sempre da rede (evita cache problemático)
-  if (e.request.url.includes('indexbkp')) {
-    e.respondWith(fetch(e.request));
+  // Páginas HTML: network first (sempre pega o最新, cai pro cache se offline)
+  if (url.endsWith('.html') || url.endsWith('/copa/') || url.endsWith('/copa')) {
+    e.respondWith(
+      fetch(e.request)
+        .then(res => {
+          const clone = res.clone();
+          caches.open(CACHE).then(cache => cache.put(e.request, clone));
+          return res;
+        })
+        .catch(() => caches.match(e.request))
+    );
     return;
   }
 
-  // Assets estáticos: cache first
+  // Assets estáticos (png, json, js, css, svg, ico): cache first
   e.respondWith(
     caches.match(e.request).then(cached => {
       const fetched = fetch(e.request).then(res => {
