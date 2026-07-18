@@ -2783,37 +2783,38 @@ function renderBracket(events, standingsData) {
       window.__bracketCache = { ...window.__bracketCache, sf: sf4, finalMatch: finalMatch4, thirdPlace: thirdPlace4 };
       renderBracketDiagram(r16, window.__bracketCache.qf, sf4, finalMatch4, thirdPlace4, events);
     }
-    // Substitui 3º lugar por dados reais da ESPN
-    const tpReal = (events||[]).filter(function(g) {
-      var slug = g.season?.slug || '';
-      if (slug !== 'third-place' && slug !== '3rd-place-match') return false;
-      var cmp = g.competitions?.[0]?.competitors || [];
-      return cmp.length >= 2 && cmp[0]?.team?.abbreviation && cmp[1]?.team?.abbreviation;
-    });
-    if (tpReal.length > 0) {
-      var tpGame = tpReal[0];
-      var cmp = tpGame.competitions?.[0]?.competitors || [];
-      if (cmp.length >= 2) {
-        var ha = cmp[0]?.team?.abbreviation || '';
-        var aa = cmp[1]?.team?.abbreviation || '';
-        var hn = pt(cmp[0]?.team?.displayName) || ha;
-        var an = pt(cmp[1]?.team?.displayName) || aa;
-        var hs = parseInt(cmp[0]?.score) || 0;
-        var as_ = parseInt(cmp[1]?.score) || 0;
-        var winner = hs > as_ ? ha : (as_ > hs ? aa : null);
-        var tpRealMatch = {
-          a: { abbr: ha, name: hn, pts: 0, gd: 0, gf: 0 },
-          b: { abbr: aa, name: an, pts: 0, gd: 0, gf: 0 },
-          _winner: winner ? { abbr: winner } : null,
-          _real: true
-        };
-        window.__bracketCache = { ...window.__bracketCache, thirdPlace: tpRealMatch };
-        renderBracketDiagram(r16, window.__bracketCache.qf, window.__bracketCache.sf, window.__bracketCache.finalMatch, tpRealMatch, events);
-      }
-    }
   } else {
     window.__bracketCache = { round32: round32, r16raw: r16raw, r16: r16, qf: qf, sf: sf, finalMatch: finalMatch, thirdPlace: thirdPlace };
     renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events);
+  }
+
+  // Substitui 3º lugar por dados reais da ESPN (sempre, independente de r16Real)
+  var tpReal = (events||[]).filter(function(g) {
+    var slug = g.season?.slug || '';
+    if (slug !== 'third-place' && slug !== '3rd-place-match') return false;
+    var cmp = g.competitions?.[0]?.competitors || [];
+    return cmp.length >= 2 && cmp[0]?.team?.abbreviation && cmp[1]?.team?.abbreviation;
+  });
+  if (tpReal.length > 0 && (!window.__bracketCache.thirdPlace || !window.__bracketCache.thirdPlace._real)) {
+    var tpGame = tpReal[0];
+    var cmp = tpGame.competitions?.[0]?.competitors || [];
+    if (cmp.length >= 2) {
+      var ha = cmp[0]?.team?.abbreviation || '';
+      var aa = cmp[1]?.team?.abbreviation || '';
+      var hn = pt(cmp[0]?.team?.displayName) || ha;
+      var an = pt(cmp[1]?.team?.displayName) || aa;
+      var hs = parseInt(cmp[0]?.score) || 0;
+      var as_ = parseInt(cmp[1]?.score) || 0;
+      var winner = hs > as_ ? ha : (as_ > hs ? aa : null);
+      var tpRealMatch = {
+        a: { abbr: ha, name: hn, pts: 0, gd: 0, gf: 0 },
+        b: { abbr: aa, name: an, pts: 0, gd: 0, gf: 0 },
+        _winner: winner ? { abbr: winner } : null,
+        _real: true
+      };
+      window.__bracketCache = { ...window.__bracketCache, thirdPlace: tpRealMatch };
+      renderBracketDiagram(r16, window.__bracketCache.qf, window.__bracketCache.sf, window.__bracketCache.finalMatch, tpRealMatch, events);
+    }
   }
 
   // Renderiza botões de favoritos (sempre, pra garantir que atualiza)
