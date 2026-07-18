@@ -1003,7 +1003,7 @@ function renderLiveCards() {
   // Pega TODOS os jogos da Segunda Fase (round-of-32) e Oitavas (round-of-16), ordenados por data decrescente
   const r32Games = (allGames||[]).filter(g => {
     const slug = (g.season?.slug || '');
-    if (slug !== 'round-of-32' && slug !== 'round-of-16' && slug !== 'quarterfinals' && slug !== 'semifinals' && slug !== 'final' && slug !== 'third-place') return false;
+    if (slug !== 'round-of-32' && slug !== 'round-of-16' && slug !== 'quarterfinals' && slug !== 'semifinals' && slug !== 'final' && slug !== 'third-place' && slug !== '3rd-place-match') return false;
     // Só jogos que já aconteceram (ao vivo ou encerrados)
     const st = getStatus(g);
     return st === 'live' || st === 'final';
@@ -2453,7 +2453,7 @@ function renderBracketDiagram(r16, qf, sf, finalMatch, thirdPlace, events) {
     if (!team || team.score === undefined) return null;
     return parseInt(team.score)||0;
   }
-  const slugMap = { r16:'round-of-16', qf:'quarterfinals', sf:'semifinals', final:'final', third:'third-place' };
+  const slugMap = { r16:'round-of-16', qf:'quarterfinals', sf:'semifinals', final:'final', third:'third-place', '3rd':'3rd-place-match' };
   function mc(a,b,phase){if(!a||!b)return '<div class="bd-m bd-ph"><div class="t"><span class="nm">─</span></div></div>';const slug=slugMap[phase];const sa=slug?getMatchScore(a.abbr,slug):null,sb=slug?getMatchScore(b.abbr,slug):null;const ca=isConfirmed(a.abbr,phase),cb=isConfirmed(b.abbr,phase);const pa=ca?'':' <span class="pr">(P)</span>',pb=cb?'':' <span class="pr">(P)</span>';const sha=sa!==null?'<span class="sc">'+sa+'</span>':'',shb=sb!==null?'<span class="sc">'+sb+'</span>':'';return '<div class="bd-m"><div class="t"><img class="fl" src="'+flagUrl(a.abbr)+'" alt="" loading="lazy"><span class="nm">'+(a.name||'?')+'</span>'+sha+pa+'</div><div class="v">✕</div><div class="t"><img class="fl" src="'+flagUrl(b.abbr)+'" alt="" loading="lazy"><span class="nm">'+(b.name||'?')+'</span>'+shb+pb+'</div></div>'}
   let h='<div style="text-align:center;margin-bottom:6px;"><button onclick="toggleR32()" style="background:none;border:1px solid #d4a01744;color:#d4a017;font-size:.65rem;padding:3px 10px;border-radius:6px;cursor:pointer;font-weight:600;">▶ Segunda Fase (32)</button></div>';
   h+='<div class="bd-wrap"><div class="bd">';
@@ -2520,7 +2520,7 @@ function renderBracket(events, standingsData) {
   const scoreMap = {};
   (events||[]).forEach(e => {
     const slug = (e.season?.slug || '');
-    if (slug !== 'round-of-32' && slug !== 'round-of-16' && slug !== 'quarterfinals' && slug !== 'semifinals' && slug !== 'final' && slug !== 'third-place') return;
+    if (slug !== 'round-of-32' && slug !== 'round-of-16' && slug !== 'quarterfinals' && slug !== 'semifinals' && slug !== 'final' && slug !== 'third-place' && slug !== '3rd-place-match') return;
     const comp = e.competitions?.[0]||{};
     const st = comp.status?.type||{};
     const state = st.state||'';
@@ -2927,7 +2927,7 @@ function renderBracket(events, standingsData) {
       var gameGoals = [];
       (allGames||[]).forEach(function(g) {
         var slug = (g.season?.slug || '');
-        if (slug !== 'round-of-32' && slug !== 'round-of-16' && slug !== 'quarterfinals' && slug !== 'semifinals' && slug !== 'final' && slug !== 'third-place') return;
+        if (slug !== 'round-of-32' && slug !== 'round-of-16' && slug !== 'quarterfinals' && slug !== 'semifinals' && slug !== 'final' && slug !== 'third-place' && slug !== '3rd-place-match') return;
         var cmp = g.competitions?.[0]?.competitors||[];
         var abs = cmp.map(function(c) { return c.team?.abbreviation; });
         if (!abs.includes(aAbbr) || !abs.includes(bAbbr)) return;
@@ -3007,7 +3007,7 @@ function renderBracket(events, standingsData) {
     // e é winner, está confirmado
     return s.winner === true;
   }
-  const slugMap = { r16:'round-of-16', qf:'quarterfinals', sf:'semifinals', final:'final', third:'third-place' };
+  const slugMap = { r16:'round-of-16', qf:'quarterfinals', sf:'semifinals', final:'final', third:'third-place', '3rd':'3rd-place-match' };
   function getMatchGame(aAbbr, bAbbr, slug) {
     return (events||[]).find(g => {
       if ((g.season?.slug||'') !== slug) return false;
@@ -3116,7 +3116,7 @@ function renderBracket(events, standingsData) {
       var gameGoals = [];
       (allGames||[]).forEach(function(g) {
         var slug = (g.season?.slug || '');
-        if (slug !== 'round-of-32' && slug !== 'round-of-16' && slug !== 'quarterfinals' && slug !== 'semifinals' && slug !== 'final' && slug !== 'third-place') return;
+        if (slug !== 'round-of-32' && slug !== 'round-of-16' && slug !== 'quarterfinals' && slug !== 'semifinals' && slug !== 'final' && slug !== 'third-place' && slug !== '3rd-place-match') return;
         var cmp = g.competitions?.[0]?.competitors||[];
         var abs = cmp.map(function(c) { return c.team?.abbreviation; });
         if (!abs.includes(aAbbr) || !abs.includes(bAbbr)) return;
